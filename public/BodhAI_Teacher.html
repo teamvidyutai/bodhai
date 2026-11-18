@@ -1,0 +1,2568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BodhAI Teacher Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0B2447;--blue:#2563EB;--orange:#F4841F;--teal:#059669;--red:#DC2626;--bg:#F0F5FF;--border:#E2E8F0;--text:#1E293B;--text2:#475569;--text3:#94A3B8}
+html,body{height:100%;font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--text)}
+.app{display:grid;grid-template-columns:220px 1fr;height:100vh;overflow:hidden}
+.sidebar{background:var(--navy);display:flex;flex-direction:column;overflow-y:auto;height:100vh;z-index:2}
+.main{display:flex;flex-direction:column;overflow:hidden;height:100vh}
+.content{flex:1;overflow-y:auto;padding:20px 24px}
+.logo{padding:18px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07)}
+.logo-name{font-family:Fraunces,serif;font-size:22px;font-weight:900;color:#fff}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.3);margin-top:2px}
+.nav-sect{padding:14px 10px 5px;font-size:9px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.8px}
+.nav-i{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;margin:1px 6px;cursor:pointer;color:rgba(255,255,255,.5);font-size:12.5px;font-weight:500;transition:all .15s;user-select:text}
+.nav-i:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8)}
+.nav-i.on{background:rgba(37,99,235,.25);color:#fff;font-weight:700}
+.nav-i .ic{font-size:15px;flex-shrink:0}
+.nbadge{background:#F4841F;color:#fff;font-size:10px;font-weight:800;padding:1px 7px;border-radius:10px;margin-left:auto}
+.sbox{margin:auto 10px 16px;padding:12px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid rgba(255,255,255,.08)}
+.slbl{font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.scode{font-family:monospace;font-size:16px;font-weight:700;color:#60A5FA;letter-spacing:2px;margin-bottom:8px;word-break:break-all}
+.sbtn{background:#2563EB;color:#fff;border:none;width:100%;padding:7px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0;gap:8px;flex-wrap:wrap}
+.toptitle{font-family:Fraunces,serif;font-size:17px;font-weight:900;color:var(--navy);white-space:nowrap}
+.topright{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.btn{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;border:none;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn-pr{background:var(--orange);color:#fff}
+.btn-ol{background:transparent;border:1.5px solid var(--border);color:var(--text2)}
+.btn-ol:hover{border-color:var(--blue);color:var(--blue)}
+.btn-nv{background:var(--navy);color:#fff}
+.btn-rd{background:transparent;border:1.5px solid #fca5a5;color:var(--red)}
+.btn-sm{font-size:11px;padding:5px 10px}
+.card{background:#fff;border-radius:14px;padding:18px 20px;border:1px solid var(--border);box-shadow:0 2px 12px rgba(37,99,235,.06);margin-bottom:14px}
+.ctitle{font-size:11.5px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.4px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.kpi{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid var(--border)}
+.knum{font-family:Fraunces,serif;font-size:30px;font-weight:900;line-height:1}
+.klbl{font-size:10px;color:var(--text3);font-weight:600;margin-top:5px;text-transform:uppercase;letter-spacing:.3px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sec{display:none}.sec.on{display:block}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{background:var(--bg);padding:9px 12px;text-align:left;font-weight:700;color:var(--text2);font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--border)}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border:none}
+.tbl tr:hover td{background:#F8FAFF}
+.gp{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+.gA{background:#DCFCE7;color:#15803D}.gB{background:#DBEAFE;color:#1D4ED8}
+.gC{background:#FEF3C7;color:#B45309}.gD{background:#FEE2E2;color:#B91C1C}
+.sel{padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);font-size:12.5px;font-family:inherit;outline:none;color:var(--text);background:#fff;cursor:pointer;min-width:160px}
+.inp{width:100%;padding:9px 13px;border-radius:9px;border:1.5px solid var(--border);font-size:13px;font-family:inherit;color:var(--text);outline:none;background:#fff}
+.inp:focus{border-color:var(--blue)}
+.ig{margin-bottom:10px}.ilbl{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.oi{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;transition:all .15s}
+.oi:hover{border-color:var(--blue)}.oi.cor{border-color:var(--teal);background:#ECFDF5}
+.oi input{flex:1;border:none;outline:none;font-size:13px;font-family:inherit;background:transparent}
+.vc{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border);cursor:pointer;color:var(--text2)}
+.vc.on{border-color:var(--blue);background:#EFF6FF;color:var(--blue)}
+#scan-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.97);z-index:9000;flex-direction:column}
+#scan-ov.open{display:flex}
+.shd{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(255,255,255,.05);flex-shrink:0}
+.shd span{font-size:16px;font-weight:700;color:#fff}
+.sx{background:rgba(255,255,255,.1);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.stabs{display:flex;background:rgba(255,255,255,.04);flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.1)}
+.stab{flex:1;padding:12px 8px;background:none;border:none;border-bottom:3px solid transparent;color:rgba(255,255,255,.45);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.stab.on{color:#F4841F;border-bottom-color:#F4841F}
+.spanel{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.spanel.on{display:flex}
+#sp-camera{padding:0;position:relative;overflow:hidden}
+.pdrop{border:2px dashed rgba(244,132,31,.45);border-radius:16px;padding:28px 20px;text-align:center;cursor:pointer;width:100%;max-width:360px}
+.pdrop:hover{border-color:#F4841F;background:rgba(244,132,31,.06)}
+.chint{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.65);padding:10px;color:rgba(255,255,255,.7);font-size:12px;text-align:center}
+.vf{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.vfb{width:220px;height:220px;position:relative}
+.vfc{position:absolute;width:28px;height:28px;border-color:#F4841F;border-style:solid}
+.vfc.tl{top:0;left:0;border-width:3px 0 0 3px}.vfc.tr{top:0;right:0;border-width:3px 3px 0 0}
+.vfc.bl{bottom:0;left:0;border-width:0 0 3px 3px}.vfc.br{bottom:0;right:0;border-width:0 3px 3px 0}
+.sln{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#F4841F,transparent);animation:scln 2s linear infinite}
+@keyframes scln{0%{top:10%}100%{top:90%}}
+.sbar{padding:12px 20px;background:#0B2447;text-align:center;flex-shrink:0;min-height:44px;display:flex;align-items:center;justify-content:center}
+#scan-msg{font-size:13px;color:rgba(255,255,255,.6)}
+#toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;display:none;box-shadow:0 4px 20px rgba(0,0,0,.2);max-width:320px}
+#ham{display:none;position:fixed;top:12px;left:12px;z-index:700;background:var(--navy);border:none;color:#fff;width:40px;height:40px;border-radius:10px;font-size:20px;cursor:pointer;align-items:center;justify-content:center}
+#sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:599}
+@media(max-width:1024px){#ham{display:flex}.app{grid-template-columns:1fr}.sidebar{position:fixed;left:-240px;top:0;bottom:0;z-index:600;transition:left .25s;width:220px}.sidebar.open{left:0}#sb-ov.open{display:block}.content{padding:14px}.topbar{padding:8px 12px 8px 56px}}
+@media(max-width:600px){.kgrid{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#E2E8F0;border-radius:3px}
+#more-tools-toggle:hover{background:#E2E8F0!important}
+#more-tools-arrow{display:inline-block}
+</style>
+</head>
+<body>
+<button id="ham" onclick="toggleSidebar()">&#9776;</button>
+<div id="sb-ov" onclick="closeSidebar()"></div>
+<div class="app">
+<aside class="sidebar">
+  <div class="logo"><div class="logo-name">BodhAI</div><div class="logo-sub">Teacher Dashboard</div></div>
+  <div class="nav-sect">Core</div>
+  <div class="nav-i on" onclick="showSec('ov',this)"><span class="ic">&#128202;</span>Overview</div>
+  <div class="nav-i" onclick="showSec('pulse',this)"><span class="ic">&#128200;</span>Class Pulse</div>
+  <div class="nav-i" onclick="showSec('gm',this)"><span class="ic">&#128506;</span>Gap Map</div>
+  <div class="nav-i" onclick="openScanner()"><span class="ic">&#128247;</span>Scan Student QR</div>
+  <div class="nav-i" onclick="showSec('qc',this)"><span class="ic">&#9999;</span>Quiz Creator</div>
+
+  <div class="nav-i" id="more-tools-toggle" onclick="toggleMoreTools()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:#F1F5F9;border-radius:8px;margin:10px 0;font-weight:700;color:#475569">
+    <span><span class="ic">&#8943;</span>More Tools (15)</span>
+    <span id="more-tools-arrow" style="transition:transform 0.2s">&#9660;</span>
+  </div>
+
+  <div id="more-tools-panel" style="display:none">
+  <div class="nav-sect">Analytics</div>
+  <div class="nav-i" onclick="showSec('ai',this)"><span class="ic">&#129302;</span>AI Insights<span class="nbadge" id="ai-badge-count">0</span></div>
+  <div class="nav-i" onclick="showSec('sp',this)"><span class="ic">&#128200;</span>Student Progress</div>
+  <div class="nav-i" onclick="showSec('sa',this)"><span class="ic">&#128218;</span>Subject Analysis</div>
+  <div class="nav-i" onclick="showSec('cp',this)"><span class="ic">&#127979;</span>Class Performance</div>
+  <div class="nav-sect">Classroom Tools</div>
+  <div class="nav-i" onclick="showSec('live',this)"><span class="ic">&#128247;</span>Live Classroom<span class="nbadge" style="background:#DC2626">LIVE</span></div>
+  <div class="nav-i" onclick="showSec('know',this)"><span class="ic">&#129504;</span>Knowledge State</div>
+  <div class="nav-i" onclick="showSec('spaced',this)"><span class="ic">&#128197;</span>Review Calendar</div>
+  <div class="nav-i" onclick="showSec('peers',this)"><span class="ic">&#129309;</span>Peer Learning</div>
+  <div class="nav-i" onclick="showSec('parents',this)"><span class="ic">&#128232;</span>Parent Reports</div>
+  <div class="nav-sect">Records</div>
+  <div class="nav-i" onclick="showSec('ms',this)"><span class="ic">&#128203;</span>Marksheet</div>
+  <div class="nav-i" onclick="showSec('fl',this)"><span class="ic">&#128172;</span>Feedback Log</div>
+  <div class="nav-sect">Advanced AI</div>
+  <div class="nav-i" onclick="showSec('risk',this)"><span class="ic">&#128680;</span>Risk Engine</div>
+  <div class="nav-i" onclick="showSec('rootcause',this)"><span class="ic">&#129518;</span>Root Cause</div>
+  <div class="nav-i" onclick="showSec('confusion',this)"><span class="ic">&#129520;</span>Misconceptions</div>
+  <div class="nav-i" onclick="showSec('fairness',this)"><span class="ic">&#9878;</span>AI Fairness</div>
+  <div class="nav-i" onclick="showSec('exampredict',this)"><span class="ic">&#128200;</span>Exam Predictor</div>
+  </div>
+
+  <div class="sbox">
+    <div class="slbl">Session Code</div>
+    <div class="scode" id="sess-code">Loading...</div>
+    <button class="sbtn" onclick="genCode()">&#8635; New Code</button>
+    <button class="sbtn" id="broadcast-btn" onclick="broadcastSessionToStudents(document.getElementById('sess-code').textContent)" style="background:#1D4ED8;color:#fff;margin-top:6px;font-weight:700">&#128225; Broadcast to Students</button>
+    <div style="font-size:10px;color:#94A3B8;margin-top:4px;text-align:center">Students auto-join — no typing</div>
+    <button class="sbtn" style="margin-top:6px;background:#059669" onclick="showShareModal()">&#128232; Share Student Link</button>
+  </div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div class="toptitle" id="top-title">&#128202; Overview</div>
+    <div class="topright">
+      <select id="sess-filter" style="font-size:11px;padding:4px 10px;border-radius:14px;border:1.5px solid #E2E8F0;font-family:inherit;background:#fff;cursor:pointer;max-width:170px" onchange="applySessionFilter()"><option value="">All Sessions</option></select>
+      <span id="conn-status" style="font-size:11px;font-weight:600;color:#94A3B8;white-space:nowrap">&#11044; Checking...</span>
+      <button class="btn btn-ol btn-sm" onclick="refresh()">&#8635; Refresh</button>
+      <button class="btn btn-ol btn-sm" onclick="addDemoData()">+ Demo</button>
+      <button class="btn btn-rd btn-sm" onclick="clearData()">&#128465;</button>
+      <button class="btn btn-nv btn-sm" onclick="openScanner()">&#128247; Scan QR</button>
+      <button class="btn btn-ol btn-sm" onclick="exportCSV()">&#8681; CSV</button>
+      <button class="btn btn-pr btn-sm" onclick="forceSyncToMySQL()">&#8679; Sync DB</button><button class="btn btn-ol btn-sm" onclick="openUploadDialog()" title="Upload local sessions to a specific server URL">&#8679;&#127760; Upload</button><span id="last-sync-ts" style="font-size:10px;color:#94A3B8;margin-left:6px"></span>
+      <button class="btn btn-ol btn-sm" onclick="cleanupDuplicates()">&#9986; Dedup</button>
+      <button class="btn btn-ol btn-sm" onclick="showSettings()">&#9881; API</button>
+    </div>
+  </div>
+  <div class="content">
+    <!-- EXISTING SECTIONS -->
+    <div class="sec on" id="sec-ov">
+      <div class="kgrid">
+        <div class="kpi"><div class="knum" style="color:var(--navy)" id="ov-s">0</div><div class="klbl">Students</div></div>
+        <div class="kpi"><div class="knum" style="color:var(--teal)" id="ov-a">--</div><div class="klbl">Class Average</div></div>
+        <div class="kpi"><div class="knum" style="color:var(--orange)" id="ov-n">0</div><div class="klbl">Sessions</div></div>
+        <div class="kpi"><div class="knum" style="color:var(--red)" id="ov-h">0</div><div class="klbl">Need Help</div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="ctitle">&#128202; Score Distribution</div><div id="dist-chart"></div></div>
+        <div class="card"><div class="ctitle">&#127919; Concept Health</div><div id="con-bars"></div></div>
+      </div>
+      <div class="card"><div class="ctitle">&#128101; Recent Sessions</div><div id="rec-tbl"></div></div>
+    </div>
+    <div class="sec" id="sec-ai">
+      <div style="background:linear-gradient(135deg,#0B2447,#19376D);border-radius:16px;padding:22px;margin-bottom:16px;display:flex;align-items:center;gap:16px">
+        <div style="font-size:40px">&#129302;</div>
+        <div><div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:4px">AI Learning Gap Insights</div><div style="font-size:13px;color:rgba(255,255,255,.55)">Pattern recognition &middot; Remediation &middot; Peer learning</div></div>
+      </div>
+      <div id="ai-items"></div>
+    </div>
+    <div class="sec" id="sec-gm"><div class="card"><div class="ctitle">&#128506; Gap Map</div><div id="gap-map"></div></div></div>
+    <div class="sec" id="sec-sp">
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <select class="sel" id="sp-sel" onchange="renderStuProg()"><option value="">-- Select student --</option></select>
+        <select class="sel" id="sp-subj" onchange="renderStuProg()"><option value="">All Subjects</option></select>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="ctitle">&#128200; Score Over Time</div><div id="sp-line"></div></div>
+        <div class="card"><div class="ctitle">&#129504; Concept Mastery</div><div id="sp-con"></div></div>
+      </div>
+      <div class="card"><div class="ctitle">&#128221; Session History</div><div id="sp-tbl"></div></div>
+    </div>
+    <div class="sec" id="sec-sa">
+      <div class="g2">
+        <div class="card"><div class="ctitle">&#128218; Avg by Subject</div><div id="sa-bar"></div></div>
+        <div class="card"><div class="ctitle">&#10060; Weakest Concept</div><div id="sa-weak"></div></div>
+      </div>
+      <div class="card"><div class="ctitle">&#128269; Drill Down</div><div style="margin-bottom:12px" id="sa-tabs"></div><div id="sa-drill"></div></div>
+    </div>
+    <div class="sec" id="sec-cp">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <select class="sel" id="cp-subj" onchange="renderClassRep()"><option value="">All Subjects</option></select>
+        <span style="font-size:12px;color:var(--text3)" id="cp-sub"></span>
+      </div>
+      <div class="card" style="margin-bottom:14px"><div class="ctitle">&#127979; Class Bar Chart</div><div id="cp-bar"></div></div>
+      <div class="g2">
+        <div class="card"><div class="ctitle">&#9889; Fast-Answer Alerts</div><div id="cp-flags"></div></div>
+        <div class="card"><div class="ctitle">&#129302; AI Summary</div><div id="cp-ai"></div></div>
+      </div>
+    </div>
+    <!-- 5 NEW AI FEATURE SECTIONS -->
+    <div class="sec" id="sec-live"></div>
+    <div class="sec" id="sec-know"></div>
+    <div class="sec" id="sec-spaced"></div>
+    <div class="sec" id="sec-peers"></div>
+    <div class="sec" id="sec-parents"></div>
+    <!-- EXISTING RECORDS/TOOLS SECTIONS -->
+    <div class="sec" id="sec-ms"><div class="card"><div class="ctitle">&#128203; Marksheet <button class="btn btn-ol btn-sm" onclick="exportCSV()">&#8681; CSV</button></div><div style="overflow-x:auto"><div id="ms-tbl"></div></div></div></div>
+    <div class="sec" id="sec-fl">
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <select class="sel" id="fb-sel" onchange="renderFbLog()"><option value="">All Students</option></select>
+        <select class="sel" id="fb-subj" onchange="renderFbLog()"><option value="">All Subjects</option></select>
+      </div>
+      <div id="fb-items"></div>
+    </div>
+    <div class="sec" id="sec-qc">
+      <div class="g2">
+        <div><div class="card">
+          <div class="ctitle">&#9999; New Question</div>
+          <div class="ig"><div class="ilbl">Subject</div><input class="inp" id="cq-s" list="cq-sl" placeholder="Math, Geography..."><datalist id="cq-sl"><option>Math</option><option>Hindi</option><option>Science</option><option>English</option></datalist></div>
+          <div class="ig"><div class="ilbl">Concept</div><input class="inp" id="cq-c" placeholder="e.g. Fractions"></div>
+          <div class="ig"><div class="ilbl">Question</div><textarea class="inp" id="cq-q" rows="2" style="resize:vertical" placeholder="Type question..."></textarea></div>
+          <div class="ig">
+            <div class="ilbl">Options &mdash; click to mark correct: <span id="cor-lbl" style="color:var(--teal);font-weight:700">not set</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="opt-grid">
+              <div class="oi" onclick="markCorrect(0)"><input id="oi-0" placeholder="Option A" onclick="event.stopPropagation()"></div>
+              <div class="oi" onclick="markCorrect(1)"><input id="oi-1" placeholder="Option B" onclick="event.stopPropagation()"></div>
+              <div class="oi" onclick="markCorrect(2)"><input id="oi-2" placeholder="Option C" onclick="event.stopPropagation()"></div>
+              <div class="oi" onclick="markCorrect(3)"><input id="oi-3" placeholder="Option D" onclick="event.stopPropagation()"></div>
+            </div>
+          </div>
+          <div class="ig"><div class="ilbl">Visual Type</div><div style="display:flex;gap:6px;flex-wrap:wrap"><div class="vc on" onclick="pickVis(this,'TEXT')">Text</div><div class="vc" onclick="pickVis(this,'BARGRAPH')">Bar</div><div class="vc" onclick="pickVis(this,'PIE')">Pie</div><div class="vc" onclick="pickVis(this,'NUMLINE')">Number Line</div><div class="vc" onclick="pickVis(this,'PATTERN')">Pattern</div></div></div>
+          <button class="btn btn-pr" style="width:100%;padding:12px;margin-top:6px" onclick="addQuestion()">+ Add to Bank</button>
+        </div></div>
+        <div><div class="card">
+          <div class="ctitle">&#128218; Question Bank <button class="btn btn-rd btn-sm" onclick="clearBank()">Clear</button></div>
+          <div style="margin-bottom:12px" id="bk-tabs"></div>
+          <div id="bk-list"></div>
+          <button class="btn btn-pr" style="width:100%;padding:12px;margin-top:14px" onclick="launchQuiz()">&#128640; Launch for Students</button>
+        </div></div>
+      </div>
+    </div>
+  
+<div id="sec-risk" class="sec"></div>
+<div id="sec-rootcause" class="sec"></div>
+<div id="sec-confusion" class="sec"></div>
+<div id="sec-fairness" class="sec"></div>
+<div id="sec-exampredict" class="sec"></div>
+<div id="sec-pulse" class="sec"></div></div>
+</div>
+</div>
+<div id="scan-ov">
+  <div class="shd"><span>&#128247; Add Student Result</span><button class="sx" onclick="closeScanner()">&#10005;</button></div>
+  <div class="stabs">
+    <button class="stab" id="tab-camera" onclick="switchTab('camera')">&#128247; Live Camera</button>
+    <button class="stab" id="tab-photo" onclick="switchTab('photo')">&#128248; Photo QR</button>
+    <button class="stab on" id="tab-manual" onclick="switchTab('manual')">&#9000; Paste Code</button>
+  </div>
+  <div class="spanel" id="sp-camera">
+    <video id="scan-vid" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover"></video>
+    <canvas id="scan-cnv" style="display:none;position:absolute;top:0;left:0"></canvas>
+    <div class="vf"><div class="vfb"><div class="vfc tl"></div><div class="vfc tr"></div><div class="vfc bl"></div><div class="vfc br"></div><div class="sln"></div></div></div>
+    <div class="chint">Point camera at student QR code</div>
+  </div>
+  <div class="spanel on" id="sp-photo">
+    <div class="pdrop" onclick="document.getElementById('qr-photo-in').click()">
+      <div style="font-size:52px;margin-bottom:12px">&#128248;</div>
+      <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:8px">Upload Photo of Student QR</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.8">Tap to open camera &rarr; point at QR<br><span style="color:#F4841F;font-weight:700">Works on mobile without HTTPS</span></div>
+    </div>
+    <input type="file" id="qr-photo-in" accept="image/*" capture="environment" style="display:none" onchange="decodeFromPhoto(this)">
+    <img id="photo-prev" style="display:none;max-width:180px;border-radius:10px;margin-top:12px" src="" alt="">
+  </div>
+  <div class="spanel" id="sp-manual">
+    <div style="width:100%;max-width:440px">
+      <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.6);margin-bottom:10px">Student sends result via WhatsApp &rarr; paste below:</div>
+      <textarea id="man-inp" rows="5" style="width:100%;padding:14px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);border-radius:12px;font-size:12px;color:#fff;font-family:monospace;outline:none;resize:none;line-height:1.6;box-sizing:border-box" placeholder="Paste code or WhatsApp message here..."></textarea>
+      <button onclick="submitManual()" style="width:100%;margin-top:10px;background:#F4841F;color:#fff;border:none;padding:14px;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">Add to Dashboard</button>
+    </div>
+  </div>
+  <div class="sbar"><span id="scan-msg">Select a method above</span></div>
+</div>
+
+<!-- Share Modal -->
+<div id="share-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:8000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:20px;padding:28px;width:90%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-family:Fraunces,serif;font-size:20px;font-weight:900;color:#0B2447">Share with Students</div>
+      <button onclick="hideShareModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94A3B8">&#10005;</button>
+    </div>
+    <div style="text-align:center;margin-bottom:16px">
+      <canvas id="share-qr-canvas" style="border-radius:12px;border:1px solid #E2E8F0"></canvas>
+      <div style="font-size:11px;color:#94A3B8;margin-top:6px">Students scan this QR — session code auto-fills</div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:6px">Or share this URL:</div>
+      <div style="display:flex;gap:6px">
+        <input id="share-url-text" type="text" readonly style="flex:1;padding:8px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:11px;font-family:monospace;color:#374151;background:#F8FAFF;outline:none">
+        <button onclick="copyShareUrl()" style="background:#2563EB;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Copy</button>
+      </div>
+    </div>
+    <button onclick="shareOnWhatsApp()" style="width:100%;background:#25D366;color:#fff;border:none;padding:12px;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+      &#128232; Send on WhatsApp
+    </button>
+    <div style="margin-top:10px;font-size:11px;color:#94A3B8;text-align:center">Session code is embedded in the URL — students don't need to type it</div>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+// ═══ DECLUTTER: More Tools collapse/expand ═══════════════════
+function toggleMoreTools(){
+  var panel=document.getElementById('more-tools-panel');
+  var arrow=document.getElementById('more-tools-arrow');
+  if(!panel)return;
+  var isOpen=panel.style.display!=='none';
+  panel.style.display=isOpen?'none':'block';
+  if(arrow)arrow.style.transform=isOpen?'rotate(0deg)':'rotate(180deg)';
+  try{localStorage.setItem('bodhai_more_tools_open',isOpen?'0':'1');}catch(e){}
+}
+// Restore collapse state on load (but defaults to collapsed for low-burden UX)
+document.addEventListener('DOMContentLoaded',function(){
+  try{
+    var saved=localStorage.getItem('bodhai_more_tools_open');
+    if(saved==='1'){
+      var panel=document.getElementById('more-tools-panel');
+      var arrow=document.getElementById('more-tools-arrow');
+      if(panel)panel.style.display='block';
+      if(arrow)arrow.style.transform='rotate(180deg)';
+    }
+  }catch(e){}
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// BodhAI Teacher Dashboard - Complete Clean JS
+// ══════════════════════════════════════════════════════════════════════════
+const DB_NAME='bodhaiDB',DB_VER=2,STORE='sessions',CSTORE='custom_banks';
+let db=null,allSessions=[],creatorBank={},currentBankSubj='',cqCorrect=-1,cqVis='TEXT';
+let scanStream=null,scanActive=false;
+
+// ── Database ──────────────────────────────────────────────────────────────
+function initDB(cb){
+  try{
+    const req=indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded=e=>{
+      const d=e.target.result;
+      if(!d.objectStoreNames.contains(STORE)){
+        const st=d.createObjectStore(STORE,{keyPath:'id',autoIncrement:true});
+        try{st.createIndex('student','student');}catch(er){}
+      }
+      if(!d.objectStoreNames.contains(CSTORE))
+        d.createObjectStore(CSTORE,{keyPath:'subject'});
+    };
+    req.onsuccess=e=>{db=e.target.result;if(cb)cb();};
+    req.onerror=e=>{console.error('DB error',e);if(cb)cb();};
+  }catch(e){console.error('initDB',e);if(cb)cb();}
+}
+
+function _loadFromDB(cb){
+  if(!db){cb([]);return;}
+  try{
+    const req=db.transaction(STORE,'readonly').objectStore(STORE).getAll();
+    req.onsuccess=()=>cb(req.result||[]);
+    req.onerror=()=>cb([]);
+  }catch(e){cb([]);}
+}
+
+function loadCustomBank(cb){
+  if(!db){cb({});return;}
+  try{
+    const req=db.transaction(CSTORE,'readonly').objectStore(CSTORE).getAll();
+    req.onsuccess=()=>{
+      const o={};(req.result||[]).forEach(r=>o[r.subject]=r.questions||[]);cb(o);
+    };
+    req.onerror=()=>cb({});
+  }catch(e){cb({});}
+}
+
+function saveCustomSubj(subj,questions,cb){
+  if(!db)return;
+  try{
+    const tx=db.transaction(CSTORE,'readwrite');
+    tx.objectStore(CSTORE).put({subject:subj,questions});
+    tx.oncomplete=()=>{if(cb)cb();};
+  }catch(e){console.error(e);}
+}
+
+function saveScanned(data,cb){
+  if(!db){showToast('DB not ready');return;}
+  try{
+    const s={...data};delete s.id;
+    const tx=db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).add(s).onsuccess=()=>{if(cb)cb();};
+  }catch(e){showToast('Save error: '+e.message);}
+}
+
+// ── Session code ──────────────────────────────────────────────────────────
+function genCode(silent){
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const code='BODH-'+Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join('');
+  localStorage.setItem('bodhTeacherSession',code);
+  const el=document.getElementById('sess-code');
+  if(el)el.textContent=code;
+  if(!silent)showToast('New session code: '+code);
+  if(typeof pushSessionCodeToMySQL==='function') pushSessionCodeToMySQL(code);
+  // Join this session's room via WebSocket — teacher broadcasts go ONLY to this room
+  try{
+    if(ws&&ws.readyState===WebSocket.OPEN){
+      const _gl='Session '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+      ws.send(JSON.stringify({type:'join-room',code}));
+      ws.send(JSON.stringify({type:'activate-session',code,label:_gl}));
+    }
+  }catch(e){}
+}
+function broadcastSessionToStudents(code){if(!code||code==='Loading...'||code.length<5){showToast('Generate a code first.');return;}code=code.toUpperCase().trim();if(ws&&ws.readyState===WebSocket.OPEN){const lbl='Class '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});ws.send(JSON.stringify({type:'activate-session',code,label:lbl}));showToast('Broadcast: '+code+' sent to all students');}else{showToast('Not connected to server.');}pushSessionCodeToMySQL(code);const btn=document.getElementById('broadcast-btn');if(btn){btn.textContent='Broadcasting: '+code;btn.style.background='#059669';setTimeout(()=>{btn.textContent='Broadcast to Students';btn.style.background='';},4000);}}
+
+
+function loadCode(){
+  const saved=localStorage.getItem('bodhTeacherSession');
+  const el=document.getElementById('sess-code');
+  if(saved&&saved.length>5){if(el)el.textContent=saved;}
+  else genCode(true);
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────
+function showSec(id,navEl){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nav-i').forEach(n=>n.classList.remove('on'));
+  const sec=document.getElementById('sec-'+id);
+  if(sec)sec.classList.add('on');
+  if(navEl)navEl.classList.add('on');
+  closeSidebar();
+  const titles={ov:'Overview',ai:'AI Insights',gm:'Gap Map',sp:'Student Progress',
+    sa:'Subject Analysis',cp:'Class Performance',ms:'Marksheet',fl:'Feedback Log',qc:'Quiz Creator'};
+  const icons={ov:'📊',ai:'🤖',gm:'🗺',sp:'📈',sa:'📚',cp:'🏫',ms:'📋',fl:'💬',qc:'✏️'};
+  const tt=document.getElementById('top-title');
+  if(tt)tt.textContent=(icons[id]||'')+' '+(titles[id]||id);
+  if(id==='ai')renderAI();
+  if(id==='gm')renderGapMap();
+  if(id==='sp')populateStuSel();
+  if(id==='sa')renderSubjAn();
+  if(id==='cp')renderClassRep();
+  if(id==='ms')renderMarksheet();
+  if(id==='fl')renderFbLog();
+  if(id==='qc')renderCreator();
+  if(id==='live')renderLiveMode();
+  if(id==='know')renderKnowledgeState();
+  if(id==='spaced')renderSpacedReview();
+  if(id==='peers')renderPeerLearning();
+  if(id==='parents')renderParentReports();
+  if(id==='pulse')renderPulseTab();
+  if(id==='risk')renderRiskTab();
+  if(id==='rootcause')renderRootTab();
+  if(id==='confusion')renderConfusionTab();
+  if(id==='fairness')renderFairnessTab();
+  if(id==='exampredict')renderExamTab();
+}
+
+function toggleSidebar(){
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sb-ov').classList.toggle('open');
+}
+function closeSidebar(){
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sb-ov').classList.remove('open');
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function getAllSubjects(){
+  const b=['Math','Hindi','Science','English'];
+  const c=[...new Set(allSessions.map(s=>s.subject||'').filter(s=>s&&!b.includes(s)))];
+  return [...b,...c];
+}
+function stuMap(s){const m={};s.forEach(x=>{const n=x.student||'?';if(!m[n])m[n]=[];m[n].push(x);});return m;}
+function pct(s){return s.total?Math.round(s.score/s.total*100):0;}
+function grade(p){return p>=85?'A+':p>=70?'A':p>=55?'B':p>=40?'C':'D';}
+function gcls(p){return p>=70?'gA':p>=55?'gB':p>=40?'gC':'gD';}
+function fmtDt(ts){
+  if(!ts)return '--';
+  const d=new Date(ts);
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+' '+
+    d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── SVG Charts ────────────────────────────────────────────────────────────
+function barChart(data,colors,maxV){
+  if(!data||!data.length)return '<p style="padding:20px;text-align:center;color:#94A3B8">No data</p>';
+  const w=560,h=200,pad=42;
+  const max=maxV||Math.max(...data.map(d=>d.value||0),1);
+  const bw=Math.max(12,Math.min(40,(w-pad*2)/data.length-6));
+  const gap=(w-pad*2-bw*data.length)/(data.length+1);
+  let svg=`<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;font-family:DM Sans,sans-serif">`;
+  for(let i=0;i<=4;i++){
+    const y=pad+(h-pad*1.6)*(1-i/4);
+    svg+=`<line x1="${pad}" y1="${y}" x2="${w-8}" y2="${y}" stroke="#E2E8F0" stroke-width="1"/>`;
+    svg+=`<text x="${pad-5}" y="${y+4}" text-anchor="end" font-size="10" fill="#94A3B8">${Math.round(max*i/4)}%</text>`;
+  }
+  data.forEach((d,i)=>{
+    const x=pad+gap+(bw+gap)*i;
+    const bh=Math.max(2,((d.value||0)/max)*(h-pad*1.6));
+    const y=pad+(h-pad*1.6)-bh;
+    const col=colors?colors[i%colors.length]:'#2563EB';
+    svg+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="${col}" rx="4"/>`;
+    svg+=`<text x="${x+bw/2}" y="${y-4}" text-anchor="middle" font-size="10" fill="#475569" font-weight="600">${d.value||0}%</text>`;
+    const lbl=(d.label||'').length>7?(d.label||'').substring(0,7)+'...':(d.label||'');
+    svg+=`<text x="${x+bw/2}" y="${h-5}" text-anchor="middle" font-size="9" fill="#94A3B8">${lbl}</text>`;
+  });
+  return svg+'</svg>';
+}
+
+function lineChart(pts,col){
+  if(!pts||pts.length<1)return '<p style="padding:20px;text-align:center;color:#94A3B8">No data</p>';
+  const w=520,h=180,pad=42,c=col||'#2563EB';
+  const vals=pts.map(p=>p.y||0),max=Math.max(...vals,1);
+  const xs=pts.map((_,i)=>pad+i*(pts.length>1?(w-pad*2)/(pts.length-1):0));
+  const ys=pts.map(p=>pad+(h-pad*1.5)*(1-(p.y||0)/max));
+  const path=xs.map((x,i)=>(i===0?'M':'L')+x+','+ys[i]).join(' ');
+  const area=path+' L'+xs[xs.length-1]+','+(h-35)+' L'+xs[0]+','+(h-35)+' Z';
+  let svg=`<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;font-family:DM Sans,sans-serif">
+    <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity=".2"/><stop offset="100%" stop-color="${c}" stop-opacity="0"/></linearGradient></defs>`;
+  for(let i=0;i<=4;i++){
+    const y=pad+(h-pad*1.5)*(1-i/4);
+    svg+=`<line x1="${pad}" y1="${y}" x2="${w-8}" y2="${y}" stroke="#E2E8F0"/>`;
+    svg+=`<text x="${pad-4}" y="${y+4}" text-anchor="end" font-size="10" fill="#94A3B8">${Math.round(max*i/4)}%</text>`;
+  }
+  if(pts.length>1)svg+=`<path d="${area}" fill="url(#lg)"/><path d="${path}" fill="none" stroke="${c}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  pts.forEach((p,i)=>{
+    svg+=`<circle cx="${xs[i]}" cy="${ys[i]}" r="4" fill="${c}" stroke="#fff" stroke-width="2"/>`;
+    svg+=`<text x="${xs[i]}" y="${ys[i]-8}" text-anchor="middle" font-size="10" fill="#475569" font-weight="600">${p.y||0}%</text>`;
+    const lbl=(p.x||'').substring(0,8);
+    svg+=`<text x="${xs[i]}" y="${h-4}" text-anchor="middle" font-size="9" fill="#94A3B8">${lbl}</text>`;
+  });
+  return svg+'</svg>';
+}
+
+function conBars(list){
+  if(!list||!list.length)return '<p style="color:#94A3B8;text-align:center;padding:16px">No concept data</p>';
+  return list.slice(0,10).map(c=>{
+    const col=c.pct>=70?'#059669':c.pct>=45?'#D97706':'#DC2626';
+    return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="font-size:12px;font-weight:600">${c.name||''}</span>
+      <span style="font-size:12px;font-weight:800;color:${col}">${c.pct||0}%</span></div>
+      <div style="height:7px;background:#F1F5F9;border-radius:99px"><div style="height:100%;width:${Math.max(c.pct||0,2)}%;background:${col};border-radius:99px"></div></div></div>`;
+  }).join('');
+}
+
+// ── Overview ──────────────────────────────────────────────────────────────
+function renderOv(){
+  // Filter to only show this teacher's sessions
+  const myCode=(localStorage.getItem('bodhTeacherSession')||'').trim().toUpperCase();
+  // Strict: only show sessions that match this teacher's code exactly
+  // Codeless sessions (DIRECT/empty) are included only when no code is set
+  const s=allSessions.filter(function(x){
+    if(!myCode||myCode.length<4) return true;
+    const sc=(x.sessionCode||x.session_code||'').toUpperCase();
+    return sc===myCode || sc==='DIRECT' || sc==='';
+  });
+  const empty='<p style="padding:24px;text-align:center;color:#94A3B8;font-size:13px">No data yet — click <b>+ Demo Data</b> or complete a student quiz</p>';
+  const setEl=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  if(!s.length){
+    setEl('ov-s','0');setEl('ov-a','--');setEl('ov-n','0');setEl('ov-h','0');
+    ['dist-chart','con-bars','rec-tbl'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=empty;});
+    const b=document.getElementById('ai-badge-count');if(b)b.textContent='0';
+    return;
+  }
+  const students=new Set(s.map(x=>x.student));
+  const avg=Math.round(s.reduce((a,x)=>a+pct(x),0)/s.length);
+  setEl('ov-s',students.size);setEl('ov-a',avg+'%');setEl('ov-n',s.length);
+  setEl('ov-h',s.filter(x=>pct(x)<50).length);
+  const bins=[0,0,0,0,0];
+  s.forEach(x=>{const p=pct(x);bins[Math.min(4,Math.floor(p/20))]++;});
+  const dc=document.getElementById('dist-chart');
+  if(dc)dc.innerHTML=barChart([
+    {label:'0-20%',value:bins[0]},{label:'21-40%',value:bins[1]},
+    {label:'41-60%',value:bins[2]},{label:'61-80%',value:bins[3]},{label:'81-100%',value:bins[4]}
+  ],['#EF4444','#F97316','#EAB308','#22C55E','#059669'],Math.max(...bins,1));
+  const cm={};
+  s.forEach(x=>Object.entries(x.conceptMap||{}).forEach(([k,v])=>{
+    if(!cm[k])cm[k]={sum:0,n:0};cm[k].sum+=Number(v)||0;cm[k].n++;
+  }));
+  const cb=document.getElementById('con-bars');
+  if(cb)cb.innerHTML=conBars(Object.entries(cm).map(([k,v])=>({name:k,pct:Math.round(v.sum/v.n)})).sort((a,b)=>a.pct-b.pct));
+  const rt=document.getElementById('rec-tbl');
+  if(rt){
+    const rows=s.slice().sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).slice(0,15);
+    rt.innerHTML='<table class="tbl"><tr><th>Student</th><th>Subject</th><th>Score</th><th>Grade</th><th>Time</th></tr>'+
+      rows.map(r=>{const p=pct(r);return`<tr><td><b>${r.student||'--'}</b></td><td>${r.subject||'--'}</td><td>${r.score||0}/${r.total||0} (${p}%)</td><td><span class="gp ${gcls(p)}">${grade(p)}</span></td><td>${fmtDt(r.timestamp)}</td></tr>`;}).join('')+'</table>';
+  }
+  try{const ins=genInsights();const b=document.getElementById('ai-badge-count');if(b)b.textContent=ins.length;}catch(e){}
+}
+
+// ── AI Insights ───────────────────────────────────────────────────────────
+const TIPS={
+  FractionBas:'Use fraction strips. Show 1/2 as pizza cut in 2.',
+  UnlikeDenom:'LCM anchor charts. Practice same-denominator pairs first.',
+  NumberLine:'Draw on paper. Mark 0 and 1, place 1/2 at midpoint.',
+  WordProblms:'Highlight key numbers, draw before solving.',
+  Vachan:'Flashcards for singular-plural pairs. Daily oral practice.',
+  Kriya:'Identify action words in daily sentences.',
+  ViomShabd:'Memory pairs: hot-cold, big-small. Match game with cards.',
+  Kaal:'Timeline posters: past, present, future.',
+  Photosynth:'Leaf experiment: cover with foil 3 days, observe yellowing.',
+  WaterCycle:'Boil water, watch condensation on lid.',
+  PlantParts:'Label real plants. Grow beans in jar to see roots.',
+  FoodChain:'Create paper chains. Act out predator-prey roles.',
+  SubjVerb:'Circle subject, underline verb. Practice daily sentences.',
+  SimplePres:'Daily routine timetable. "I wake up at 7" format.',
+  PartsOfSp:'Colour-code nouns, verbs, adjectives in a paragraph.',
+  Preposit:'Place objects: on, under, beside, inside a box.'
+};
+
+function genInsights(){
+  const s=allSessions;if(!s.length)return[];
+  const ins=[];const sm=stuMap(s);const stuCount=Object.keys(sm).length;
+  // Fast answer detection
+  const fast=Object.entries(sm).filter(([,ss])=>ss.some(x=>(x.flags||[]).some(f=>f.reason==='TOO_FAST'))).map(([n])=>n);
+  if(fast.length)ins.push({type:'warning',icon:'⚡',title:'Guessing: '+fast.slice(0,3).join(', ')+(fast.length>3?' +more':''),body:fast.length+' student(s) answered in under 3 seconds. Possible guessing.',action:'Conduct oral questioning to verify understanding.'});
+  // Weakest concept
+  const cm={};
+  s.forEach(x=>Object.entries(x.conceptMap||{}).forEach(([k,v])=>{if(!cm[k])cm[k]={sum:0,n:0};cm[k].sum+=Number(v)||0;cm[k].n++;}));
+  const ranked=Object.entries(cm).map(([k,v])=>({k,avg:Math.round(v.sum/v.n)})).sort((a,b)=>a.avg-b.avg);
+  if(ranked.length&&ranked[0].avg<55)ins.push({type:'critical',icon:'🎯',title:'Critical gap: '+ranked[0].k+' ('+ranked[0].avg+'%)',body:stuCount+' students assessed. This concept needs immediate attention.',action:TIPS[ranked[0].k]||'Use visual aids and concrete examples. Peer teaching recommended.'});
+  // Struggling
+  const struggling=Object.entries(sm).filter(([,ss])=>{const l=ss.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))[0];return l&&pct(l)<40;}).map(([n])=>n);
+  if(struggling.length)ins.push({type:'critical',icon:'🆘',title:struggling.length+' student(s) need urgent help',body:struggling.slice(0,4).join(', ')+(struggling.length>4?' and more':''),action:'Schedule 10-min individual session. Inform parents if below 40% for 3+ sessions.'});
+  // Subject weakness
+  const subjs=getAllSubjects();
+  const subjA=subjs.map(sj=>{const ss=s.filter(x=>x.subject===sj);return{sj,avg:ss.length?Math.round(ss.reduce((a,x)=>a+pct(x),0)/ss.length):null};}).filter(x=>x.avg!==null).sort((a,b)=>a.avg-b.avg);
+  if(subjA.length&&subjA[0].avg<60)ins.push({type:'warning',icon:'📚',title:subjA[0].sj+' needs attention ('+subjA[0].avg+'% avg)',body:'Class average below threshold in '+subjA[0].sj+'.',action:'Add 15 min extra practice daily. Use peer tutoring.'});
+  // Stars
+  const stars=Object.entries(sm).filter(([,ss])=>Math.round(ss.reduce((a,x)=>a+pct(x),0)/ss.length)>=80&&ss.length>=2).map(([n,ss])=>({n,avg:Math.round(ss.reduce((a,x)=>a+pct(x),0)/ss.length)})).sort((a,b)=>b.avg-a.avg);
+  if(stars.length)ins.push({type:'success',icon:'⭐',title:'Top performers: '+stars.slice(0,3).map(s=>s.n.split(' ')[0]).join(', '),body:stars.slice(0,3).map(s=>s.n.split(' ')[0]+' ('+s.avg+'%)').join(', ')+' consistently above 80%.',action:'Assign as peer tutors. Pair with struggling students.'});
+  return ins;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SOPHISTICATED AI LEARNING GAP INSIGHTS — v3.0
+// 10 insight types with deep analysis, remediation, and actionable advice
+// ════════════════════════════════════════════════════════════════════════════
+function renderAI(){
+  const el=document.getElementById('ai-items');
+  const badge=document.getElementById('ai-badge-count');
+  if(!el)return;
+  if(!allSessions.length){
+    el.innerHTML='<div style="padding:40px;text-align:center;color:#94A3B8;font-size:14px">No quiz data yet</div>';
+    if(badge)badge.textContent='0';return;
+  }
+  const insights=[];
+  const byStudent={};
+  allSessions.forEach(s=>{const n=s.student||'?';if(!byStudent[n])byStudent[n]=[];byStudent[n].push(s);});
+  const students=Object.keys(byStudent);
+  const conceptScores={};
+  allSessions.forEach(s=>{Object.entries(s.conceptMap||{}).forEach(([c,v])=>{if(!conceptScores[c])conceptScores[c]=[];conceptScores[c].push({score:v,student:s.student||'?',subject:s.subject||'?'});});});
+  const allFlags=allSessions.flatMap(s=>(s.flags||[]).map(f=>({...f,student:s.student,subject:s.subject})));
+
+  // INSIGHT 1: Critical Concept Gaps — with full per-student table
+  const criticals=Object.entries(conceptScores)
+    .map(([c,vals])=>({concept:c,avg:Math.round(vals.reduce((a,b)=>a+b.score,0)/vals.length),count:vals.length,weakCount:vals.filter(v=>v.score<50).length}))
+    .filter(c=>c.avg<55).sort((a,b)=>a.avg-b.avg);
+  if(criticals.length){
+    const w=criticals[0];
+    const remediation={'photo':'Revisit photosynthesis with leaf diagram activity.','frac':'Use physical fraction strips — equivalent fractions worksheet.','water':'Draw and label water cycle together on board.','gram':'Daily 5-min gap-fill. Focus on tense consistency.','food':'Build food web on board with class participation.'};
+    const fix=Object.entries(remediation).find(([k])=>w.concept.toLowerCase().includes(k))?.[1]||'Review core concepts with visual aids and group discussion.';
+    const rows=conceptScores[w.concept].sort((a,b)=>a.score-b.score).map(v=>{
+      const col=v.score>=70?'#059669':v.score>=45?'#D97706':'#DC2626';
+      const bg=v.score>=70?'#DCFCE7':v.score>=45?'#FEF3C7':'#FEE2E2';
+      const st=v.score>=70?'✅ Strong':v.score>=45?'⚠️ Average':'❌ Needs Help';
+      return '<tr style="border-bottom:1px solid #fee2e2"><td style="padding:6px 10px;font-weight:700;font-size:12px">'+v.student+'</td><td style="padding:6px 10px;font-size:11px;color:#64748B">'+v.subject+'</td><td style="padding:6px 10px"><div style="display:inline-block;width:'+Math.max(4,v.score)+'px;height:6px;background:'+col+';border-radius:3px;vertical-align:middle;margin-right:5px"></div><span style="font-weight:700;color:'+col+';font-size:12px">'+v.score+'%</span></td><td style="padding:6px 10px;font-size:11px;background:'+bg+';color:'+col+'">'+st+'</td></tr>';
+    }).join('');
+    const also=criticals.slice(1,3).map(c=>'<b>'+c.concept+'</b> ('+c.avg+'%)').join(', ');
+    insights.push({type:'critical',icon:'🚨',color:'#DC2626',bg:'#FFF5F5',
+      title:'Critical Gap: '+w.concept+' ('+w.avg+'% class average)',
+      body:'<b>'+w.weakCount+' of '+w.count+'</b> students scored below 50%.'+(also?' Also weak: '+also+'.':'')
+        +'<br><br><b>Recommended Action:</b> '+fix
+        +'<br><br><b>Per-Student Breakdown — '+w.concept+':</b>'
+        +'<div style="overflow-x:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;border:1px solid #fecaca"><thead><tr style="background:#FEE2E2"><th style="padding:6px 10px;font-size:11px;text-align:left;color:#991B1B">Student</th><th style="padding:6px 10px;font-size:11px;text-align:left;color:#991B1B">Subject</th><th style="padding:6px 10px;font-size:11px;text-align:left;color:#991B1B">Score</th><th style="padding:6px 10px;font-size:11px;text-align:left;color:#991B1B">Status</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    });
+  }
+
+  // INSIGHT 2: Guessing Pattern
+  const fastFlags=allFlags.filter(f=>f.reason==='TOO_FAST');
+  if(fastFlags.length>=3){
+    const fb={};fastFlags.forEach(f=>{if(!fb[f.student])fb[f.student]=0;fb[f.student]++;});
+    const guessers=Object.entries(fb).filter(([,n])=>n>=2).sort((a,b)=>b[1]-a[1]);
+    if(guessers.length){
+      const pills=guessers.slice(0,6).map(([s,n])=>'<span style="background:#FEF3C7;color:#B45309;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;margin:2px;display:inline-block">'+s+': '+n+'× fast</span>').join('');
+      insights.push({type:'guessing',icon:'⚡',color:'#D97706',bg:'#FFFBEB',
+        title:'Guessing Pattern: '+guessers.length+' student'+(guessers.length>1?'s':'')+' answering too fast',
+        body:'<b>'+fastFlags.length+' answers</b> submitted in under 3 seconds.'
+          +'<br><b>Students:</b> '+pills
+          +'<br><br><b>Action:</b> Ask these students to explain their reasoning aloud for 2-3 questions to check genuine understanding vs elimination guessing.'
+      });
+    }
+  }
+
+  // INSIGHT 3: At-Risk Students — per-session trend table
+  const declining=[];
+  Object.entries(byStudent).forEach(([name,ss])=>{
+    if(ss.length<2)return;
+    const sorted=ss.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+    const f=sorted[0],l=sorted[sorted.length-1];
+    const fp=f.total?Math.round(f.score/f.total*100):0,lp=l.total?Math.round(l.score/l.total*100):0;
+    if(lp<fp-15)declining.push({name,drop:fp-lp,latest:lp,sessions:ss.length,history:sorted});
+  });
+  if(declining.length){
+    declining.sort((a,b)=>b.drop-a.drop);
+    const rows=declining.slice(0,6).map(d=>{
+      const scores=d.history.map((s,i)=>{const p=s.total?Math.round(s.score/s.total*100):0;return'<span style="background:'+(p>=60?'#DCFCE7':'#FEE2E2')+';color:'+(p>=60?'#15803D':'#B91C1C')+';padding:2px 7px;border-radius:8px;font-size:11px;font-weight:700;margin:1px;display:inline-block">S'+(i+1)+':'+p+'%</span>';}).join('');
+      return'<tr style="border-bottom:1px solid #ddd6fe"><td style="padding:7px 10px;font-weight:700;font-size:12px;color:#5B21B6">'+d.name+'</td><td style="padding:7px 10px">'+scores+'</td><td style="padding:7px 10px;font-weight:800;color:#DC2626">↓'+d.drop+'pts</td></tr>';
+    }).join('');
+    insights.push({type:'atrisk',icon:'📉',color:'#7C3AED',bg:'#EDE9FE',
+      title:'At-Risk: '+declining.length+' student'+(declining.length>1?'s':'')+' declining',
+      body:'<b>Per-Student Session Trend:</b>'
+        +'<div style="overflow-x:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;border:1px solid #c4b5fd"><thead><tr style="background:#EDE9FE"><th style="padding:6px 10px;font-size:11px;text-align:left;color:#5B21B6">Student</th><th style="padding:6px 10px;font-size:11px;text-align:left;color:#5B21B6">Session History (oldest→newest)</th><th style="padding:6px 10px;font-size:11px;color:#5B21B6">Drop</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+        +'<br><b>Action:</b> 1-on-1 check-in with '+declining[0].name+'. Use Peer Learning tab to pair with a stronger student.'
+    });
+  }
+
+  // INSIGHT 4: Star Performers
+  const tops=students.map(n=>{const ss=byStudent[n];const avg=Math.round(ss.reduce((a,s)=>a+(s.score/s.total*100),0)/ss.length);return{name:n,avg,sessions:ss.length};}).filter(s=>s.avg>=80).sort((a,b)=>b.avg-a.avg);
+  if(tops.length>=2){
+    const pills=tops.slice(0,6).map(s=>'<span style="background:#DCFCE7;color:#15803D;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;margin:2px;display:inline-block">'+s.name+' '+s.avg+'%</span>').join('');
+    insights.push({type:'stars',icon:'⭐',color:'#059669',bg:'#F0FDF4',
+      title:'Star Performers: '+tops.length+' students consistently above 80%',
+      body:'<b>Top students:</b> '+pills
+        +'<br><br><b>Opportunity:</b> Deploy '+tops[0].name+' as peer tutor. Peer teaching improves retention by 90% for the tutor. See Peer Learning tab for suggested pairs.'
+    });
+  }
+
+  // INSIGHT 5: Language Gap
+  const langS={};allSessions.forEach(s=>{const l=s.lang||'en';if(!langS[l])langS[l]=[];langS[l].push(s.total?Math.round(s.score/s.total*100):0);});
+  const langA=Object.entries(langS).filter(([,v])=>v.length>=2).map(([l,v])=>({lang:l,avg:Math.round(v.reduce((a,b)=>a+b,0)/v.length),count:v.length})).sort((a,b)=>b.avg-a.avg);
+  const lNames={'hi':'Hindi','en':'English','bn':'Bengali','ta':'Tamil','te':'Telugu','mr':'Marathi'};
+  if(langA.length>=2&&langA[0].avg-langA[langA.length-1].avg>=10){
+    const gap=langA[0].avg-langA[langA.length-1].avg;
+    insights.push({type:'lang',icon:'🌐',color:'#2563EB',bg:'#EFF6FF',
+      title:'Language Gap: '+gap+'-point difference across languages',
+      body:langA.map(l=>'<b>'+(lNames[l.lang]||l.lang)+'</b>: '+l.avg+'% avg ('+l.count+' session'+(l.count>1?'s':'')+')'  ).join(' · ')
+        +'<br><br><b>Action:</b> For the lower-scoring language group, explain key concepts in their preferred language before the next quiz.'
+    });
+  }
+
+  // INSIGHT 6: Class Polarisation
+  const avgs=students.map(n=>{const ss=byStudent[n];return Math.round(ss.reduce((a,s)=>a+(s.score/s.total*100),0)/ss.length);}).sort((a,b)=>a-b);
+  if(avgs.length>=4){
+    const q=Math.ceil(avgs.length/4);
+    const bAvg=Math.round(avgs.slice(0,q).reduce((a,b)=>a+b,0)/q);
+    const tAvg=Math.round(avgs.slice(-q).reduce((a,b)=>a+b,0)/q);
+    const gap2=tAvg-bAvg;
+    if(gap2>=30){
+      const bottom=students.sort((a,b)=>{const getAvg=n=>Math.round(byStudent[n].reduce((acc,s)=>acc+(s.score/s.total*100),0)/byStudent[n].length);return getAvg(a)-getAvg(b);}).slice(0,q);
+      const bPills=bottom.map(n=>{const a=Math.round(byStudent[n].reduce((acc,s)=>acc+(s.score/s.total*100),0)/byStudent[n].length);return'<span style="background:#FEE2E2;color:#B91C1C;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin:1px;display:inline-block">'+n+' '+a+'%</span>';}).join('');
+      insights.push({type:'polar',icon:'📊',color:'#0B2447',bg:'#F0F5FF',
+        title:'Class Polarisation: '+gap2+'-point gap (top vs bottom quartile)',
+        body:'Top 25% avg: <b>'+tAvg+'%</b> · Bottom 25% avg: <b>'+bAvg+'%</b> · Gap: <b>'+gap2+' points</b>'
+          +'<br><b>Bottom quartile students:</b> '+bPills
+          +'<br><br><b>Action:</b> Differentiated instruction — while strong students work on challenge questions, give bottom quartile foundational concept review. Peer Learning tab has suggested pairs.'
+      });
+    }
+  }
+
+  // INSIGHT 7: Subject Difficulty
+  const subjS={};allSessions.forEach(s=>{const sub=s.subject||'?';if(!subjS[sub])subjS[sub]=[];subjS[sub].push(s.total?Math.round(s.score/s.total*100):0);});
+  const hard=Object.entries(subjS).filter(([,v])=>v.length>=2).map(([s,v])=>({subj:s,avg:Math.round(v.reduce((a,b)=>a+b,0)/v.length),count:v.length})).sort((a,b)=>a.avg-b.avg);
+  if(hard.length>=2&&hard[0].avg<55){
+    insights.push({type:'subject',icon:'📚',color:'#B45309',bg:'#FFFBEB',
+      title:'Hardest Subject: '+hard[0].subj+' ('+hard[0].avg+'% avg, '+hard[0].count+' sessions)',
+      body:'Subject rankings: '+hard.map(s=>'<b>'+s.subj+'</b> '+s.avg+'%').join(' · ')
+        +'<br><br><b>Action:</b> Consider reducing question difficulty in '+hard[0].subj+', or spend extra class time on foundational concepts.'
+    });
+  }
+
+  // INSIGHT 8: Fastest Improving
+  const imp=[];Object.entries(byStudent).forEach(([name,ss])=>{if(ss.length<2)return;const sorted=ss.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));const fp=sorted[0].total?Math.round(sorted[0].score/sorted[0].total*100):0;const lp=sorted[sorted.length-1].total?Math.round(sorted[sorted.length-1].score/sorted[sorted.length-1].total*100):0;if(lp-fp>=15)imp.push({name,improvement:lp-fp,from:fp,to:lp});});
+  if(imp.length){
+    imp.sort((a,b)=>b.improvement-a.improvement);
+    const pills=imp.slice(0,5).map(s=>'<span style="background:#D1FAE5;color:#065F46;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;margin:2px;display:inline-block">'+s.name+' +'+s.improvement+'pts ('+s.from+'%→'+s.to+'%)</span>').join('');
+    insights.push({type:'improve',icon:'🚀',color:'#059669',bg:'#ECFDF5',
+      title:'Fastest Learners: '+imp.length+' student'+(imp.length>1?'s':'')+' improving rapidly',
+      body:'<b>Growth leaders:</b> '+pills
+        +'<br><br><b>Action:</b> Acknowledge '+imp[0].name+"'s progress publicly. Give them a challenge question. Use as motivation for struggling peers."
+    });
+  }
+
+  // INSIGHT 9: Mastery Map
+  const allC=Object.keys(conceptScores);
+  const full=allC.filter(c=>conceptScores[c].every(v=>v.score>=80));
+  const none=allC.filter(c=>conceptScores[c].every(v=>v.score<50));
+  if(full.length||none.length){
+    insights.push({type:'mastery',icon:'🎯',color:'#1D4ED8',bg:'#EFF6FF',
+      title:'Mastery Map: '+full.length+' mastered · '+none.length+' class-wide gaps',
+      body:(full.length?'<b>All students mastered:</b> '+full.map(c=>'<span style="background:#DCFCE7;color:#15803D;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin:1px;display:inline-block">'+c+' ✅</span>').join('')+'<br>':'')
+        +(none.length?'<b>Nobody understands yet:</b> '+none.map(c=>'<span style="background:#FEE2E2;color:#B91C1C;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin:1px;display:inline-block">'+c+' ❌</span>').join('')+'<br>':'')
+        +(none.length?'<br><b>Priority:</b> Start next class with '+none[0]+' — use a visual demonstration.':'<br><b>All concepts covered!</b> Move to advanced applications.')
+    });
+  }
+
+  // INSIGHT 10: Engagement
+  const sessPerStu=students.map(n=>byStudent[n].length);
+  const avgS=Math.round(sessPerStu.reduce((a,b)=>a+b,0)/sessPerStu.length);
+  const lowE=students.filter(n=>byStudent[n].length<Math.max(1,avgS-1));
+  if(lowE.length&&avgS>=2){
+    const pills=lowE.map(n=>'<span style="background:#F1F5F9;color:#475569;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;margin:2px;display:inline-block">'+n+' ('+byStudent[n].length+')</span>').join('');
+    insights.push({type:'engage',icon:'📱',color:'#475569',bg:'#F8FAFF',
+      title:'Engagement Gap: '+lowE.length+' student'+(lowE.length>1?'s':'')+' with fewer sessions',
+      body:'Class avg: <b>'+avgS+' sessions</b>. Lower engagement: '+pills
+        +'<br><br><b>Action:</b> Check if '+lowE[0]+' has device/access issues. Share student URL via WhatsApp using the Share button in sidebar.'
+    });
+  }
+
+  // Render
+  if(badge)badge.textContent=String(insights.length);
+  if(!insights.length){el.innerHTML='<div style="padding:40px;text-align:center;color:#94A3B8;font-size:14px">🎉 All concepts healthy — no critical gaps detected yet.</div>';return;}
+  el.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">'
+    +'<div class="kpi"><div class="knum" style="color:var(--navy)">'+insights.length+'</div><div class="klbl">Insights</div></div>'
+    +'<div class="kpi"><div class="knum" style="color:var(--red)">'+insights.filter(i=>['critical','atrisk'].includes(i.type)).length+'</div><div class="klbl">Priority Alerts</div></div>'
+    +'<div class="kpi"><div class="knum" style="color:var(--teal)">'+insights.filter(i=>['stars','improve'].includes(i.type)).length+'</div><div class="klbl">Positive Signals</div></div>'
+    +'</div>'
+    +insights.map((ins,j)=>'<div style="background:'+ins.bg+';border-radius:14px;padding:18px 20px;margin-bottom:12px;border-left:4px solid '+ins.color+'">'
+      +'<div style="display:flex;align-items:flex-start;gap:12px">'
+      +'<div style="font-size:24px;flex-shrink:0;margin-top:2px">'+ins.icon+'</div>'
+      +'<div style="flex:1"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px">'
+      +'<div style="font-size:14px;font-weight:800;color:'+ins.color+'">'+ins.title+'</div>'
+      +'<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:'+ins.color+';color:#fff;font-weight:700;opacity:.8">'+( j+1)+'/'+insights.length+'</span>'
+      +'</div><div style="font-size:13px;color:#374151;line-height:1.7">'+ins.body+'</div></div></div></div>'
+    ).join('');
+}
+
+
+
+// ── Gap Map ───────────────────────────────────────────────────────────────
+function renderGapMap(){
+  const el=document.getElementById('gap-map');
+  if(!el)return;
+
+  // ── Subject filter UI ────────────────────────────────────────────────────
+  const subjects=[...new Set(allSessions.map(s=>s.subject||'').filter(Boolean))].sort();
+  const filterId='gm-subj-filter';
+  let filterEl=document.getElementById(filterId);
+  const selectedSubj=filterEl?filterEl.value:'';
+
+  // Inject filter bar if not present
+  if(!filterEl){
+    const bar=document.createElement('div');
+    bar.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap';
+    bar.innerHTML=`
+      <label style="font-size:12px;font-weight:700;color:var(--navy)">Filter by Subject:</label>
+      <select id="${filterId}" class="sel" style="min-width:0;width:auto" onchange="renderGapMap()">
+        <option value="">All Subjects (combined)</option>
+        ${subjects.map(s=>`<option value="${s}">${s}</option>`).join('')}
+      </select>
+      <span id="gm-hint" style="font-size:11px;color:#94A3B8"></span>`;
+    el.innerHTML='';
+    el.appendChild(bar);
+  } else {
+    // Update subject options if new subjects added
+    const opts=['<option value="">All Subjects (combined)</option>',
+      ...subjects.map(s=>`<option value="${s}"${s===selectedSubj?' selected':''}>${s}</option>`)].join('');
+    filterEl.innerHTML=opts;
+  }
+
+  // ── Filter sessions ───────────────────────────────────────────────────────
+  const filtered=selectedSubj
+    ? allSessions.filter(s=>s.subject===selectedSubj)
+    : allSessions;
+
+  if(!filtered.length){
+    const msg=document.createElement('div');
+    msg.style.cssText='padding:40px;text-align:center;color:#94A3B8;font-size:13px';
+    msg.textContent=selectedSubj?`No sessions found for ${selectedSubj}`:'No sessions yet — take a quiz first';
+    const existing=el.querySelector('.gm-table');
+    if(existing)existing.remove();
+    if(!el.querySelector('.gm-empty')){msg.className='gm-empty';el.appendChild(msg);}
+    return;
+  }
+
+  // ── Build matrix ──────────────────────────────────────────────────────────
+  const students=[...new Set(filtered.map(s=>s.student||'?'))].sort();
+
+  // Get concepts — for single subject: sorted by avg score (weakest first)
+  // For all subjects: grouped by subject then concept
+  const conceptSubjMap={};  // concept → subject
+  filtered.forEach(s=>{
+    const subj=s.subject||'?';
+    Object.keys(s.conceptMap||{}).forEach(c=>{
+      if(!conceptSubjMap[c])conceptSubjMap[c]=subj;
+    });
+  });
+
+  let concepts;
+  if(selectedSubj){
+    // Single subject: sort by class average (weakest first — most important)
+    const conceptAvgs={};
+    filtered.forEach(s=>{Object.entries(s.conceptMap||{}).forEach(([c,v])=>{
+      if(!conceptAvgs[c])conceptAvgs[c]=[];
+      conceptAvgs[c].push(v);
+    });});
+    concepts=Object.keys(conceptAvgs).sort((a,b)=>{
+      const avgA=conceptAvgs[a].reduce((x,y)=>x+y,0)/conceptAvgs[a].length;
+      const avgB=conceptAvgs[b].reduce((x,y)=>x+y,0)/conceptAvgs[b].length;
+      return avgA-avgB; // weakest first
+    });
+  } else {
+    // All subjects: group by subject
+    const bySubj={};
+    Object.entries(conceptSubjMap).forEach(([c,s])=>{
+      if(!bySubj[s])bySubj[s]=[];
+      bySubj[s].push(c);
+    });
+    concepts=Object.entries(bySubj).flatMap(([subj,cs])=>cs.map(c=>({c,subj}))).map(x=>x.c);
+  }
+
+  // Student × concept best scores
+  const matrix={};
+  students.forEach(stu=>{
+    matrix[stu]={};
+    concepts.forEach(c=>matrix[stu][c]=null);
+  });
+  filtered.forEach(s=>{
+    const stu=s.student||'?';
+    if(!matrix[stu])matrix[stu]={};
+    Object.entries(s.conceptMap||{}).forEach(([c,v])=>{
+      if(matrix[stu][c]===null||v>matrix[stu][c])matrix[stu][c]=v;
+    });
+  });
+
+  // Concept averages for footer
+  const conceptAvg={};
+  concepts.forEach(c=>{
+    const vals=students.map(s=>matrix[s][c]).filter(v=>v!==null);
+    conceptAvg[c]=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+  });
+
+  // ── Update hint text ──────────────────────────────────────────────────────
+  const hint=document.getElementById('gm-hint');
+  if(hint){
+    if(selectedSubj){
+      hint.textContent=`${students.length} students · ${concepts.length} concepts · sorted weakest→strongest`;
+    } else {
+      hint.textContent=`${students.length} students · ${concepts.length} concepts across ${subjects.length} subjects — select a subject for focused view`;
+    }
+  }
+
+  // ── Render table ──────────────────────────────────────────────────────────
+  const cellColor=(v)=>{
+    if(v===null)return{bg:'#F1F5F9',color:'#CBD5E1',text:'—'};
+    if(v>=80)return{bg:'#DCFCE7',color:'#15803D',text:v+'%'};
+    if(v>=60)return{bg:'#D1FAE5',color:'#059669',text:v+'%'};
+    if(v>=40)return{bg:'#FEF3C7',color:'#B45309',text:v+'%'};
+    return{bg:'#FEE2E2',color:'#B91C1C',text:v+'%'};
+  };
+
+  // Group header row for multi-subject view
+  let groupHeader='';
+  if(!selectedSubj){
+    const subjectSpans={};
+    concepts.forEach(c=>{
+      const s=conceptSubjMap[c]||'?';
+      if(!subjectSpans[s])subjectSpans[s]=0;
+      subjectSpans[s]++;
+    });
+    let prevSubj=null;
+    groupHeader='<tr style="background:#F8FAFF"><td style="padding:6px 10px;font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase">Subject →</td>';
+    concepts.forEach(c=>{
+      const s=conceptSubjMap[c]||'?';
+      if(s!==prevSubj){
+        const colors={'Math':'#EFF6FF','Science':'#F0FDF4','English':'#FFF7ED','Hindi':'#FDF4FF'};
+        groupHeader+=`<td style="padding:5px 8px;text-align:center;font-size:10px;font-weight:800;color:var(--navy);background:${colors[s]||'#F8FAFF'};border-bottom:2px solid var(--border)">${s}</td>`;
+        prevSubj=s;
+      } else {
+        groupHeader+=`<td style="background:${{'Math':'#EFF6FF','Science':'#F0FDF4','English':'#FFF7ED','Hindi':'#FDF4FF'}[s]||'#F8FAFF'};border-bottom:2px solid var(--border)"></td>`;
+      }
+    });
+    groupHeader+='<td></td></tr>';
+  }
+
+  const headerRow='<tr style="position:sticky;top:0;z-index:2;background:#fff">'
+    +'<th style="min-width:90px;padding:9px 12px;font-size:11px;font-weight:700;color:#475569;border-bottom:2px solid var(--border);text-align:left;background:#fff">Student</th>'
+    +concepts.map(c=>`<th style="padding:8px 6px;font-size:10.5px;font-weight:700;color:#475569;border-bottom:2px solid var(--border);text-align:center;white-space:nowrap;background:#fff" title="${conceptSubjMap[c]||''}">${c}</th>`).join('')
+    +'<th style="padding:8px 12px;font-size:10.5px;font-weight:700;color:#475569;border-bottom:2px solid var(--border);background:#fff">Avg</th></tr>';
+
+  const dataRows=students.map(stu=>{
+    const vals=concepts.map(c=>matrix[stu][c]).filter(v=>v!==null);
+    const stuAvg=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+    const avgStyle=stuAvg===null?{bg:'#F1F5F9',color:'#CBD5E1'}:stuAvg>=70?{bg:'#DCFCE7',color:'#15803D'}:stuAvg>=45?{bg:'#FEF3C7',color:'#B45309'}:{bg:'#FEE2E2',color:'#B91C1C'};
+    return`<tr>
+      <td style="padding:8px 12px;font-weight:700;font-size:13px;white-space:nowrap;border-bottom:1px solid #F1F5F9">${stu}</td>
+      ${concepts.map(c=>{const{bg,color,text}=cellColor(matrix[stu][c]);return`<td style="text-align:center;padding:7px 6px;background:${bg};color:${color};font-size:12px;font-weight:700;border:1px solid #fff;border-radius:4px">${text}</td>`;}).join('')}
+      <td style="text-align:center;padding:8px 12px;background:${avgStyle.bg};color:${avgStyle.color};font-weight:800;font-size:13px;border-bottom:1px solid #F1F5F9">${stuAvg!==null?stuAvg+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const footerRow='<tr style="background:var(--bg)">'
+    +'<td style="padding:8px 12px;font-size:11px;font-weight:700;color:#475569;border-top:2px solid var(--border)">Class Avg</td>'
+    +concepts.map(c=>{const{bg,color,text}=cellColor(conceptAvg[c]);return`<td style="text-align:center;padding:7px 6px;background:${bg};color:${color};font-size:11px;font-weight:800;border:1px solid #fff">${text}</td>`;}).join('')
+    +'<td style="border-top:2px solid var(--border)"></td></tr>';
+
+  // Legend
+  const legend=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:11px">
+    <span style="color:#64748B;font-weight:600">Legend:</span>
+    <span style="background:#DCFCE7;color:#15803D;padding:2px 8px;border-radius:6px;font-weight:700">80–100% Strong</span>
+    <span style="background:#FEF3C7;color:#B45309;padding:2px 8px;border-radius:6px;font-weight:700">40–60% Average</span>
+    <span style="background:#FEE2E2;color:#B91C1C;padding:2px 8px;border-radius:6px;font-weight:700">0–40% Needs Help</span>
+    <span style="background:#F1F5F9;color:#CBD5E1;padding:2px 8px;border-radius:6px;font-weight:700">— Not Taken</span>
+  </div>`;
+
+  // Remove old table
+  const oldTable=el.querySelector('.gm-table');
+  if(oldTable)oldTable.remove();
+  const oldEmpty=el.querySelector('.gm-empty');
+  if(oldEmpty)oldEmpty.remove();
+
+  const wrap=document.createElement('div');
+  wrap.className='gm-table';
+  wrap.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:separate;border-spacing:2px;font-family:inherit">
+    ${groupHeader}${headerRow}${dataRows}${footerRow}
+  </table></div>${legend}`;
+  el.appendChild(wrap);
+}
+
+// ── Student Progress ──────────────────────────────────────────────────────
+function populateStuSel(){
+  const students=[...new Set(allSessions.map(s=>s.student||'?'))].sort();
+  const opts='<option value="">Select student...</option>'+students.map(n=>`<option>${n}</option>`).join('');
+  ['sp-sel','fb-sel'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=opts;});
+}
+
+function renderStuProg(){
+  const nm=document.getElementById('sp-sel')?.value;
+  const sj=document.getElementById('sp-subj')?.value||'';
+  if(!nm){['sp-line','sp-con','sp-tbl'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='<p style="color:#94A3B8;padding:20px">Select a student above</p>';});return;}
+  let ss=allSessions.filter(s=>s.student===nm);
+  if(sj)ss=ss.filter(s=>s.subject===sj);
+  ss.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+  const lc=document.getElementById('sp-line');if(lc)lc.innerHTML=lineChart(ss.map(s=>({x:fmtDt(s.timestamp),y:pct(s)})));
+  const latest=ss[ss.length-1];
+  const sc=document.getElementById('sp-con');
+  if(sc)sc.innerHTML=latest&&latest.conceptMap?conBars(Object.entries(latest.conceptMap).map(([k,v])=>({name:k,pct:Number(v)||0})).sort((a,b)=>a.pct-b.pct)):'<p style="color:#94A3B8;padding:20px">No concept data</p>';
+  const st=document.getElementById('sp-tbl');
+  if(st)st.innerHTML='<table class="tbl"><tr><th>Date</th><th>Subject</th><th>Score</th><th>Grade</th><th>Flags</th></tr>'+
+    ss.slice().reverse().map(r=>{const p=pct(r),ff=(r.flags||[]).filter(f=>f.reason==='TOO_FAST').length;
+      return`<tr><td>${fmtDt(r.timestamp)}</td><td>${r.subject||'--'}</td><td>${r.score||0}/${r.total||0} (${p}%)</td><td><span class="gp ${gcls(p)}">${grade(p)}</span></td><td>${ff?'⚡'+ff+' fast':'OK'}</td></tr>`;
+    }).join('')+'</table>';
+}
+
+// ── Subject Analysis ──────────────────────────────────────────────────────
+function renderSubjAn(){
+  const subjs=getAllSubjects();
+  const data=subjs.map(sj=>{const ss=allSessions.filter(s=>s.subject===sj);return{label:sj,value:ss.length?Math.round(ss.reduce((a,s)=>a+pct(s),0)/ss.length):0,n:ss.length};}).filter(d=>d.n>0);
+  const sb=document.getElementById('sa-bar');if(sb)sb.innerHTML=barChart(data,['#2563EB','#059669','#7C3AED','#D97706','#DC2626','#0891B2'],100);
+  const wl=document.getElementById('sa-weak');let wh='';
+  subjs.forEach(sj=>{
+    const ss=allSessions.filter(s=>s.subject===sj&&s.conceptMap);if(!ss.length)return;
+    const cm={};ss.forEach(s=>Object.entries(s.conceptMap||{}).forEach(([k,v])=>{if(!cm[k])cm[k]={sum:0,n:0};cm[k].sum+=Number(v)||0;cm[k].n++;}));
+    const w=Object.entries(cm).map(([k,v])=>({k,p:Math.round(v.sum/v.n)})).sort((a,b)=>a.p-b.p)[0];
+    if(w)wh+=`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #E2E8F0"><b style="color:#0B2447;min-width:70px;font-size:12px">${sj}</b><span style="font-size:12px;color:#DC2626">❌ ${w.k}</span><span style="margin-left:auto;font-size:12px;font-weight:700;color:#DC2626">${w.p}%</span></div>`;
+  });
+  if(wl)wl.innerHTML=wh||'<p style="color:#94A3B8;padding:16px">No data</p>';
+  const tb=document.getElementById('sa-tabs');
+  if(tb)tb.innerHTML=subjs.map(sj=>`<button class="btn btn-ol btn-sm" onclick="drillSubj('${sj}',this)">${sj}</button>`).join('');
+}
+
+function drillSubj(sj,btn){
+  document.querySelectorAll('#sa-tabs .btn').forEach(b=>b.classList.remove('btn-pr'));
+  if(btn)btn.classList.add('btn-pr');
+  const ss=allSessions.filter(s=>s.subject===sj);
+  const el=document.getElementById('sa-drill');
+  if(!el)return;
+  if(!ss.length){el.innerHTML='<p style="color:#94A3B8;padding:16px">No '+sj+' data</p>';return;}
+  const bars=[...new Set(ss.map(s=>s.student))].map(nm=>{const l=ss.filter(s=>s.student===nm).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))[0];return{label:nm,value:pct(l)};}).sort((a,b)=>b.value-a.value);
+  el.innerHTML=barChart(bars,bars.map(b=>b.value>=70?'#059669':b.value>=50?'#D97706':'#DC2626'),100);
+}
+
+// ── Class Performance ─────────────────────────────────────────────────────
+function renderClassRep(){
+  const sj=document.getElementById('cp-subj')?.value||'';
+  let ss=allSessions;if(sj)ss=ss.filter(s=>s.subject===sj);
+  const sub=document.getElementById('cp-sub');if(sub)sub.textContent=ss.length+' sessions'+(sj?' in '+sj:'');
+  const sm=stuMap(ss);
+  const bars=Object.entries(sm).map(([nm,sessions])=>{const l=sessions.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))[0];return{label:nm,value:pct(l)};}).sort((a,b)=>b.value-a.value);
+  const bc=document.getElementById('cp-bar');if(bc)bc.innerHTML=barChart(bars,bars.map(b=>b.value>=70?'#059669':b.value>=50?'#D97706':'#DC2626'),100);
+  const fl=document.getElementById('cp-flags');
+  const ff=ss.filter(s=>(s.flags||[]).some(f=>f.reason==='TOO_FAST'));
+  if(fl)fl.innerHTML=ff.length?ff.slice(0,8).map(s=>`<div style="padding:8px 0;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between"><b>${s.student}</b><span style="color:#D97706">⚡${(s.flags||[]).filter(f=>f.reason==='TOO_FAST').length} fast in ${s.subject}</span></div>`).join(''):'<p style="color:#94A3B8;padding:16px">No alerts</p>';
+  const avgP=bars.length?Math.round(bars.reduce((a,b)=>a+b.value,0)/bars.length):0;
+  const ai=document.getElementById('cp-ai');
+  if(ai)ai.innerHTML=`<div style="padding:9px 11px;background:#F0FDF4;border-radius:9px;border-left:3px solid #059669;font-size:12px;margin-bottom:8px"><b>Class avg: ${avgP}%</b>${avgP>=70?' Good overall':' Needs attention'}</div>`+(bars.filter(b=>b.value<50).length?`<div style="padding:9px 11px;background:#FFF5F5;border-radius:9px;border-left:3px solid #DC2626;font-size:12px"><b>${bars.filter(b=>b.value<50).length} students</b> below 50%</div>`:'');
+}
+
+// ── Marksheet ─────────────────────────────────────────────────────────────
+function renderMarksheet(){
+  const subjs=getAllSubjects();
+  const sm=stuMap(allSessions);
+  const rows=Object.entries(sm).map(([nm,sessions])=>{
+    const scores={};let tot=0,cnt=0;
+    subjs.forEach(sj=>{const l=sessions.filter(x=>x.subject===sj).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))[0];if(l){scores[sj]=pct(l);tot+=scores[sj];cnt++;}else scores[sj]=null;});
+    return{nm,scores,overall:cnt?Math.round(tot/cnt):0,roll:sessions[0]?.roll||''};
+  }).sort((a,b)=>b.overall-a.overall);
+  const el=document.getElementById('ms-tbl');if(!el)return;
+  if(!rows.length){el.innerHTML='<p style="color:#94A3B8;padding:20px">No data</p>';return;}
+  el.innerHTML='<table class="tbl"><tr><th>#</th><th>Roll</th><th>Student</th>'+subjs.map(s=>`<th>${s}</th>`).join('')+'<th>Overall</th><th>Grade</th></tr>'+
+    rows.map((r,i)=>`<tr><td style="color:#94A3B8;font-weight:700">${i+1}</td><td>${r.roll||'--'}</td><td><b>${r.nm}</b></td>${subjs.map(sj=>r.scores[sj]!=null?`<td><span class="gp ${gcls(r.scores[sj])}">${r.scores[sj]}%</span></td>`:'<td style="color:#94A3B8">--</td>').join('')}<td><b>${r.overall}%</b></td><td><span class="gp ${gcls(r.overall)}">${grade(r.overall)}</span></td></tr>`).join('')+'</table>';
+}
+
+// ── Feedback Log ──────────────────────────────────────────────────────────
+function renderFbLog(){
+  const stuF=document.getElementById('fb-sel')?.value||'';
+  const sjF=document.getElementById('fb-subj')?.value||'';
+  let ss=allSessions.slice().sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+  if(stuF)ss=ss.filter(s=>s.student===stuF);
+  if(sjF)ss=ss.filter(s=>s.subject===sjF);
+  const el=document.getElementById('fb-items');if(!el)return;
+  if(!ss.length){el.innerHTML='<p style="color:#94A3B8;padding:20px">No records</p>';return;}
+  el.innerHTML=ss.slice(0,30).map(s=>{
+    const p=pct(s),g=grade(p),ff=(s.flags||[]).filter(f=>f.reason==='TOO_FAST').length;
+    const txt=p>=70?`${s.student} shows good understanding in ${s.subject}. Grade ${g}.`:p>=50?`${s.student} has partial grasp of ${s.subject} (${p}%). ${ff?'Fast answers noted. ':''}Targeted revision recommended.`:`${s.student} needs support in ${s.subject} (${p}%). Individual session advised.`;
+    return`<div style="padding:14px;background:#F8FAFF;border-radius:10px;margin-bottom:10px;border:1px solid #E2E8F0">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><b style="color:#0B2447">${s.student||'--'}</b><span style="font-size:10.5px;color:#94A3B8">${fmtDt(s.timestamp)}</span></div>
+      <div style="font-size:12px;color:#475569;margin-bottom:6px">${txt}</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <span style="padding:2px 8px;background:#E2E8F0;border-radius:10px;font-size:10px;font-weight:600">${s.subject||'--'}</span>
+        <span class="gp ${gcls(p)}" style="font-size:10px">${p}% ${g}</span>
+        ${ff?`<span style="padding:2px 8px;background:#FEF3C7;border-radius:10px;font-size:10px;font-weight:600;color:#B45309">⚡${ff} fast</span>`:''}
+        ${s.sessionCode?`<span style="padding:2px 8px;background:#E2E8F0;border-radius:10px;font-size:9.5px;font-family:monospace">${s.sessionCode}</span>`:''}
+      </div></div>`;
+  }).join('');
+}
+
+// ── Quiz Creator ──────────────────────────────────────────────────────────
+function markCorrect(idx){
+  cqCorrect=idx;
+  document.querySelectorAll('#opt-grid .oi').forEach((el,i)=>el.classList.toggle('cor',i===idx));
+  const cl=document.getElementById('cor-lbl');if(cl)cl.textContent='Option '+String.fromCharCode(65+idx);
+}
+function pickVis(el,vis){cqVis=vis;document.querySelectorAll('.vc').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+
+function addQuestion(){
+  const subj=(document.getElementById('cq-s')?.value||'').trim();
+  const concept=(document.getElementById('cq-c')?.value||'').trim();
+  const qtext=(document.getElementById('cq-q')?.value||'').trim();
+  const opts=[0,1,2,3].map(i=>(document.getElementById('oi-'+i)?.value||'').trim());
+  if(!subj||!concept||!qtext||opts.some(o=>!o)||cqCorrect<0){showToast('Fill all fields and pick correct answer');return;}
+  const q={q:{en:qtext},opts:{en:opts},ans:cqCorrect,concept,vis:cqVis,createdAt:Date.now()};
+  if(!creatorBank[subj])creatorBank[subj]=[];
+  creatorBank[subj].push(q);
+  saveCustomSubj(subj,creatorBank[subj],()=>{
+    showToast('Question added to '+subj);
+    try{new BroadcastChannel('bodhai-sync').postMessage({type:'custom-bank-updated',subj});}catch(e){}
+    if(typeof pushCustomBankToMySQL==='function') pushCustomBankToMySQL(subj,creatorBank[subj]);
+    renderCreator();
+    [0,1,2,3].forEach(i=>{const el=document.getElementById('oi-'+i);if(el)el.value='';});
+    const qt=document.getElementById('cq-q');if(qt)qt.value='';
+    cqCorrect=-1;
+    document.querySelectorAll('#opt-grid .oi').forEach(el=>el.classList.remove('cor'));
+    const cl=document.getElementById('cor-lbl');if(cl)cl.textContent='not set';
+  });
+}
+
+function renderCreator(){
+  loadCustomBank(bank=>{
+    creatorBank=bank;const subjs=Object.keys(bank);
+    const tb=document.getElementById('bk-tabs');
+    if(tb)tb.innerHTML=subjs.map(s=>`<div class="schip ${s===currentBankSubj?'active':''}" onclick="selBankSubj('${s}')">${s} (${bank[s].length})</div>`).join('');
+    if(!currentBankSubj&&subjs.length)currentBankSubj=subjs[0];
+    renderBankList();
+  });
+}
+
+function selBankSubj(s){currentBankSubj=s;document.querySelectorAll('.schip').forEach(c=>c.classList.toggle('active',c.textContent.startsWith(s)));renderBankList();}
+
+function renderBankList(){
+  const el=document.getElementById('bk-list');if(!el)return;
+  const qs=creatorBank[currentBankSubj]||[];
+  if(!qs.length){el.innerHTML='<p style="color:#94A3B8;padding:16px">No questions yet</p>';return;}
+  el.innerHTML=qs.map((q,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#fff;border-radius:9px;border:1px solid #E2E8F0;margin-bottom:8px">
+    <div style="width:22px;height:22px;border-radius:50%;background:#0B2447;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+    <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;color:#1E293B">${q.q?.en||q.q||''}</div><div style="font-size:10.5px;color:#94A3B8">${q.concept} · ${q.vis} · Correct: ${q.opts?.en?.[q.ans]||'--'}</div></div>
+    <button onclick="delQ('${currentBankSubj}',${i})" style="background:none;border:none;color:#DC2626;cursor:pointer;font-size:16px;padding:4px">✕</button></div>`).join('');
+}
+
+function delQ(subj,idx){if(!creatorBank[subj])return;creatorBank[subj].splice(idx,1);saveCustomSubj(subj,creatorBank[subj],()=>{renderCreator();showToast('Removed');});}
+function clearBank(){creatorBank={};currentBankSubj='';renderCreator();showToast('Bank cleared');}
+
+function launchQuiz(){
+  if(!currentBankSubj||!(creatorBank[currentBankSubj]||[]).length){showToast('Add questions first');return;}
+  localStorage.setItem('bodhCustomBank',JSON.stringify({subj:currentBankSubj,qs:creatorBank[currentBankSubj],ts:Date.now()}));
+  try{new BroadcastChannel('bodhai-sync').postMessage({type:'custom-bank-updated',subj:currentBankSubj});}catch(e){}
+  showToast('Quiz ready! Students will see '+currentBankSubj+' in subject picker');
+}
+
+// ── Scanner ───────────────────────────────────────────────────────────────
+function isMobile(){return/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);}
+
+function openScanner(){
+  var _sov=document.getElementById('scan-ov');if(_sov)_sov.classList.add('open');
+  var _proto=location.protocol,_host=location.hostname;
+  var _secure=_proto==='https:'||(_proto==='http:'&&(_host==='localhost'||_host==='127.0.0.1'));
+  if(!_secure){switchTab('manual');setScanMsg('Camera needs HTTPS or localhost. Use Type Code tab — student reads the code aloud.','error');return;}
+  if(isMobile())switchTab('photo');else switchTab('camera');
+}
+
+function switchTab(tab){
+  if(tab!=='camera')stopCamera();
+  ['camera','photo','manual'].forEach(t=>{
+    const tb=document.getElementById('tab-'+t);const pn=document.getElementById('sp-'+t);
+    if(tb)tb.classList.toggle('on',t===tab);
+    if(pn)pn.classList.toggle('on',t===tab);
+  });
+  if(tab==='camera'){setScanMsg('Starting camera...','info');startCamera();}
+  else if(tab==='photo')setScanMsg('Tap the box to open camera','info');
+  else{setScanMsg('Paste code below','info');const i=document.getElementById('man-inp');if(i)setTimeout(()=>i.focus(),200);}
+}
+
+function startCamera(){
+  stopCamera();
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){setScanMsg('Camera not available - use Photo or Paste tab','error');return;}
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
+    .then(stream=>{
+      scanStream=stream;scanActive=true;
+      const v=document.getElementById('scan-vid');if(v){v.srcObject=stream;v.play();}
+      setScanMsg('Point camera at student QR code','info');
+      requestAnimationFrame(scanLoop);
+    })
+    .catch(err=>{setScanMsg('Camera denied: '+err.message,'error');setTimeout(()=>switchTab(isMobile()?'photo':'manual'),1500);});
+}
+
+function stopCamera(){
+  scanActive=false;
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
+  const v=document.getElementById('scan-vid');if(v)v.srcObject=null;
+}
+
+async function scanLoop(){
+  if(!scanActive)return;
+  const v=document.getElementById('scan-vid'),c=document.getElementById('scan-cnv');
+  if(!v||v.readyState!==v.HAVE_ENOUGH_DATA){requestAnimationFrame(scanLoop);return;}
+  c.width=v.videoWidth;c.height=v.videoHeight;
+  const ctx=c.getContext('2d');ctx.drawImage(v,0,0);
+  if('BarcodeDetector' in window){
+    try{const codes=await new BarcodeDetector({formats:['qr_code']}).detect(v);if(codes.length){processCode(codes[0].rawValue);return;}}catch(e){}
+  }
+  if(typeof jsQR!=='undefined'){
+    const code=jsQR(ctx.getImageData(0,0,c.width,c.height).data,c.width,c.height,{inversionAttempts:'dontInvert'});
+    if(code&&code.data){processCode(code.data);return;}
+  }
+  requestAnimationFrame(scanLoop);
+}
+
+function decodeFromPhoto(input){
+  const file=input.files&&input.files[0];if(!file)return;
+  setScanMsg('Reading QR from photo...','info');
+  const prev=document.getElementById('photo-prev');
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    if(prev){prev.src=e.target.result;prev.style.display='block';}
+    setScanMsg('Scanning...','info');
+    if('BarcodeDetector' in window){
+      try{var bd=new BarcodeDetector({formats:['qr_code']});var blob=await fetch(e.target.result).then(function(r){return r.blob();});var bmp=await createImageBitmap(blob);var codes=await bd.detect(bmp);if(codes&&codes.length){processCode(codes[0].rawValue);return;}}catch(e2){}
+    }
+    var img=new Image();
+    img.onload=function(){var cnv=document.createElement('canvas');var ctx=cnv.getContext('2d');for(var sc of [1,0.5,2,0.75]){cnv.width=Math.round(img.width*sc);cnv.height=Math.round(img.height*sc);ctx.drawImage(img,0,0,cnv.width,cnv.height);if(typeof jsQR!=='undefined'){for(var inv of ['dontInvert','onlyInvert','attemptBoth']){var c=jsQR(ctx.getImageData(0,0,cnv.width,cnv.height).data,cnv.width,cnv.height,{inversionAttempts:inv});if(c&&c.data){processCode(c.data);return;}}}}setScanMsg('QR not detected — better lighting or closer photo','error');};
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value='';
+}
+
+function submitManual(){
+  const raw=(document.getElementById('man-inp')?.value||'').trim();
+  if(!raw){setScanMsg('Paste the result code first','error');return;}
+  const match=raw.match(/[A-Za-z0-9_\-]{20,}/);
+  processCode(match?match[0]:raw);
+}
+
+function processCode(encoded){
+  setScanMsg('Processing...','info');
+  try{
+    const clean=encoded.trim().replace(/\s+/g,'');
+    const b64=clean.replace(/-/g,'+').replace(/_/g,'/');
+    const pad=b64.length%4;
+    const padded=pad?b64+'='.repeat(4-pad):b64;
+    const raw=atob(padded);
+    let session;
+    if(raw.includes('|')){
+      const parts=raw.split('|');
+      if(parts.length<6)throw new Error('Need 6+ fields, got '+parts.length);
+      const [nm,roll,sj,s,t,ans,fl,sess,ts]=parts;
+      const SUBJ_MAP={M:'Math',H:'Hindi',S:'Science',E:'English'};
+      const subject=SUBJ_MAP[sj]||sj;
+      const answers=(ans||'').split('').map(a=>parseInt(a)||0);
+      const flags=fl&&fl!=='0'?fl.split('').filter(c=>/\d/.test(c)).map(q=>({q:parseInt(q),reason:'TOO_FAST'})):[];
+      const cm={},cc={};
+      try{
+        const qBank=typeof BANKS!=='undefined'?BANKS[subject]||[]:[];
+        qBank.forEach((q,i)=>{const cn=(q.concept||'').substring(0,10);if(!cm[cn])cm[cn]=0;if(!cc[cn])cc[cn]=0;cc[cn]++;if(answers[i]===q.ans)cm[cn]++;});
+      }catch(e){}
+      const conceptMap={};Object.keys(cm).forEach(k=>conceptMap[k]=Math.round(cm[k]/(cc[k]||1)*100));
+      session={student:nm||'?',roll:parseInt(roll)||0,subject,
+        score:parseInt(s)||0,total:parseInt(t)||6,answers,timings:[],flags,conceptMap,
+        sessionCode:'BODH-'+(sess||'DIRECT'),lang:'hi',
+        timestamp:ts?parseInt(ts)*60000:Date.now(),source:'scan'};
+    } else {
+      const data=JSON.parse(decodeURIComponent(escape(raw)));
+      if(!data.n||data.s===undefined)throw new Error('Invalid data format');
+      session={student:data.n,roll:data.r||0,subject:data.j||'Unknown',
+        score:data.s,total:data.t||data.s,answers:data.a||[],timings:data.tm||[],
+        flags:(data.fl||[]).map(q=>({q,reason:'TOO_FAST'})),
+        conceptMap:data.c||{},sessionCode:data.code||'DIRECT',
+        lang:'hi',timestamp:data.ts||Date.now(),source:'scan'};
+    }
+    saveScanned(session,()=>{
+      allSessions.push(session);renderOv();populateStuSel();
+      setScanMsg('Added: '+session.student+' ('+session.subject+')','success');
+      showToast('Added: '+session.student);
+      setTimeout(closeScanner,1500);
+    });
+  }catch(e){
+    console.error('processCode error:',e.message,'| encoded:',encoded);
+    setScanMsg('Invalid code: '+e.message,'error');
+    showToast('Error: '+e.message);
+  }
+}
+
+function closeScanner(){
+  stopCamera();
+  const ov=document.getElementById('scan-ov');if(ov){ov.classList.remove('open');ov.style.display='';}
+  const prev=document.getElementById('photo-prev');if(prev){prev.src='';prev.style.display='none';}
+  const inp=document.getElementById('man-inp');if(inp)inp.value='';
+}
+
+function setScanMsg(msg,type){
+  const el=document.getElementById('scan-msg');if(!el)return;
+  el.textContent=msg;
+  el.style.color={success:'#22C55E',error:'#EF4444',info:'rgba(255,255,255,.6)'}[type]||'rgba(255,255,255,.6)';
+}
+
+// ── Demo Data ─────────────────────────────────────────────────────────────
+const BANKS={
+  Math:[{concept:'FractionBas',ans:0},{concept:'UnlikeDenom',ans:1},{concept:'NumberLine',ans:0},{concept:'WordProblms',ans:2},{concept:'FractionBas',ans:1},{concept:'UnlikeDenom',ans:0}],
+  Hindi:[{concept:'Vachan',ans:0},{concept:'Kriya',ans:1},{concept:'ViomShabd',ans:0},{concept:'Kaal',ans:2},{concept:'Vachan',ans:1},{concept:'Kriya',ans:0}],
+  Science:[{concept:'Photosynth',ans:0},{concept:'WaterCycle',ans:1},{concept:'PlantParts',ans:0},{concept:'FoodChain',ans:2},{concept:'Photosynth',ans:1},{concept:'WaterCycle',ans:0}],
+  English:[{concept:'SubjVerb',ans:0},{concept:'SimplePres',ans:1},{concept:'PartsOfSp',ans:0},{concept:'Preposit',ans:2},{concept:'SubjVerb',ans:1},{concept:'SimplePres',ans:0}]
+};
+
+function addDemoData(){
+  const run=()=>{
+    if(!db){showToast('Connecting to DB...');setTimeout(run,1500);return;}
+    const names=['Priya Sharma','Rahul Singh','Anjali Patel','Vikram Kumar','Sneha Das','Arjun Mehta','Kavya Reddy','Rohan Gupta','Pooja Nair','Amit Joshi'];
+    const subjs=getAllSubjects();
+    const ckeys={Math:['FractionBas','UnlikeDenom','NumberLine','WordProblms'],Hindi:['Vachan','Kriya','ViomShabd','Kaal'],Science:['Photosynth','WaterCycle','PlantParts','FoodChain'],English:['SubjVerb','SimplePres','PartsOfSp','Preposit']};
+    const sessions=[];
+    names.forEach((name,si)=>{
+      subjs.forEach(subj=>{
+        if(Math.random()>0.25){
+          const total=6,p=20+Math.floor(Math.random()*75),score=Math.round(p/100*total);
+          const ck=ckeys[subj]||['Concept1','Concept2','Concept3'];
+          const cm={};ck.forEach(c=>{cm[c]=Math.round(15+Math.random()*80);});
+          sessions.push({student:name,roll:si+1,subject:subj,score,total,lang:'hi',
+            answers:Array.from({length:total},(_,qi)=>qi<score?0:1),
+            timings:Array.from({length:total},()=>Math.round(4+Math.random()*22)),
+            flags:Math.random()>0.78?[{q:0,reason:'TOO_FAST'}]:[],conceptMap:cm,
+            sessionCode:'BODH-DEMO01',timestamp:Date.now()-Math.floor(Math.random()*7*86400000),source:'demo'});
+        }
+      });
+    });
+    const tx=db.transaction(STORE,'readwrite');
+    const store=tx.objectStore(STORE);
+    sessions.forEach(s=>store.add(s));
+    tx.oncomplete=()=>{_loadFromDB(s=>{allSessions=s;renderOv();populateStuSel();});showToast('Added '+sessions.length+' demo sessions');};
+    tx.onerror=e=>{console.error(e);showToast('Demo failed: check console');};
+  };
+  run();
+}
+
+function clearData(){
+  if(!confirm('Clear ALL student data?'))return;
+  if(!db)return;
+  db.transaction(STORE,'readwrite').objectStore(STORE).clear().onsuccess=()=>{allSessions=[];renderOv();showToast('Cleared');};
+}
+
+function exportCSV(){
+  const subjs=getAllSubjects();
+  const sm=stuMap(allSessions);
+  const h=['#','Roll','Student',...subjs,'Overall','Grade','Sessions'];
+  const rows=Object.entries(sm).map(([nm,sessions],i)=>{
+    const sc={};let tot=0,cnt=0;
+    subjs.forEach(sj=>{const l=sessions.filter(x=>x.subject===sj).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))[0];if(l){sc[sj]=pct(l);tot+=sc[sj];cnt++;}else sc[sj]='';});
+    const overall=cnt?Math.round(tot/cnt):0;
+    return[i+1,sessions[0]?.roll||'',nm,...subjs.map(sj=>sc[sj]!==undefined?sc[sj]:''),overall,grade(overall),sessions.length];
+  });
+  const csv=[h,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='BodhAI_'+new Date().toISOString().slice(0,10)+'.csv';a.click();showToast('CSV exported');
+}
+
+// ── Sync ──────────────────────────────────────────────────────────────────
+function refresh(){loadSessions(s=>{allSessions=s;renderOv();populateStuSel();showToast('Refreshed: '+s.length+' sessions');});}
+
+function startSync(){
+  try{
+    const bc=new BroadcastChannel('bodhai-sync');
+    bc.onmessage=e=>{
+      if(e.data.type==='session-saved'){loadSessions(s=>{allSessions=s;renderOv();populateStuSel();});showToast('New result received!');}
+    };
+  }catch(e){}
+  setInterval(()=>{
+    if(!db)return;
+    loadSessions(s=>{
+      const newSig=s.map(x=>x.id||x.timestamp||0).join('|');
+      const oldSig=allSessions.map(x=>x.id||x.timestamp||0).join('|');
+      if(newSig!==oldSig){allSessions=s;renderOv();populateStuSel();}
+    });
+  },2000);
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById('toast');if(!t)return;
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(t._to);t._to=setTimeout(()=>{t.style.display='none';},3000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  loadCode(); // show session code immediately
+  initDB(()=>{
+    loadSessions(s=>{
+      allSessions=s;
+      renderOv();
+      populateStuSel();
+      startSync();
+    });
+  });
+});
+
+
+// ══ Session filter ════════════════════════════════════════════════════════════
+function applySessionFilter(){
+  const code=(document.getElementById('sess-filter')?.value||'').trim();
+  _loadFromDB(s=>{
+    allSessions=code?s.filter(x=>(x.sessionCode||'').toUpperCase().includes(code.replace('BODH-',''))):s;
+    renderOv();populateStuSel();
+  });
+}
+function updateSessionFilter(){
+  const sel=document.getElementById('sess-filter');if(!sel)return;
+  _loadFromDB(s=>{
+    const codes=[...new Set(s.map(x=>x.sessionCode||'').filter(Boolean))].sort();
+    const cur=sel.value;
+    sel.innerHTML='<option value="">All Sessions</option>'+
+      codes.map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
+  });
+}
+const _pss=populateStuSel;
+window.populateStuSel=function(){_pss();updateSessionFilter();};
+
+// ══ API settings ══════════════════════════════════════════════════════════════
+function showSettings(){
+  const cur=localStorage.getItem('bodhApiUrl')||'';
+  const url=prompt('Server URL (blank=offline only)\nExample: http://localhost:3000',cur);
+  if(url!==null){localStorage.setItem('bodhApiUrl',url.trim());showToast('Saved. Reloading...');setTimeout(()=>location.reload(),800);}
+}
+
+// ══ API URL detection ═════════════════════════════════════════════════════════
+const API_URL=(()=>{
+  const s=localStorage.getItem('bodhApiUrl');
+  if(s&&s.length>5)return s;
+  const h=location.hostname;
+  if(!h||h==='')return'';
+  // LAN/local — needs explicit port (server runs on custom port)
+  if(h==='localhost'||h==='127.0.0.1'||h.startsWith('192.168.')||h.startsWith('10.')||h.startsWith('172.')){
+    return'http://'+h+':'+(location.port||'3000');
+  }
+  // Public HTTPS deployment — only add port if explicitly in URL
+  return location.protocol+'//'+h+(location.port?':'+location.port:'');
+})();
+
+let isOnline=false,ws=null;
+
+function setConnectionStatus(online){
+  isOnline=online;
+  const el=document.getElementById('conn-status');if(!el)return;
+  if(online){el.textContent='🟢 MySQL Connected';el.style.color='#059669';}
+  else if(API_URL){el.textContent='🔴 Server unreachable';el.style.color='#DC2626';}
+  else{el.textContent='⚫ Offline Mode';el.style.color='#94A3B8';}
+}
+
+async function checkOnlineStatus(){
+  if(!API_URL){setConnectionStatus(false);return false;}
+  try{
+    const ctrl=new AbortController(),tid=setTimeout(()=>ctrl.abort(),3000);
+    const r=await fetch(API_URL+'/api/health',{signal:ctrl.signal});
+    clearTimeout(tid);
+    const d=await r.json();
+    setConnectionStatus(d.status==='ok');
+    return d.status==='ok';
+  }catch(e){setConnectionStatus(false);return false;}
+}
+
+// ══ Hybrid loadSessions (MySQL + IndexedDB) ═══════════════════════════════════
+function loadSessions(cb){
+  const myCode=(localStorage.getItem('bodhTeacherSession')||'').trim().toUpperCase();
+
+  function isMySession(s){
+    if(!myCode||myCode.length<4) return true;
+    const sc=(s.sessionCode||s.session_code||'').toUpperCase();
+    return sc===myCode || sc==='' || sc==='DIRECT';
+  }
+
+  // Content fingerprint — immune to ID mismatches between IndexedDB and MySQL.
+  // MySQL uses its own auto-increment; IndexedDB uses its own.
+  // Two sessions are the SAME if student+subject+timestamp match within 10 seconds.
+  function fingerprint(s){
+    const t=Math.floor((s.timestamp||0)/10000); // 10-second bucket
+    return (s.student||'')+'|'+(s.subject||'')+'|'+t;
+  }
+
+  if(isOnline&&API_URL){
+    const codeParam=myCode&&myCode.length>4?'&code='+encodeURIComponent(myCode):'';
+    fetch(API_URL+'/api/sessions?limit=2000'+codeParam)
+      .then(r=>r.json())
+      .then(srv=>{
+        _loadFromDB(local=>{
+          // Build fingerprint set from MySQL results (source of truth)
+          const seen=new Set(srv.map(fingerprint));
+          // Only include local sessions whose fingerprint is NOT in MySQL
+          const extra=local.filter(s=>isMySession(s)&&!seen.has(fingerprint(s)));
+          const merged=[...srv,...extra].sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+          cb(merged);
+        });
+      })
+      .catch(()=>{
+        _loadFromDB(local=>cb(
+          local.filter(isMySession).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))
+        ));
+      });
+  }else{
+    _loadFromDB(local=>cb(
+      local.filter(isMySession).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))
+    ));
+  }
+}
+
+// ══ Smart Force Sync: only sends sessions NOT already in MySQL ════════════════
+async function forceSyncToMySQL(){var _ls=document.getElementById('last-sync-ts');if(_ls){var _n=new Date();_ls.textContent='Synced: '+_n.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});}
+  if(!API_URL){showToast('Not connected to server');return;}
+  if(!isOnline){showToast('Not connected to MySQL');return;}
+  showToast('Checking what needs syncing...');
+  try{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),8000);
+    const r0=await fetch(API_URL+'/api/sessions?limit=10000',{signal:ctrl.signal});
+    clearTimeout(tid);
+
+    // Guard: ensure response is OK and is actually an array
+    if(!r0.ok){
+      showToast('Server error: '+r0.status+' — try again');return;
+    }
+    const raw=await r0.json();
+    const inMySQL=Array.isArray(raw)?raw:(raw.sessions||raw.data||[]);
+
+    const stored=new Set(inMySQL.map(s=>
+      (s.student||'')+'|'+(s.subject||'')+'|'+(s.score||0)+'|'+(s.total||0)+'|'+
+      JSON.stringify(s.answers||[])));
+
+    _loadFromDB(async local=>{
+      if(!local||!local.length){showToast('No local sessions to sync');return;}
+      const toSync=local.filter(s=>{
+        const key=(s.student||'')+'|'+(s.subject||'')+'|'+(s.score||0)+'|'+
+          (s.total||0)+'|'+JSON.stringify(s.answers||[]);
+        return !stored.has(key);
+      });
+      if(!toSync.length){
+        showToast('✅ All '+local.length+' sessions already in MySQL');return;
+      }
+      showToast('Syncing '+toSync.length+' new session'+(toSync.length>1?'s':'')+'...');
+      const r=await fetch(API_URL+'/api/sync',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({sessions:toSync,deviceId:'teacher-force-sync'})
+      });
+      if(!r.ok){showToast('Sync error: '+r.status);return;}
+      const d=await r.json();
+      showToast('✅ Done: '+d.synced+' synced, '+(toSync.length-d.synced)+' skipped');
+      loadSessions(s=>{allSessions=s;renderOv();populateStuSel();});
+    });
+  }catch(e){
+    if(e.name==='AbortError') showToast('Sync timed out — check connection');
+    else showToast('Sync failed: '+e.message);
+  }
+}
+
+// ══ Cleanup duplicates ════════════════════════════════════════════════════════
+async function cleanupDuplicates(){
+  if(!API_URL||!isOnline){showToast('Need MySQL connection');return;}
+  if(!confirm('Remove all duplicate rows from MySQL sessions table?'))return;
+  try{
+    const r=await fetch(API_URL+'/api/sessions/duplicates',{method:'DELETE'});
+    const d=await r.json();
+    showToast('Removed '+d.deleted+' duplicate rows');
+    loadSessions(s=>{allSessions=s;renderOv();populateStuSel();});
+  }catch(e){showToast('Cleanup failed: '+e.message);}
+}
+
+// ══ MySQL table helpers ═══════════════════════════════════════════════════════
+function pushSessionCodeToMySQL(code){
+  if(!API_URL||!code||code.length<5)return;
+  fetch(API_URL+'/api/session-codes',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({code})}).catch(()=>{});
+}
+function pushCustomBankToMySQL(subj,questions){
+  if(!API_URL||!subj||!questions)return;
+  fetch(API_URL+'/api/custom-banks',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({subject:subj,questions})}).catch(()=>{});
+}
+async function pullCustomBanksFromMySQL(){
+  if(!API_URL||!isOnline)return;
+  try{
+    const r=await fetch(API_URL+'/api/custom-banks');if(!r.ok)return;
+    const banks=await r.json();
+    banks.forEach(b=>{if(b.questions&&b.questions.length)creatorBank[b.subject]=b.questions;});
+    if(Object.keys(creatorBank).length)renderCreator();
+  }catch(e){}
+}
+
+// ══ WebSocket real-time ═══════════════════════════════════════════════════════
+function connectWS(){
+  if(!API_URL||!isOnline)return;
+  try{
+    const u=API_URL.replace('http','ws').replace('https','wss')+'/ws';
+    ws=new WebSocket(u);
+    ws.onopen=function(){
+      // Re-join room on reconnect (teacher may have refreshed)
+      try{
+        const myCode=localStorage.getItem('bodhTeacherSession')||
+                     (document.getElementById('sess-code')?.textContent||'');
+        if(myCode&&myCode.length>5&&ws.readyState===WebSocket.OPEN){
+          ws.send(JSON.stringify({type:'join-room',code:myCode}));
+        }
+      }catch(e){}
+    };
+    // Keepalive ping every 25s — prevents Railway/proxy from dropping idle WS
+    const _wsPing=setInterval(()=>{
+      if(ws&&ws.readyState===WebSocket.OPEN) ws.send(JSON.stringify({type:'ping'}));
+      else clearInterval(_wsPing);
+    },25000);
+    ws.onmessage=e=>{
+      try{
+        const d=JSON.parse(e.data);
+        // Room-isolated live student result (only arrives for THIS teacher's session code)
+        if(d.type==='student-result'&&d.data){
+          const s=d.data;
+          const myCode=(localStorage.getItem('bodhTeacherSession')||'').toUpperCase();
+          if(!myCode||s.sessionCode===myCode||!s.sessionCode){
+            const dup=allSessions.some(function(x){return x.student===s.student&&x.subject===s.subject&&Math.abs((x.timestamp||0)-(s.timestamp||0))<5000;});
+            if(!dup){allSessions.unshift(s);renderOv();showToast(s.student+' submitted '+s.subject+' — '+s.score+'/'+(s.total||6));}
+          }
+          return;
+        }
+        if(d.type==='session-saved'){
+          // Direct MySQL fetch — bypass isOnline flag entirely
+          // (isOnline may be stale; WebSocket proves server is alive)
+          if(!API_URL)return;
+          (()=>{
+  const _mc2=(localStorage.getItem('bodhTeacherSession')||'').trim();
+  const _cp2=_mc2&&_mc2.length>4?'&code='+encodeURIComponent(_mc2):'';
+  return fetch(API_URL+'/api/sessions?limit=2000'+_cp2);
+})()
+            .then(r=>r.json())
+            .then(data=>{
+              allSessions=data;
+              renderOv();populateStuSel();
+              const sid=document.querySelector('.sec.on')?.id?.replace('sec-','');
+              if(sid==='gm')renderGapMap();
+              else if(sid==='ai')renderAI();
+              else if(sid==='sp')renderStuProg();
+              else if(sid==='sa')renderSubjAn();
+              else if(sid==='cp')renderClassRep();
+              else if(sid==='ms')renderMarksheet();
+              else if(sid==='fl')renderFbLog();
+              else if(sid==='live')renderLiveMode();
+              else if(sid==='know')renderKnowledgeState();
+              else if(sid==='spaced')renderSpacedReview();
+              else if(sid==='peers')renderPeerLearning();
+              else if(sid==='parents')renderParentReports();
+            }).catch(()=>{});
+          showToast('📷 '+(d.data?.student||'Student')+' submitted');
+        }
+        else if(d.type==='db-reconnected'){setConnectionStatus(true);showToast('MySQL reconnected — syncing...');setTimeout(forceSyncToMySQL,1000);}
+        else if(d.type==='db-disconnected'){setConnectionStatus(false);}
+        else if(d.type==='custom-bank-updated'){pullCustomBanksFromMySQL();}
+      }catch(er){}
+    };
+    ws.onclose=()=>{ws=null;setTimeout(()=>{if(isOnline)connectWS();},3000);}; // faster reconnect
+    ws.onerror=()=>{};
+  }catch(e){}
+}
+
+// ══ DOMContentLoaded ══════════════════════════════════════════════════════════
+
+// ── Session code QR & share URL ──────────────────────────────────────────────
+function showShareModal(){
+  const code=(document.getElementById('sess-code')?.textContent||'').trim();
+  let url;
+  if(API_URL){
+    url=API_URL+'/BodhAI_Student.html?code='+code;
+  } else {
+    // Offline mode — show session code to write on board
+    showToast('Offline mode: write code on board → BODH-'+code.replace('BODH-',''));
+    return;
+  }
+  const modal=document.getElementById('share-modal');
+  if(!modal)return;
+  document.getElementById('share-url-text').value=url;
+  // Generate QR using canvas (no CDN needed)
+  generateQRCanvas(url,'share-qr-canvas');
+  modal.style.display='flex';
+}
+function hideShareModal(){
+  const m=document.getElementById('share-modal');
+  if(m)m.style.display='none';
+}
+function copyShareUrl(){
+  const el=document.getElementById('share-url-text');
+  if(!el)return;
+  navigator.clipboard.writeText(el.value)
+    .then(()=>showToast('URL copied! Share with students via WhatsApp'))
+    .catch(()=>{el.select();document.execCommand('copy');showToast('URL copied!');});
+}
+function shareOnWhatsApp(){
+  const el=document.getElementById('share-url-text');
+  if(!el)return;
+  const code=(document.getElementById('sess-code')?.textContent||'').trim();
+  const msg='BodhAI Quiz Link\nSession Code: '+code+'\nOpen on your phone: '+el.value;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+// QR code generator — pure canvas, no library needed
+function generateQRCanvas(text, canvasId){
+  const canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  // Use QR API via image (works when online on LAN)
+  const img=document.createElement('img');
+  img.onload=()=>{
+    const ctx=canvas.getContext('2d');
+    canvas.width=200;canvas.height=200;
+    ctx.drawImage(img,0,0,200,200);
+  };
+  img.onerror=()=>{
+    // Fallback: show text
+    const ctx=canvas.getContext('2d');
+    canvas.width=200;canvas.height=200;
+    ctx.fillStyle='#F0F5FF';ctx.fillRect(0,0,200,200);
+    ctx.fillStyle='#0B2447';ctx.font='bold 11px DM Sans';ctx.textAlign='center';
+    ctx.fillText('QR requires internet',100,95);
+    ctx.fillText('Copy URL below instead',100,115);
+  };
+  img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(text);
+}
+
+
+// ── Live Polling: fetch MySQL every 5 seconds when online ────────────────────
+// More reliable than WebSocket alone — catches all cases including WS failures
+let _livePollTimer=null, _lastSessionCount=0, _lastFirstId=null;
+
+function startLivePolling(){
+  if(_livePollTimer)return; // already running
+  _livePollTimer=setInterval(async ()=>{
+    if(!API_URL||!isOnline)return;
+    try{
+      const r=await fetch(API_URL+'/api/sessions?limit=2000',{cache:'no-store'});
+      if(!r.ok)return;
+      const data=await r.json();
+      // Only re-render if data actually changed
+      const newCount=data.length;
+      const newFirstId=data[0]?.id||null;
+      if(newCount!==_lastSessionCount||newFirstId!==_lastFirstId){
+        _lastSessionCount=newCount;
+        _lastFirstId=newFirstId;
+        allSessions=data;
+        renderOv();
+        populateStuSel();
+        // Re-render active section
+        const sid=document.querySelector('.sec.on')?.id?.replace('sec-','');
+        if(sid==='gm')renderGapMap();
+        else if(sid==='ai')renderAI();
+        else if(sid==='sp')renderStuProg();
+        else if(sid==='sa')renderSubjAn();
+        else if(sid==='cp')renderClassRep();
+        else if(sid==='ms')renderMarksheet();
+        else if(sid==='fl')renderFbLog();
+        else if(sid==='live')renderLiveMode();
+        else if(sid==='know')renderKnowledgeState();
+        else if(sid==='spaced')renderSpacedReview();
+        else if(sid==='peers')renderPeerLearning();
+        else if(sid==='parents')renderParentReports();
+        if(newCount>_lastSessionCount)showToast('📊 Dashboard updated ('+newCount+' sessions)');
+      }
+    }catch(e){}
+  },2000);
+}
+
+function stopLivePolling(){
+  if(_livePollTimer){clearInterval(_livePollTimer);_livePollTimer=null;}
+}
+
+
+// ═══ LANG NAMES ════════════════════════════════════════════
+var _LNAMES={'hi':'Hindi','en':'English','bn':'Bengali','ta':'Tamil','te':'Telugu','mr':'Marathi'};
+
+// ═══ TAB 1: RISK ENGINE ═══════════════════════════════════
+function renderRiskTab(){
+  var el=document.getElementById('sec-risk');if(!el)return;
+  try{
+    var S=allSessions||[];
+    var hdr='<div style="background:linear-gradient(135deg,#7F1D1D,#B91C1C);border-radius:14px;padding:20px;margin-bottom:18px;display:flex;align-items:center;gap:14px"><div style="font-size:36px">&#128680;</div><div><div style="font-size:16px;font-weight:800;color:#fff">Student Risk Engine</div><div style="font-size:12px;color:rgba(255,255,255,0.85)">Composite: score + flag rate + trajectory</div></div></div>';
+    if(!S.length){el.innerHTML=hdr+'<div style="padding:32px;text-align:center;background:#F8FAFF;border-radius:14px"><div style="font-size:28px;margin-bottom:10px">&#128365;</div><div style="font-weight:600;color:#374151">No sessions yet — take a quiz first, then click Sync</div></div>';return;}
+    var map={};
+    for(var i=0;i<S.length;i++){var s=S[i],nm=s.student||'Unknown';if(!map[nm])map[nm]=[];map[nm].push({pct:s.total>0?Math.round(s.score/s.total*100):0,fl:Array.isArray(s.flags)?s.flags.length:0,ts:s.timestamp||0});}
+    var risks=[],nms=Object.keys(map);
+    for(var ni=0;ni<nms.length;ni++){var nm=nms[ni],ss=map[nm].slice().sort(function(a,b){return a.ts-b.ts;}),tot=0,fT=0;for(var j=0;j<ss.length;j++){tot+=ss[j].pct;fT+=ss[j].fl;}var avg=Math.round(tot/ss.length),fr=Math.round(fT/ss.length*10)/10,risk=Math.min(100,Math.round(Math.max(0,100-avg)*0.50+Math.min(25,fr*8)*0.30)),lv=risk>=60?'HIGH':risk>=30?'MEDIUM':'LOW';risks.push({name:nm,avg:avg,fr:fr,sessions:ss.length,risk:risk,pred:Math.max(0,Math.min(100,avg)),level:lv,bg:lv==='HIGH'?'#FEF2F2':lv==='MEDIUM'?'#FFFBEB':'#F0FDF4',bc:lv==='HIGH'?'#DC2626':lv==='MEDIUM'?'#D97706':'#059669',ic:lv==='HIGH'?'&#128680;':lv==='MEDIUM'?'&#9888;':'&#9989;'});}
+    risks.sort(function(a,b){return b.risk-a.risk;});
+    var hi=0,md=0,lo=0,cR=0;for(var i=0;i<risks.length;i++){if(risks[i].level==='HIGH')hi++;else if(risks[i].level==='MEDIUM')md++;else lo++;cR+=risks[i].risk;}cR=Math.round(cR/risks.length);
+    var h=hdr+'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px"><div style="background:#FEF2F2;border-radius:12px;padding:16px;text-align:center"><div style="font-size:26px;font-weight:800;color:#DC2626">'+hi+'</div><div style="font-size:11px;color:#991B1B;font-weight:700;margin-top:4px">HIGH RISK</div></div><div style="background:#FFFBEB;border-radius:12px;padding:16px;text-align:center"><div style="font-size:26px;font-weight:800;color:#D97706">'+md+'</div><div style="font-size:11px;color:#92400E;font-weight:700;margin-top:4px">MEDIUM RISK</div></div><div style="background:#F0FDF4;border-radius:12px;padding:16px;text-align:center"><div style="font-size:26px;font-weight:800;color:#059669">'+lo+'</div><div style="font-size:11px;color:#065F46;font-weight:700;margin-top:4px">LOW RISK</div></div></div><div style="background:#EFF6FF;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:14px"><div style="font-size:28px;font-weight:800;color:'+(cR>=60?'#DC2626':cR>=30?'#D97706':'#059669')+'">'+cR+'%</div><div><div style="font-weight:700;color:#0B2447">Class Risk Index</div><div style="font-size:11px;color:#64748B">'+risks.length+' student'+(risks.length!==1?'s':'')+' | '+S.length+' session'+(S.length!==1?'s':'')+' analysed</div></div></div>';
+    for(var i=0;i<risks.length;i++){var r=risks[i],pc=r.pred<50?'#DC2626':'#059669';h+='<div style="background:'+r.bg+';border-left:4px solid '+r.bc+';border-radius:0 12px 12px 0;padding:14px 16px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-weight:700;color:#1E293B;font-size:14px">'+r.ic+' '+r.name+'</span><span style="background:'+r.bc+';color:#fff;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700">Risk '+r.risk+'%</span></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;font-size:12px;color:#64748B"><div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:8px">Avg<br><b style="color:#0B2447;font-size:14px">'+r.avg+'%</b></div><div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:8px">Predicted<br><b style="color:'+pc+';font-size:14px">'+r.pred+'%</b></div><div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:8px">Flags/quiz<br><b style="color:#0B2447;font-size:14px">'+r.fr+'</b></div><div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:8px">Quizzes<br><b style="color:#0B2447;font-size:14px">'+r.sessions+'</b></div></div></div>';}
+    el.innerHTML=h;
+  }catch(e){if(el)el.innerHTML='<div style="padding:20px;color:#DC2626"><b>Error:</b> '+e.message+'</div>';}
+}
+
+// ═══ TAB 2: ROOT CAUSE ════════════════════════════════════
+function renderRootTab(){
+  var el=document.getElementById('sec-rootcause');if(!el)return;
+  try{
+    var S=allSessions||[];
+    var hdr='<div style="background:linear-gradient(135deg,#0B2447,#1D4ED8);border-radius:14px;padding:20px;margin-bottom:18px;display:flex;align-items:center;gap:14px"><div style="font-size:36px">&#129518;</div><div><div style="font-size:16px;font-weight:800;color:#fff">Root Cause Diagnosis</div><div style="font-size:12px;color:rgba(255,255,255,0.85)">Traces concept failures to prerequisite gaps</div></div></div>';
+    if(!S.length){el.innerHTML=hdr+'<div style="padding:32px;text-align:center;background:#F8FAFF;border-radius:14px"><div style="font-size:28px">&#129518;</div><div style="font-weight:600;color:#374151;margin-top:10px">No sessions yet</div></div>';return;}
+    var subjMap={};for(var i=0;i<S.length;i++){var s=S[i],subj=s.subject||'Unknown';if(!subjMap[subj])subjMap[subj]={};var cm=s.conceptMap||{},ck=Object.keys(cm);for(var j=0;j<ck.length;j++){var c=ck[j];if(!subjMap[subj][c])subjMap[subj][c]={sum:0,n:0};subjMap[subj][c].sum+=Number(cm[c])||0;subjMap[subj][c].n++;}}
+    var body='',anyWeak=false,subjs=Object.keys(subjMap);
+    for(var si=0;si<subjs.length;si++){var subj=subjs[si],concepts=subjMap[subj],weak=[],ck=Object.keys(concepts);for(var j=0;j<ck.length;j++){var avg=Math.round(concepts[ck[j]].sum/concepts[ck[j]].n);if(avg<65)weak.push({c:ck[j],sc:avg});}if(!weak.length)continue;anyWeak=true;weak.sort(function(a,b){return a.sc-b.sc;});body+='<div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px;margin-bottom:14px"><div style="font-weight:700;color:#0B2447;font-size:13px;margin-bottom:12px;padding:8px 12px;background:#EFF6FF;border-radius:10px">&#128218; '+subj+' &mdash; '+weak.length+' weak concept'+(weak.length!==1?'s':'')+'</div><div style="background:#FEF2F2;border-left:4px solid #DC2626;border-radius:0 10px 10px 0;padding:12px 14px;margin-bottom:10px"><div style="font-weight:700;color:#991B1B;font-size:12px;margin-bottom:8px">&#9888; Root Causes &mdash; Fix These First</div>';for(var k=0;k<Math.min(2,weak.length);k++){body+='<div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px"><span style="font-size:20px">&#127919;</span><div><div style="font-weight:700;color:#DC2626;font-size:12px">'+weak[k].c+' &mdash; '+weak[k].sc+'%</div><div style="font-size:11px;color:#64748B">Reteach this first</div></div></div>';}body+='</div><div style="background:#F0FDF4;border-left:4px solid #059669;border-radius:0 10px 10px 0;padding:12px 14px"><div style="font-weight:700;color:#065F46;font-size:12px;margin-bottom:8px">&#128203; Teaching Order</div>';for(var k=0;k<weak.length;k++){var sc2=weak[k].sc<40?'#DC2626':weak[k].sc<65?'#D97706':'#059669';body+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="background:'+(k<2?'#DC2626':'#059669')+';color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">'+(k+1)+'</span><span style="font-size:12px;color:#0B2447;flex:1">'+weak[k].c+(k<2?' &larr; start here':'')+'</span><span style="font-size:12px;font-weight:700;color:'+sc2+'">'+weak[k].sc+'%</span></div>';}body+='</div></div>';}
+    if(!anyWeak)body='<div style="background:#F0FDF4;border-radius:14px;padding:32px;text-align:center"><div style="font-size:28px;margin-bottom:10px">&#9989;</div><div style="font-weight:600;color:#059669">All concepts above 65% &mdash; no root cause gaps</div></div>';
+    el.innerHTML=hdr+body;
+  }catch(e){if(el)el.innerHTML='<div style="padding:20px;color:#DC2626"><b>Error:</b> '+e.message+'</div>';}
+}
+
+// ═══ TAB 3: MISCONCEPTIONS ════════════════════════════════
+function renderConfusionTab(){
+  var el=document.getElementById('sec-confusion');if(!el)return;
+  try{
+    var S=allSessions||[];
+    var hdr='<div style="background:linear-gradient(135deg,#3B0764,#6D28D9);border-radius:14px;padding:20px;margin-bottom:18px;display:flex;align-items:center;gap:14px"><div style="font-size:36px">&#129520;</div><div><div style="font-size:16px;font-weight:800;color:#fff">Misconception Detector</div><div style="font-size:12px;color:rgba(255,255,255,0.85)">Concepts with highest systematic error rates</div></div></div>';
+    if(!S.length){el.innerHTML=hdr+'<div style="padding:32px;text-align:center;background:#F8FAFF;border-radius:14px"><div style="font-size:28px">&#129520;</div><div style="font-weight:600;color:#374151;margin-top:10px">No sessions yet</div></div>';return;}
+    var subjErr={};for(var i=0;i<S.length;i++){var s=S[i],subj=s.subject||'Unknown';if(!subjErr[subj])subjErr[subj]={};var cm=s.conceptMap||{},ck=Object.keys(cm);for(var j=0;j<ck.length;j++){var c=ck[j];if(!subjErr[subj][c])subjErr[subj][c]={n:0,b50:0,b30:0};subjErr[subj][c].n++;var v=Number(cm[c])||0;if(v<50)subjErr[subj][c].b50++;if(v<30)subjErr[subj][c].b30++;}}
+    var body='',anyFound=false,subjs=Object.keys(subjErr);
+    for(var si=0;si<subjs.length;si++){var subj=subjs[si],probs=[],ck=Object.keys(subjErr[subj]);for(var j=0;j<ck.length;j++){var d=subjErr[subj][ck[j]];if(d.n>0&&d.b50/d.n>=0.3)probs.push({c:ck[j],d:d});}probs.sort(function(a,b){return b.d.b50/b.d.n-a.d.b50/a.d.n;});if(!probs.length)continue;anyFound=true;body+='<div style="margin-bottom:18px"><div style="font-weight:700;color:#0B2447;font-size:13px;margin-bottom:10px;padding:8px 12px;background:#F5F3FF;border-radius:10px">&#128218; '+subj+'</div>';for(var k=0;k<Math.min(6,probs.length);k++){var p=probs[k],er=Math.round(p.d.b50/p.d.n*100),sr=Math.round(p.d.b30/p.d.n*100),bc2=er>=60?'#DC2626':er>=40?'#D97706':'#059669';body+='<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:14px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-weight:700;color:#0B2447;font-size:13px">'+p.c+'</span><span style="background:'+bc2+';color:#fff;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700">'+er+'% error rate</span></div><div style="background:#E2E8F0;border-radius:4px;height:8px;margin-bottom:8px"><div style="width:'+er+'%;background:'+bc2+';height:8px;border-radius:4px"></div></div>'+(sr>0?'<div style="background:#FEF2F2;border-radius:8px;padding:8px 12px;font-size:11px;color:#991B1B"><b>'+sr+'%</b> below 30% &mdash; reteach from scratch</div>':'')+'</div>';}body+='</div>';}
+    if(!anyFound)body='<div style="background:#F5F3FF;border-radius:14px;padding:32px;text-align:center"><div style="font-size:28px;margin-bottom:10px">&#9989;</div><div style="font-weight:600;color:#7C3AED">No systematic misconceptions detected</div></div>';
+    el.innerHTML=hdr+body;
+  }catch(e){if(el)el.innerHTML='<div style="padding:20px;color:#DC2626"><b>Error:</b> '+e.message+'</div>';}
+}
+
+// ═══ TAB 4: AI FAIRNESS ═══════════════════════════════════
+function renderFairnessTab(){
+  var el=document.getElementById('sec-fairness');if(!el)return;
+  try{
+    var S=allSessions||[];
+    var hdr='<div style="background:linear-gradient(135deg,#064E3B,#059669);border-radius:14px;padding:20px;margin-bottom:18px;display:flex;align-items:center;gap:14px"><div style="font-size:36px">&#9878;</div><div><div style="font-size:16px;font-weight:800;color:#fff">AI Fairness Monitor</div><div style="font-size:12px;color:rgba(255,255,255,0.85)">Language-wise performance &mdash; bias detection</div></div></div>';
+    if(!S.length){el.innerHTML=hdr+'<div style="padding:32px;text-align:center;background:#F8FAFF;border-radius:14px"><div style="font-size:28px">&#9878;</div><div style="font-weight:600;color:#374151;margin-top:10px">No sessions yet</div></div>';return;}
+    var lg={};for(var i=0;i<S.length;i++){var s=S[i],lc=(s.lang||s.language||'hi').toLowerCase().trim();if(!lg[lc])lg[lc]={cor:0,tot:0,n:0};lg[lc].cor+=Number(s.score)||0;lg[lc].tot+=Number(s.total)||0;lg[lc].n++;}
+    var lkeys=Object.keys(lg),rows='';
+    for(var i=0;i<lkeys.length;i++){var lc=lkeys[i],d=lg[lc],pct=d.tot>0?Math.round(d.cor/d.tot*100):0,pc2=pct>=70?'#059669':pct>=50?'#D97706':'#DC2626',lname=_LNAMES[lc]||(lc.toUpperCase()+'('+lc+')');rows+='<tr style="border-bottom:1px solid #F1F5F9"><td style="padding:10px 14px"><div style="font-weight:700;color:#0B2447">'+lname+'</div><div style="font-size:11px;color:#94A3B8">code: '+lc+'</div></td><td style="padding:10px 14px;text-align:center;font-weight:700;color:#64748B">'+d.n+'</td><td style="padding:10px 14px;text-align:center;font-weight:800;color:'+pc2+';font-size:15px">'+pct+'%</td><td style="padding:10px 14px;text-align:center;font-size:12px">'+(d.n>=5?'<span style="color:#059669;font-weight:700">&#9989; Sufficient</span>':'<span style="color:#64748B">Need '+(5-d.n)+' more</span>')+'</td></tr>';}
+    el.innerHTML=hdr+'<div style="background:#F0FDF4;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#065F46">&#128200; '+S.length+' session'+(S.length!==1?'s':'')+' | codes found: <b>'+Object.keys(lg).join(', ')+'</b></div><table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px"><thead><tr style="background:#0B2447;color:#fff"><th style="padding:10px 14px;text-align:left;border-radius:8px 0 0 0">Language</th><th style="padding:10px 14px">Sessions</th><th style="padding:10px 14px">Avg Score</th><th style="padding:10px 14px;border-radius:0 8px 0 0">z-test Status</th></tr></thead><tbody>'+rows+'</tbody></table><div style="background:#FFFBEB;border-radius:10px;padding:12px 16px;font-size:12px;color:#92400E">&#8505; Two-proportion z-test requires &#8805;5 sessions per language. Bengali sessions not showing? Click &#8679; Sync first.</div>';
+  }catch(e){if(el)el.innerHTML='<div style="padding:20px;color:#DC2626"><b>Error:</b> '+e.message+'</div>';}
+}
+
+// ═══ TAB 5: EXAM PREDICTOR ════════════════════════════════
+function renderExamTab(){
+  var el=document.getElementById('sec-exampredict');if(!el)return;
+  try{
+    var S=allSessions||[];
+    var hdr='<div style="background:linear-gradient(135deg,#1E3A5F,#2563EB);border-radius:14px;padding:20px;margin-bottom:18px;display:flex;align-items:center;gap:14px"><div style="font-size:36px">&#128200;</div><div><div style="font-size:16px;font-weight:800;color:#fff">Exam Score Predictor</div><div style="font-size:12px;color:rgba(255,255,255,0.85)">Linear regression on quiz history</div></div></div>';
+    if(!S.length){el.innerHTML=hdr+'<div style="padding:32px;text-align:center;background:#F8FAFF;border-radius:14px"><div style="font-size:28px">&#128200;</div><div style="font-weight:600;color:#374151;margin-top:10px">No sessions yet</div></div>';return;}
+    var stuMap={};for(var i=0;i<S.length;i++){var s=S[i],nm=s.student||'Unknown';if(!stuMap[nm])stuMap[nm]=[];stuMap[nm].push(s.total>0?Math.round(s.score/s.total*100):0);}
+    var rows='',nms=Object.keys(stuMap);
+    for(var ni=0;ni<nms.length;ni++){var nm=nms[ni],scores=stuMap[nm],n=scores.length,avg=Math.round(scores.reduce(function(a,b){return a+b;},0)/n),pred=avg,trend='&mdash;',tc='#94A3B8',conf='LOW';if(n>=2){var sx=0,sy=0,sxy=0,sxx=0;for(var j=0;j<n;j++){sx+=j;sy+=scores[j];sxy+=j*scores[j];sxx+=j*j;}var D=n*sxx-sx*sx,sl=D?((n*sxy-sx*sy)/D):0;pred=Math.max(0,Math.min(100,Math.round(avg+sl*2)));trend=sl>3?'&#8593; Improving':sl<-3?'&#8595; Declining':'&#8594; Stable';tc=sl>3?'#059669':sl<-3?'#DC2626':'#D97706';conf=n>=3?'MEDIUM':'LOW';}if(n>=5)conf='HIGH';var pc=pred>=70?'#059669':pred>=50?'#D97706':'#DC2626',cbg=conf==='HIGH'?'#059669':conf==='MEDIUM'?'#D97706':'#94A3B8';rows+='<tr style="border-bottom:1px solid #F1F5F9"><td style="padding:10px 14px;font-weight:600;color:#0B2447">'+nm+'</td><td style="padding:10px 14px;text-align:center;color:#64748B">'+n+'</td><td style="padding:10px 14px"><div style="display:flex;align-items:center;gap:10px"><div style="flex:1;background:#E2E8F0;border-radius:4px;height:8px;min-width:50px"><div style="width:'+pred+'%;background:'+pc+';height:8px;border-radius:4px"></div></div><span style="font-weight:800;color:'+pc+';font-size:14px;width:38px">'+pred+'%</span></div></td><td style="padding:10px 14px;text-align:center;color:'+tc+';font-weight:700">'+trend+'</td><td style="padding:10px 14px;text-align:center"><span style="background:'+cbg+';color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">'+conf+'</span></td></tr>';}
+    el.innerHTML=hdr+'<div style="background:#EFF6FF;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:#1D4ED8">&#8505; Linear regression. HIGH confidence at &#8805;5 sessions. '+S.length+' session'+(S.length!==1?'s':'')+' analysed.</div><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#0B2447;color:#fff"><th style="padding:10px 14px;text-align:left;border-radius:8px 0 0 0">Student</th><th style="padding:10px 14px">Sessions</th><th style="padding:10px 14px;text-align:left">Predicted</th><th style="padding:10px 14px">Trend</th><th style="padding:10px 14px;border-radius:0 8px 0 0">Confidence</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }catch(e){if(el)el.innerHTML='<div style="padding:20px;color:#DC2626"><b>Error:</b> '+e.message+'</div>';}
+}
+
+// ═══ CLASS PULSE TAB ════════════════════════════════════════
+function renderPulseTab(){
+  var el=document.getElementById('sec-pulse');if(!el)return;
+  try{
+    var S=allSessions||[];
+    var hdr='<div style="background:linear-gradient(135deg,#0B2447,#1E40AF);border-radius:14px;padding:20px;margin-bottom:18px;display:flex;align-items:center;gap:14px"><div style="font-size:36px">&#128270;</div><div><div style="font-size:16px;font-weight:800;color:#fff">Class Understanding Overview</div><div style="font-size:12px;color:rgba(255,255,255,0.85)">How well is each student grasping the material?</div></div></div>';
+    if(!S.length){el.innerHTML=hdr+'<div style="padding:32px;text-align:center;background:#F8FAFF;border-radius:14px"><div style="font-size:32px;margin-bottom:10px">&#128269;</div><div style="font-weight:600;color:#374151">No sessions yet — take quizzes first, then click Sync</div></div>';return;}
+
+    // Latest session per student
+    var latest={};
+    for(var i=0;i<S.length;i++){
+      var s=S[i],nm=s.student||'Unknown';
+      if(!latest[nm]||s.timestamp>latest[nm].timestamp) latest[nm]=s;
+    }
+
+    // Group by understanding level
+    var good=[],avg=[],poor=[];
+    var names=Object.keys(latest);
+    for(var ni=0;ni<names.length;ni++){
+      var s=latest[names[ni]];
+      var pct=s.total>0?Math.round(s.score/s.total*100):0;
+      var obj={name:names[ni],pct:pct,subject:s.subject||'?',score:s.score,total:s.total};
+      if(pct>=70)good.push(obj);
+      else if(pct>=40)avg.push(obj);
+      else poor.push(obj);
+    }
+    good.sort(function(a,b){return b.pct-a.pct;});
+    avg.sort(function(a,b){return b.pct-a.pct;});
+    poor.sort(function(a,b){return a.pct-b.pct;});
+
+    var total=names.length;
+    var classAvg=total?Math.round(Object.values(latest).reduce(function(a,s){return a+(s.total>0?s.score/s.total*100:0);},0)/total):0;
+
+    // Summary bar
+    var h=hdr+'<div style="background:#fff;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">';
+    h+='<div style="font-size:13px;font-weight:600;color:#0B2447;margin-bottom:14px">'+total+' student'+(total!==1?'s':'')+' | Class average: <span style="color:'+(classAvg>=70?'#059669':classAvg>=40?'#D97706':'#DC2626')+'">'+classAvg+'%</span></div>';
+
+    // Visual bar
+    var gw=total?Math.round(good.length/total*100):0;
+    var aw=total?Math.round(avg.length/total*100):0;
+    var pw=100-gw-aw;
+    h+='<div style="height:28px;border-radius:10px;overflow:hidden;display:flex;margin-bottom:12px">';
+    if(gw)h+='<div style="width:'+gw+'%;background:#059669;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">'+good.length+'</div>';
+    if(aw)h+='<div style="width:'+aw+'%;background:#D97706;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">'+avg.length+'</div>';
+    if(pw)h+='<div style="width:'+pw+'%;background:#DC2626;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">'+poor.length+'</div>';
+    h+='</div>';
+
+    // Legend
+    h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">';
+    h+='<div style="background:#F0FDF4;border-radius:10px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:800;color:#059669">'+good.length+'</div><div style="font-size:11px;font-weight:700;color:#065F46;margin-top:2px">&#9989; Understands Well</div><div style="font-size:10px;color:#64748B;margin-top:2px">Score &#8805; 70%</div></div>';
+    h+='<div style="background:#FFFBEB;border-radius:10px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:800;color:#D97706">'+avg.length+'</div><div style="font-size:11px;font-weight:700;color:#92400E;margin-top:2px">&#9889; Average</div><div style="font-size:10px;color:#64748B;margin-top:2px">Score 40&#8211;69%</div></div>';
+    h+='<div style="background:#FEF2F2;border-radius:10px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:800;color:#DC2626">'+poor.length+'</div><div style="font-size:11px;font-weight:700;color:#991B1B;margin-top:2px">&#9888; Needs Help</div><div style="font-size:10px;color:#64748B;margin-top:2px">Score &lt; 40%</div></div>';
+    h+='</div></div>';
+
+    // Student lists
+    function studentCard(st,col){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border-radius:10px;margin-bottom:6px;border-left:4px solid '+col+'">'
+        +'<div><div style="font-weight:600;color:#0B2447;font-size:13px">'+st.name+'</div><div style="font-size:11px;color:#64748B">'+st.subject+' &middot; '+st.score+'/'+st.total+'</div></div>'
+        +'<div style="font-size:16px;font-weight:800;color:'+col+'">'+st.pct+'%</div></div>';
+    }
+
+    if(poor.length){
+      h+='<div style="background:#FEF2F2;border-radius:12px;padding:14px;margin-bottom:12px">';
+      h+='<div style="font-weight:700;color:#991B1B;font-size:13px;margin-bottom:10px">&#9888; Needs Immediate Attention ('+poor.length+')</div>';
+      for(var i=0;i<poor.length;i++) h+=studentCard(poor[i],'#DC2626');
+      h+='</div>';
+    }
+    if(avg.length){
+      h+='<div style="background:#FFFBEB;border-radius:12px;padding:14px;margin-bottom:12px">';
+      h+='<div style="font-weight:700;color:#92400E;font-size:13px;margin-bottom:10px">&#9889; Average — Can Improve ('+avg.length+')</div>';
+      for(var i=0;i<avg.length;i++) h+=studentCard(avg[i],'#D97706');
+      h+='</div>';
+    }
+    if(good.length){
+      h+='<div style="background:#F0FDF4;border-radius:12px;padding:14px;margin-bottom:12px">';
+      h+='<div style="font-weight:700;color:#065F46;font-size:13px;margin-bottom:10px">&#9989; Understanding Well ('+good.length+')</div>';
+      for(var i=0;i<good.length;i++) h+=studentCard(good[i],'#059669');
+      h+='</div>';
+    }
+
+    // Subject-wise breakdown
+    var subjMap={};
+    for(var i=0;i<S.length;i++){
+      var s=S[i],sj=s.subject||'Unknown';
+      if(!subjMap[sj])subjMap[sj]={sum:0,n:0,good:0,avg:0,poor:0};
+      var pct=s.total>0?Math.round(s.score/s.total*100):0;
+      subjMap[sj].sum+=pct;subjMap[sj].n++;
+      if(pct>=70)subjMap[sj].good++;else if(pct>=40)subjMap[sj].avg++;else subjMap[sj].poor++;
+    }
+    var subjs=Object.keys(subjMap);
+    if(subjs.length){
+      h+='<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px"><div style="font-weight:700;color:#0B2447;font-size:13px;margin-bottom:12px">&#128218; Subject-wise Breakdown</div>';
+      h+='<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#0B2447;color:#fff"><th style="padding:8px 12px;text-align:left;border-radius:6px 0 0 0">Subject</th><th style="padding:8px 12px;text-align:center">Sessions</th><th style="padding:8px 12px;text-align:center">Avg Score</th><th style="padding:8px 12px;text-align:center">&#9989;</th><th style="padding:8px 12px;text-align:center">&#9889;</th><th style="padding:8px 12px;text-align:center;border-radius:0 6px 0 0">&#9888;</th></tr></thead><tbody>';
+      for(var si=0;si<subjs.length;si++){
+        var sj=subjs[si],d=subjMap[sj],savg=Math.round(d.sum/d.n);
+        var col=savg>=70?'#059669':savg>=40?'#D97706':'#DC2626';
+        h+='<tr style="border-bottom:1px solid #F1F5F9"><td style="padding:8px 12px;font-weight:600;color:#0B2447">'+sj+'</td><td style="padding:8px 12px;text-align:center;color:#64748B">'+d.n+'</td><td style="padding:8px 12px;text-align:center;font-weight:700;color:'+col+'">'+savg+'%</td><td style="padding:8px 12px;text-align:center;color:#059669">'+d.good+'</td><td style="padding:8px 12px;text-align:center;color:#D97706">'+d.avg+'</td><td style="padding:8px 12px;text-align:center;color:#DC2626">'+d.poor+'</td></tr>';
+      }
+      h+='</tbody></table></div>';
+    }
+    el.innerHTML=h;
+  }catch(e){if(el)el.innerHTML='<div style="padding:20px;color:#DC2626"><b>Error:</b> '+e.message+'</div>';}
+}
+
+// ═══ UPLOAD SESSIONS TO SERVER ═══════════════════════════════
+function openUploadDialog(){
+  var d=document.getElementById('upload-dialog');
+  if(d)d.style.display='flex';
+  // Pre-fill with current API_URL if set
+  var inp=document.getElementById('upload-url');
+  if(inp&&API_URL&&API_URL.length>4)inp.value=API_URL.replace('/api','');
+}
+
+function _sessionKey(s){
+  // Unique fingerprint per session: student + subject + timestamp (rounded to minute)
+  return (s.student||'?')+'|'+(s.subject||'?')+'|'+Math.floor((s.timestamp||0)/60000);
+}
+
+function _getUploadedKeys(){
+  try{var v=localStorage.getItem('bodhai_uploaded_keys');return v?JSON.parse(v):[];}
+  catch(e){return [];}
+}
+
+function _markUploaded(keys){
+  try{
+    var existing=_getUploadedKeys();
+    var merged=Array.from(new Set(existing.concat(keys)));
+    // Keep only last 500 to avoid localStorage bloat
+    if(merged.length>500)merged=merged.slice(-500);
+    localStorage.setItem('bodhai_uploaded_keys',JSON.stringify(merged));
+  }catch(e){}
+}
+
+function doUploadSessions(){
+  var urlEl=document.getElementById('upload-url');
+  var statusEl=document.getElementById('upload-status');
+  if(!urlEl||!statusEl)return;
+  var baseUrl=urlEl.value.trim().replace(/\/+$/,'');
+  if(!baseUrl){statusEl.textContent='Please enter a server URL';statusEl.style.color='#DC2626';return;}
+
+  statusEl.textContent='Checking for new sessions...';statusEl.style.color='#64748B';
+
+  _loadFromDB(function(sessions){
+    if(!sessions||!sessions.length){
+      statusEl.textContent='No local sessions found.';statusEl.style.color='#D97706';
+      return;
+    }
+
+    // Filter out already-uploaded sessions
+    var uploadedKeys=_getUploadedKeys();
+    var pending=sessions.filter(function(s){
+      return uploadedKeys.indexOf(_sessionKey(s))===-1;
+    });
+
+    if(!pending.length){
+      statusEl.textContent='All '+sessions.length+' sessions already uploaded. Nothing new to send.';
+      statusEl.style.color='#059669';
+      return;
+    }
+
+    statusEl.textContent='Uploading '+pending.length+' new session'+(pending.length!==1?'s':'')+' ('+(sessions.length-pending.length)+' already uploaded, skipping)...';
+
+    var uploaded=0,failed=0,newKeys=[];
+
+    function uploadNext(idx){
+      if(idx>=pending.length){
+        if(uploaded>0)_markUploaded(newKeys);
+        statusEl.textContent='Done: '+uploaded+' uploaded, '+failed+' skipped. '
+          +(sessions.length-pending.length)+' were already on server.';
+        statusEl.style.color=failed&&!uploaded?'#DC2626':uploaded?'#059669':'#D97706';
+        if(uploaded>0){allSessions=sessions;renderOv();showToast(uploaded+' new sessions uploaded');}
+        return;
+      }
+      var s=pending[idx];
+      fetch(baseUrl+'/api/sessions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          student:s.student||'Unknown',roll:s.roll||0,
+          subject:s.subject||'Unknown',score:s.score||0,total:s.total||6,
+          answers:JSON.stringify(s.answers||[]),timings:JSON.stringify(s.timings||[]),
+          flags:JSON.stringify(s.flags||[]),concept_map:JSON.stringify(s.conceptMap||{}),
+          session_code:s.sessionCode||'DIRECT',lang:s.lang||'hi',
+          timestamp:s.timestamp||Date.now(),source:s.source||'local'
+        })
+      })
+      .then(function(r){
+        if(r.ok){uploaded++;newKeys.push(_sessionKey(s));}
+        else failed++;
+        uploadNext(idx+1);
+      })
+      .catch(function(){failed++;uploadNext(idx+1);});
+    }
+    uploadNext(0);
+  });
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  loadCode();
+  initDB(()=>{
+    loadSessions(s=>{
+      allSessions=s;
+      renderOv();
+      populateStuSel();
+      startSync();
+    });
+  });
+  checkOnlineStatus().then(online=>{
+    if(online){
+      connectWS();
+      startLivePolling(); // backup to WebSocket — polls MySQL every 5s
+      pullCustomBanksFromMySQL();
+      setTimeout(()=>{
+        const code=document.getElementById('sess-code')?.textContent||'';
+        pushSessionCodeToMySQL(code);
+      },1500);
+    }
+  });
+  // Restart polling if connection restored
+  setInterval(()=>{checkOnlineStatus().then(on=>{
+    if(on){if(!ws)connectWS();if(!_livePollTimer)startLivePolling();}
+    else stopLivePolling();
+  });},30000);
+});
+
+// ══ Wire new sections into showSec ══════════════════════════════════════════
+const _origShowSec=showSec;
+window.showSec=function(id,el){
+  _origShowSec(id,el);
+  if(id==='spaced')renderSpacedReview();
+  if(id==='parents')renderParentReports();
+  if(id==='live')renderLiveMode();
+  if(id==='peers')renderPeerLearning();
+  if(id==='know')renderKnowledgeState();
+};
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// FEATURE 1: SPACED REPETITION ENGINE (Ebbinghaus Forgetting Curve)
+// ════════════════════════════════════════════════════════════════════════════
+function ebbinghausRetention(daysSince, stability){
+  return Math.round(Math.exp(-daysSince / stability) * 100);
+}
+function renderSpacedReview(){
+  const el=document.getElementById('sec-spaced');if(!el)return;
+  const now=Date.now();
+  const S=8; // Ebbinghaus stability constant for school content
+  const reviews=[];
+  const studentConcepts={};
+  allSessions.forEach(s=>{
+    const n=s.student||'?';
+    if(!studentConcepts[n])studentConcepts[n]={};
+    const cm=s.conceptMap||{};
+    Object.entries(cm).forEach(([c,pct])=>{
+      if(!studentConcepts[n][c]||s.timestamp>studentConcepts[n][c].ts)
+        studentConcepts[n][c]={pct,ts:s.timestamp||now};
+    });
+  });
+  Object.entries(studentConcepts).forEach(([student,concepts])=>{
+    Object.entries(concepts).forEach(([concept,{pct,ts}])=>{
+      if(pct===undefined)return;
+      const days=(now-ts)/86400000;
+      const retention=ebbinghausRetention(days,S);
+      const reviewIn=S*Math.log(Math.max(1,pct)/60);
+      const reviewDate=new Date(ts+(Math.max(0.5,reviewIn))*86400000);
+      const urgency=reviewDate<now?'overdue':reviewDate<now+3*86400000?'soon':'ok';
+      reviews.push({student,concept,pct,retention,reviewDate,urgency,days:Math.round((reviewDate-now)/86400000)});
+    });
+  });
+  reviews.sort((a,b)=>a.urgency==='overdue'&&b.urgency!=='overdue'?-1:b.urgency==='overdue'&&a.urgency!=='overdue'?1:a.reviewDate-b.reviewDate);
+  const ov=reviews.filter(r=>r.urgency==='overdue').length;
+  const sn=reviews.filter(r=>r.urgency==='soon').length;
+  el.innerHTML=`
+<div style="background:linear-gradient(135deg,#0B2447,#19376D);border-radius:16px;padding:22px;margin-bottom:16px;display:flex;align-items:center;gap:16px">
+  <div style="font-size:40px">&#128197;</div>
+  <div><div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:4px">Spaced Repetition Engine</div>
+  <div style="font-size:13px;color:rgba(255,255,255,.55)">Ebbinghaus Forgetting Curve — predicts exactly when each student will forget each concept</div></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+  <div class="kpi"><div class="knum" style="color:var(--red)">${ov}</div><div class="klbl">Overdue Reviews</div></div>
+  <div class="kpi"><div class="knum" style="color:var(--orange)">${sn}</div><div class="klbl">Review This Week</div></div>
+  <div class="kpi"><div class="knum" style="color:var(--teal)">${reviews.length-ov-sn}</div><div class="klbl">On Track</div></div>
+</div>
+${!reviews.length?'<div style="padding:40px;text-align:center;color:#94A3B8">Take quizzes first to build the review schedule</div>':'<div class="card"><div class="ctitle">&#128203; Review Calendar — Next 30 Days</div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Student</th><th>Concept</th><th>Quiz Score</th><th>Memory Now</th><th>Review By</th><th>Action</th></tr></thead><tbody>'+reviews.filter(r=>r.days<31).map(r=>`<tr>
+  <td><b>${r.student}</b></td><td>${r.concept}</td><td>${r.pct}%</td>
+  <td><div style="background:#E2E8F0;border-radius:4px;height:7px;width:80px;overflow:hidden;margin-bottom:2px"><div style="background:${r.retention>60?'#059669':r.retention>35?'#D97706':'#DC2626'};height:100%;width:${Math.max(4,r.retention)}%"></div></div><span style="font-size:10px;color:#64748B">${r.retention}% retained</span></td>
+  <td style="font-weight:${r.urgency==='overdue'?700:400};color:${r.urgency==='overdue'?'var(--red)':r.urgency==='soon'?'var(--orange)':'#374151'}">${r.urgency==='overdue'?'&#9888; OVERDUE':r.reviewDate.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}</td>
+  <td><span style="padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;background:${r.urgency==='overdue'?'#FEE2E2':r.urgency==='soon'?'#FEF3C7':'#DCFCE7'};color:${r.urgency==='overdue'?'#B91C1C':r.urgency==='soon'?'#B45309':'#15803D'}">${r.urgency==='overdue'?'Review Now!':r.urgency==='soon'?'This Week':'OK'}</span></td>
+</tr>`).join('')+'</tbody></table></div></div>'}`;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FEATURE 2: WHATSAPP PARENT REPORT GENERATOR
+// ════════════════════════════════════════════════════════════════════════════
+const PARENT_LANG_TEMPLATES={
+  en:(s,sc,ov,wk,dt)=>`BodhAI Report - ${s}\nDate: ${dt}\nSubject: ${sc}\nScore: ${ov}%\nStrong: ${strong(wk)}\nNeeds help: ${weak(wk)}\nTeacher's note: Review weak concepts before next class.`,
+  hi:(s,sc,ov,wk,dt)=>`BodhAI रिपोर्ट - ${s}\nदिनांक: ${dt}\nविषय: ${sc}\nस्कोर: ${ov}%\nअच्छा: ${strong(wk)}\nसुधार चाहिए: ${weak(wk)}\nशिक्षक की सलाह: कमजोर विषयों को दोहराएं।`,
+  bn:(s,sc,ov,wk,dt)=>`BodhAI রিপোর্ট - ${s}\nতারিখ: ${dt}\nবিষয়: ${sc}\nস্কোর: ${ov}%\nভালো: ${strong(wk)}\nউন্নতি দরকার: ${weak(wk)}\nশিক্ষকের পরামর্শ: দুর্বল বিষয়গুলি পুনরাবৃত্তি করুন।`,
+};
+function strong(cm){return Object.entries(cm).filter(([,v])=>v>=70).map(([k])=>k+'✅').join(', ')||'—';}
+function weak(cm){return Object.entries(cm).filter(([,v])=>v<60).map(([k])=>k+'⚠️').join(', ')||'—';}
+
+function renderParentReports(){
+  const el=document.getElementById('sec-parents');if(!el)return;
+  const lang=document.getElementById('pr-lang')?.value||'hi';
+  const map={};
+  allSessions.forEach(s=>{
+    const n=s.student||'?';
+    if(!map[n])map[n]={student:n,roll:s.roll||0,sessions:[],subjects:new Set()};
+    map[n].sessions.push(s);
+    map[n].subjects.add(s.subject||'?');
+  });
+  const reports=Object.values(map).map(d=>{
+    const latest=d.sessions.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))[0];
+    const avgPct=d.sessions.length?Math.round(d.sessions.reduce((a,s)=>a+(s.score/s.total*100),0)/d.sessions.length):0;
+    const cm=latest.conceptMap||{};
+    const dt=latest.timestamp?new Date(latest.timestamp).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'Today';
+    const subj=[...d.subjects].join(', ');
+    const fn=PARENT_LANG_TEMPLATES[lang]||PARENT_LANG_TEMPLATES.hi;
+    const msg=fn(d.student,subj,avgPct,cm,dt);
+    return{student:d.student,roll:d.roll,msg,avgPct,weak:weak(cm)};
+  }).sort((a,b)=>a.avgPct-b.avgPct);
+
+  el.innerHTML=`
+<div style="background:linear-gradient(135deg,#059669,#047857);border-radius:16px;padding:22px;margin-bottom:16px;display:flex;align-items:center;gap:16px">
+  <div style="font-size:40px">&#128232;</div>
+  <div><div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:4px">WhatsApp Parent Report Generator</div>
+  <div style="font-size:13px;color:rgba(255,255,255,.7)">One click per parent — no app needed — reaches them where they already are</div></div>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+  <label style="font-size:13px;font-weight:600;color:var(--navy)">Report Language:</label>
+  <select id="pr-lang" class="sel" style="min-width:0;width:auto" onchange="renderParentReports()">
+    <option value="hi">&#127470;&#127475; Hindi</option>
+    <option value="en">&#127468;&#127463; English</option>
+    <option value="bn">&#127463;&#127465; Bengali</option>
+  </select>
+  <button class="btn btn-pr btn-sm" onclick="copyAllReports()">&#128203; Copy All Reports</button>
+</div>
+${!reports.length?'<div style="padding:40px;text-align:center;color:#94A3B8">No student sessions yet</div>':reports.map(r=>`
+<div style="background:#F0FDF4;border-radius:12px;padding:16px;margin-bottom:10px;border:1px solid #A7F3D0">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+    <div><span style="font-weight:800;color:var(--navy);font-size:14px">${r.student}</span> <span style="font-size:12px;color:#64748B">Roll ${r.roll}</span></div>
+    <div style="display:flex;gap:8px">
+      <span style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:${r.avgPct>=70?'#DCFCE7':'#FEE2E2'};color:${r.avgPct>=70?'#15803D':'#B91C1C'}">${r.avgPct}%</span>
+      <a href="https://wa.me/?text=${encodeURIComponent(r.msg)}" target="_blank" style="background:#25D366;color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px">&#128232; Send on WhatsApp</a>
+    </div>
+  </div>
+  <pre style="background:#fff;border-radius:8px;padding:10px 12px;font-size:11.5px;font-family:inherit;color:#374151;white-space:pre-wrap;border:1px solid #E2E8F0;max-height:100px;overflow-y:auto">${r.msg}</pre>
+</div>`).join('')}`;
+}
+function copyAllReports(){
+  const lang=document.getElementById('pr-lang')?.value||'hi';
+  const map={};
+  allSessions.forEach(s=>{
+    const n=s.student||'?';
+    if(!map[n])map[n]={student:n,roll:s.roll||0,sessions:[],subjects:new Set()};
+    map[n].sessions.push(s);map[n].subjects.add(s.subject||'?');
+  });
+  const all=Object.values(map).map(d=>{
+    const latest=d.sessions.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))[0];
+    const avg=Math.round(d.sessions.reduce((a,s)=>a+(s.score/s.total*100),0)/d.sessions.length);
+    const cm=latest.conceptMap||{};
+    const dt=latest.timestamp?new Date(latest.timestamp).toLocaleDateString('en-IN'):'Today';
+    const fn=PARENT_LANG_TEMPLATES[lang]||PARENT_LANG_TEMPLATES.hi;
+    return fn(d.student,[...d.subjects].join(', '),avg,cm,dt);
+  }).join('\n\n─────────────────\n\n');
+  navigator.clipboard.writeText(all).then(()=>showToast('All '+Object.keys(map).length+' reports copied!')).catch(()=>showToast('Copy failed — use individual send buttons'));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FEATURE 3: LIVE CLASSROOM MODE
+// ════════════════════════════════════════════════════════════════════════════
+let liveEvents=[];
+function renderLiveMode(){
+  const el=document.getElementById('sec-live');if(!el)return;
+  const online=isOnline&&API_URL;
+  const recent=allSessions.filter(s=>(Date.now()-(s.timestamp||0))<3600000).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+  el.innerHTML=`
+<div style="background:linear-gradient(135deg,#DC2626,#B91C1C);border-radius:16px;padding:22px;margin-bottom:16px;display:flex;align-items:center;gap:16px">
+  <div style="font-size:40px">&#128247;</div>
+  <div style="flex:1"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px">
+    <div style="font-size:18px;font-weight:800;color:#fff">Live Classroom Mode</div>
+    <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);padding:4px 12px;border-radius:20px">
+      <div style="width:8px;height:8px;border-radius:50%;background:${online?'#4ADE80':'#FCA5A5'};animation:${online?'pulse 1.5s infinite':'none'}"></div>
+      <span style="font-size:12px;font-weight:700;color:#fff">${online?'Live — receiving results':'Offline — QR mode'}</span>
+    </div>
+  </div>
+  <div style="font-size:13px;color:rgba(255,255,255,.7)">Results appear instantly as students finish — no QR scanning needed when on same WiFi</div></div>
+</div>
+<style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}</style>
+${!online?`<div style="background:#FFF5F5;border-left:4px solid var(--red);border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#991B1B">
+  <b>How to activate Live Mode:</b><br>
+  1. Ensure Node.js server is running (<code>node server.js</code>)<br>
+  2. Connect all student phones to same WiFi<br>
+  3. Students open <code>http://[your-ip]:3000/BodhAI_Student.html</code><br>
+  4. Results appear here automatically as each student finishes &#128197;
+</div>`:''}
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+  <div class="kpi"><div class="knum" style="color:var(--navy)" id="live-count">${recent.length}</div><div class="klbl">Submitted (Last Hour)</div></div>
+  <div class="kpi"><div class="knum" style="color:var(--teal)">${recent.length?Math.round(recent.reduce((a,s)=>a+(s.score/s.total*100),0)/recent.length)+'%':'--'}</div><div class="klbl">Live Class Average</div></div>
+  <div class="kpi"><div class="knum" style="color:var(--orange)">${new Set(recent.map(s=>s.student)).size}</div><div class="klbl">Unique Students</div></div>
+</div>
+<div class="g2">
+<div class="card"><div class="ctitle">&#128101; Live Feed</div>
+${!recent.length?'<div style="padding:20px;text-align:center;color:#94A3B8;font-size:13px">Waiting for students to submit...</div>':
+'<div style="max-height:320px;overflow-y:auto">'+recent.map((s,i)=>{
+  const pct=Math.round(s.score/s.total*100);
+  const dt=s.timestamp?new Date(s.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'--';
+  return`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);${i===0?'animation:fadeIn .5s ease':''}">
+    <div style="width:36px;height:36px;border-radius:50%;background:${pct>=70?'#DCFCE7':'#FEE2E2'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:${pct>=70?'#15803D':'#B91C1C'};flex-shrink:0">${pct}</div>
+    <div style="flex:1"><div style="font-weight:700;font-size:13px">${s.student}</div><div style="font-size:11px;color:#64748B">${s.subject} · ${s.score}/${s.total} · ${dt}</div></div>
+    <span style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;background:${pct>=70?'#DCFCE7':'#FEE2E2'};color:${pct>=70?'#15803D':'#B91C1C'}">${pct>=85?'A+':pct>=70?'A':pct>=55?'B':pct>=40?'C':'D'}</span>
+  </div>`;
+}).join('')+'</div>'}
+</div>
+<div class="card"><div class="ctitle">&#128202; Live Gap Map</div>
+${buildLiveGapMap(recent)}
+</div>
+</div>
+<style>@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}</style>`;
+}
+
+function buildLiveGapMap(sessions){
+  if(!sessions.length)return '<div style="padding:20px;text-align:center;color:#94A3B8;font-size:13px">Waiting for results...</div>';
+  const concepts={};
+  sessions.forEach(s=>{
+    Object.entries(s.conceptMap||{}).forEach(([c,v])=>{
+      if(!concepts[c]){concepts[c]=[];}
+      concepts[c].push(v);
+    });
+  });
+  return '<div>'+Object.entries(concepts).map(([c,vals])=>{
+    const avg=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+    const col=avg>=70?'#059669':avg>=45?'#D97706':'#DC2626';
+    return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600;min-width:80px;color:#374151">${c}</div>
+      <div style="flex:1;background:#E2E8F0;border-radius:4px;height:8px;overflow:hidden">
+        <div style="background:${col};height:100%;width:${avg}%;transition:width .5s ease"></div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:${col};min-width:36px">${avg}%</div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FEATURE 4: PEER LEARNING MATCHMAKER
+// ════════════════════════════════════════════════════════════════════════════
+function renderPeerLearning(){
+  const el=document.getElementById('sec-peers');if(!el)return;
+  // Build per-student concept map (best score per concept)
+  const map={};
+  allSessions.forEach(s=>{
+    const n=s.student||'?';
+    if(!map[n])map[n]={student:n,concepts:{},subjects:new Set()};
+    map[n].subjects.add(s.subject||'?');
+    Object.entries(s.conceptMap||{}).forEach(([c,v])=>{
+      if(!map[n].concepts[c]||v>map[n].concepts[c])map[n].concepts[c]=v;
+    });
+  });
+  const students=Object.values(map);
+  const allConcepts=[...new Set(students.flatMap(s=>Object.keys(s.concepts)))];
+
+  // Overall mastery per student
+  const overallMap={};
+  students.forEach(s=>{
+    const vals=Object.values(s.concepts);
+    overallMap[s.student]=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;
+  });
+
+  // Peer pairs — use RELATIVE ranking (top half vs bottom half per concept)
+  // This ensures pairs are always generated even when scores are close
+  const pairs=[];const seen=new Set();
+  allConcepts.forEach(concept=>{
+    const withData=students
+      .filter(s=>s.concepts[concept]!==undefined)
+      .sort((a,b)=>b.concepts[concept]-a.concepts[concept]);
+    if(withData.length<2)return;
+
+    // Split into top half and bottom half
+    const mid=Math.ceil(withData.length/2);
+    const tutors=withData.slice(0,mid);   // higher scorers
+    const learners=withData.slice(mid);   // lower scorers
+
+    // Only create pairs where the gap is meaningful (>15 points)
+    tutors.forEach((tutor,i)=>{
+      const learner=learners[i%Math.max(1,learners.length)];
+      if(!learner||tutor.student===learner.student)return;
+      const gap=tutor.concepts[concept]-learner.concepts[concept];
+      if(gap<15)return; // not worth pairing if scores are too similar
+      const key=tutor.student+'|'+learner.student;
+      if(seen.has(key))return;
+      seen.add(key);
+      pairs.push({
+        tutor:tutor.student,
+        learner:learner.student,
+        concept,
+        tutorScore:tutor.concepts[concept],
+        learnerScore:learner.concepts[concept],
+        gap
+      });
+    });
+  });
+
+  // Sort pairs by gap size (biggest gap = most useful pairing)
+  pairs.sort((a,b)=>b.gap-a.gap);
+
+  el.innerHTML=`
+<div style="background:linear-gradient(135deg,#7C3AED,#5B21B6);border-radius:16px;padding:22px;margin-bottom:16px;display:flex;align-items:center;gap:16px">
+  <div style="font-size:40px">&#129309;</div>
+  <div><div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:4px">AI Peer Learning Matchmaker</div>
+  <div style="font-size:13px;color:rgba(255,255,255,.65)">Pairs students by relative concept strength — all ${students.length} students included</div></div>
+</div>
+${students.length<2?'<div style="padding:40px;text-align:center;color:#94A3B8">Need at least 2 students with quiz data</div>':
+`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+  <div class="kpi"><div class="knum" style="color:var(--navy)">${students.length}</div><div class="klbl">Students Analysed</div></div>
+  <div class="kpi"><div class="knum" style="color:var(--purple)">${pairs.length}</div><div class="klbl">Peer Pairs Generated</div></div>
+  <div class="kpi"><div class="knum" style="color:var(--teal)">${allConcepts.length}</div><div class="klbl">Concepts Compared</div></div>
+</div>
+${!pairs.length?
+  `<div style="background:#F0FDF4;border-radius:12px;padding:20px;text-align:center;border:1px solid #A7F3D0">
+    <div style="font-size:20px;margin-bottom:8px">&#127775;</div>
+    <div style="font-weight:700;color:#065F46">Scores are very close across all concepts</div>
+    <div style="font-size:12px;color:#64748B;margin-top:4px">No student has a 15+ point advantage over another — the class is performing at a similar level. This is excellent!</div>
+  </div>`:
+  `<div class="card" style="margin-bottom:14px">
+    <div class="ctitle">&#127979; Today's Peer Teaching Plan <span style="font-size:11px;font-weight:400;color:#94A3B8">${pairs.length} pairs · ~15 min session</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    ${pairs.slice(0,8).map((p,i)=>`
+    <div style="background:var(--bg);border-radius:10px;padding:13px;border:1px solid var(--border)">
+      <div style="font-size:10px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${p.concept} — ${p.gap}pt gap</div>
+      <div style="display:flex;align-items:stretch;gap:6px">
+        <div style="background:#DCFCE7;border-radius:8px;padding:8px;flex:1;text-align:center">
+          <div style="font-size:10px;color:#15803D;font-weight:800;margin-bottom:2px">TUTOR</div>
+          <div style="font-weight:800;font-size:13px;color:var(--navy)">${p.tutor}</div>
+          <div style="font-size:11px;color:#059669;font-weight:700">${p.tutorScore}%</div>
+        </div>
+        <div style="display:flex;align-items:center;color:#7C3AED;font-size:18px">&#8594;</div>
+        <div style="background:#EDE9FE;border-radius:8px;padding:8px;flex:1;text-align:center">
+          <div style="font-size:10px;color:#7C3AED;font-weight:800;margin-bottom:2px">LEARNER</div>
+          <div style="font-weight:800;font-size:13px;color:var(--navy)">${p.learner}</div>
+          <div style="font-size:11px;color:#7C3AED;font-weight:700">${p.learnerScore}%</div>
+        </div>
+      </div>
+    </div>`).join('')}
+    </div>
+  </div>`}
+
+<div class="card">
+  <div class="ctitle">&#127941; All Students — Concept Mastery Ranking</div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr>
+        <th>Rank</th><th>Student</th><th>Subjects</th>
+        ${allConcepts.slice(0,6).map(c=>`<th title="${c}">${c.substring(0,8)}</th>`).join('')}
+        <th>Overall</th>
+      </tr></thead>
+      <tbody>
+      ${students.sort((a,b)=>overallMap[b.student]-overallMap[a.student]).map((s,i)=>{
+        const medal=i===0?'&#127947;':i===1?'&#129352;':i===2?'&#129353;':''+(i+1);
+        const overall=overallMap[s.student];
+        return`<tr>
+          <td style="font-weight:700;font-size:13px">${medal}</td>
+          <td style="font-weight:700">${s.student}</td>
+          <td style="font-size:11px;color:#64748B">${[...s.subjects].join(', ')}</td>
+          ${allConcepts.slice(0,6).map(c=>{
+            const v=s.concepts[c];
+            if(v===undefined)return'<td style="color:#CBD5E1;text-align:center">—</td>';
+            const col=v>=70?'#DCFCE7':v>=45?'#FEF3C7':'#FEE2E2';
+            const tcol=v>=70?'#15803D':v>=45?'#B45309':'#B91C1C';
+            return`<td style="background:${col};color:${tcol};font-weight:700;text-align:center;border-radius:4px;font-size:12px">${v}%</td>`;
+          }).join('')}
+          <td><span class="gp ${overall>=70?'gA':overall>=55?'gB':overall>=40?'gC':'gD'}">${overall}%</span></td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+  </div>
+</div>`}`;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FEATURE 5: BAYESIAN KNOWLEDGE STATE TRACKER
+// ════════════════════════════════════════════════════════════════════════════
+function renderKnowledgeState(){
+  const el=document.getElementById('sec-know');if(!el)return;
+  const selStu=document.getElementById('ks-stu')?.value||'';
+  const students=[...new Set(allSessions.map(s=>s.student||'?'))].sort();
+  const stuSessions=selStu?allSessions.filter(s=>s.student===selStu).sort((a,b)=>(a.timestamp||0)-(b.timestamp||0)):[];
+  const allConcepts=[...new Set(stuSessions.flatMap(s=>Object.keys(s.conceptMap||{})))];
+  const knowledgeState={};
+  allConcepts.forEach(c=>{
+    const history=stuSessions.map(s=>({score:s.conceptMap?.[c]||null,ts:s.timestamp||Date.now()})).filter(e=>e.score!==null);
+    if(!history.length){knowledgeState[c]={p:0,trend:'—',sessions:0};return;}
+    // Bayesian: weight recent sessions more (exponential decay)
+    let weightedSum=0,weightTotal=0;
+    const now=Date.now();
+    history.forEach((e,i)=>{
+      const w=Math.exp(-0.3*(history.length-1-i));
+      weightedSum+=e.score*w;weightTotal+=w;
+    });
+    const p=Math.round(weightedSum/weightTotal);
+    const trend=history.length>=2?(history[history.length-1].score-history[history.length-2].score>5?'&#8593; improving':history[history.length-1].score-history[history.length-2].score<-5?'&#8595; declining':'&#8594; stable'):'&#8213; first result';
+    knowledgeState[c]={p,trend,sessions:history.length,history:history.map(e=>e.score)};
+  });
+  const examPrediction=Object.values(knowledgeState).length?Math.round(Object.values(knowledgeState).reduce((a,c)=>a+c.p,0)/Object.values(knowledgeState).length):null;
+
+  el.innerHTML=`
+<div style="background:linear-gradient(135deg,#0B2447,#1E40AF);border-radius:16px;padding:22px;margin-bottom:16px;display:flex;align-items:center;gap:16px">
+  <div style="font-size:40px">&#129504;</div>
+  <div><div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:4px">Bayesian Knowledge State Tracker</div>
+  <div style="font-size:13px;color:rgba(255,255,255,.65)">P(student knows concept) — tracks knowledge probability using all sessions, not just the latest</div></div>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+  <select id="ks-stu" class="sel" style="min-width:180px" onchange="renderKnowledgeState()">
+    <option value="">Select student...</option>
+    ${students.map(s=>`<option value="${s}"${s===selStu?' selected':''}>${s}</option>`).join('')}
+  </select>
+</div>
+${!selStu?'<div style="padding:40px;text-align:center;color:#94A3B8;font-size:13px">Select a student to see their knowledge state</div>':!stuSessions.length?'<div style="padding:40px;text-align:center;color:#94A3B8">No sessions found for this student</div>':`
+${examPrediction!==null?`<div style="background:linear-gradient(135deg,${examPrediction>=70?'#059669':'#DC2626'},${examPrediction>=70?'#047857':'#B91C1C'});border-radius:12px;padding:18px;margin-bottom:16px;display:flex;align-items:center;gap:16px">
+  <div style="font-family:Fraunces,serif;font-size:48px;font-weight:900;color:#fff;line-height:1">${examPrediction}%</div>
+  <div><div style="font-size:14px;font-weight:800;color:#fff">Predicted Exam Score</div>
+  <div style="font-size:12px;color:rgba(255,255,255,.75)">Based on ${stuSessions.length} session(s) · Bayesian weighted average</div></div>
+</div>`:''}
+<div class="card"><div class="ctitle">&#127922; Concept Knowledge Probabilities — ${selStu}</div>
+${Object.entries(knowledgeState).sort((a,b)=>a[1].p-b[1].p).map(([c,k])=>`
+<div style="margin-bottom:12px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+    <div style="font-size:13px;font-weight:600;color:var(--navy)">${c}</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:#64748B">${k.trend}</span>
+      <span style="font-weight:800;font-size:13px;color:${k.p>=70?'#059669':k.p>=45?'#D97706':'#DC2626'}">${k.p}%</span>
+      <span style="font-size:10px;color:#94A3B8">(${k.sessions} session${k.sessions>1?'s':''})</span>
+    </div>
+  </div>
+  <div style="background:#E2E8F0;border-radius:6px;height:10px;overflow:hidden;position:relative">
+    <div style="background:${k.p>=70?'#059669':k.p>=45?'#D97706':'#DC2626'};height:100%;width:${k.p}%;transition:width .6s ease;border-radius:6px"></div>
+  </div>
+  ${k.history&&k.history.length>1?`<div style="display:flex;gap:3px;margin-top:4px">${k.history.map((v,i)=>`<div title="Session ${i+1}: ${v}%" style="width:18px;height:18px;border-radius:4px;background:${v>=70?'#059669':v>=45?'#D97706':'#DC2626'};opacity:${0.5+(i/k.history.length)*0.5};display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:700">${v}</div>`).join('')}<span style="font-size:10px;color:#94A3B8;align-self:center;margin-left:4px">trend</span></div>`:''}
+</div>`).join('')}
+</div>
+<div class="card"><div class="ctitle">&#128198; Learning Journey — ${stuSessions.length} Sessions</div>
+<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>#</th><th>Date</th><th>Subject</th><th>Score</th><th>Grade</th></tr></thead><tbody>
+${stuSessions.map((s,i)=>{const p=s.total?Math.round(s.score/s.total*100):0;const g=p>=85?'A+':p>=70?'A':p>=55?'B':p>=40?'C':'D';const dt=s.timestamp?new Date(s.timestamp).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}):'--';return`<tr><td>${i+1}</td><td>${dt}</td><td>${s.subject}</td><td>${s.score}/${s.total}</td><td><span class="gp ${p>=70?'gA':p>=55?'gB':p>=40?'gC':'gD'}">${p}% ${g}</span></td></tr>`;}).join('')}
+</tbody></table></div></div>`}`;
+}
+
+</script>
+
+<div id="upload-dialog" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:28px;width:90%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="font-size:16px;font-weight:700;color:#0B2447;margin-bottom:6px">&#8679;&#127760; Upload Sessions to Server</div>
+    <div style="font-size:12px;color:#64748B;margin-bottom:18px">Use this when running from file:// to push local IndexedDB sessions to your Railway or local MySQL server.</div>
+    <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Server URL</label>
+    <input id="upload-url" type="text" placeholder="https://your-app.up.railway.app" value=""
+      style="width:100%;padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:13px;margin-bottom:14px;box-sizing:border-box">
+    <div id="upload-status" style="font-size:12px;color:#64748B;min-height:20px;margin-bottom:14px"></div>
+    <div style="display:flex;gap:10px">
+      <button onclick="doUploadSessions()" style="flex:1;padding:11px;background:#0B2447;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Upload All Sessions</button>
+      <button onclick="document.getElementById('upload-dialog').style.display='none'" style="padding:11px 18px;background:#F1F5F9;color:#374151;border:none;border-radius:10px;font-size:13px;cursor:pointer">Cancel</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

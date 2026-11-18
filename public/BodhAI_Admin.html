@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BodhAI Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0B2447;--blue:#2563EB;--orange:#F4841F;--teal:#059669;--red:#DC2626;--bg:#F0F5FF;--border:#E2E8F0}
+body{font-family:"DM Sans",sans-serif;background:var(--bg);color:#1E293B}
+.hero{background:linear-gradient(135deg,#0B2447,#1E40AF);padding:24px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.hero h1{font-family:Fraunces,serif;font-size:24px;font-weight:900;color:#fff}
+.hero p{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px}
+.conn-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;gap:6px}
+.wrap{max-width:1200px;margin:0 auto;padding:20px}
+.kgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:12px;padding:14px 16px;border:1px solid var(--border);text-align:center}
+.knum{font-family:Fraunces,serif;font-size:26px;font-weight:900;line-height:1}
+.klbl{font-size:10px;color:#94A3B8;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.3px}
+.tabs{display:flex;background:#fff;border-radius:12px 12px 0 0;border:1px solid var(--border);border-bottom:none}
+.tab{flex:1;padding:11px 14px;background:none;border:none;border-bottom:3px solid transparent;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;color:#64748B;transition:all .15s}
+.tab.on{color:var(--navy);border-bottom-color:var(--blue);background:#F8FAFF}
+.panel{display:none;background:#fff;border:1px solid var(--border);border-radius:0 0 12px 12px}
+.panel.on{display:block}
+.toolbar{display:flex;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center}
+.toolbar select,.toolbar input{padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);font-size:12px;font-family:inherit;outline:none;background:#fff}
+.toolbar select:focus,.toolbar input:focus{border-color:var(--blue)}
+.btn{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.btn-b{background:var(--blue);color:#fff}.btn-o{background:var(--orange);color:#fff}
+.btn-g{background:var(--teal);color:#fff}.btn-r{background:var(--red);color:#fff}
+.btn-sm{font-size:11px;padding:5px 10px}
+.tbl-wrap{overflow-x:auto;max-height:480px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:#F8FAFF;padding:9px 12px;text-align:left;font-weight:700;color:#475569;font-size:11px;text-transform:uppercase;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:1}
+td{padding:9px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle}
+tr:hover td{background:#FAFCFF}
+.gp{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+.gA{background:#DCFCE7;color:#15803D}.gB{background:#DBEAFE;color:#1D4ED8}
+.gC{background:#FEF3C7;color:#B45309}.gD{background:#FEE2E2;color:#B91C1C}
+.cpill{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;margin:1px}
+.cg{background:#DCFCE7;color:#15803D}.co{background:#FEF3C7;color:#B45309}.cr{background:#FEE2E2;color:#B91C1C}
+.empty{padding:40px;text-align:center;color:#94A3B8}
+.sum-bar{background:#F8FAFF;padding:10px 14px;display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#475569;border-bottom:1px solid var(--border)}
+.sum-bar b{color:var(--navy)}
+#toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;display:none;max-width:300px}
+@media(max-width:768px){.kgrid{grid-template-columns:repeat(3,1fr)}.tabs{flex-wrap:wrap}}
+</style>
+<style>#adm-refresh-ts{font-size:10px;color:#94A3B8;padding:4px 10px}</style></head>
+<body>
+<div class="hero">
+  <div>
+    <h1>BodhAI Admin Panel</h1>
+    <p>School administrator — full MySQL database access &amp; reports</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <input id="srv-url" type="text" style="padding:8px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:13px;font-family:inherit;outline:none;width:240px" placeholder="https://bodhai.up.railway.app" value="https://bodhai.up.railway.app">
+    <button onclick="connectServer()" style="background:#F4841F;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Connect</button>
+    <div class="conn-pill">
+      <span id="conn-dot" style="width:8px;height:8px;border-radius:50%;background:#94A3B8;flex-shrink:0"></span>
+      <span id="conn-lbl">Not connected</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="kgrid">
+    <div class="kpi"><div class="knum" id="k-sessions" style="color:var(--navy)">--</div><div class="klbl">Sessions</div></div>
+    <div class="kpi"><div class="knum" id="k-students" style="color:var(--teal)">--</div><div class="klbl">Students</div></div>
+    <div class="kpi"><div class="knum" id="k-avg" style="color:var(--blue)">--</div><div class="klbl">Avg Score</div></div>
+    <div class="kpi"><div class="knum" id="k-codes" style="color:var(--orange)">--</div><div class="klbl">Session Codes</div></div>
+    <div class="kpi"><div class="knum" id="k-banks" style="color:#7C3AED">--</div><div class="klbl">Custom Banks</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="showTab('sessions',this)">All Sessions</button>
+    <button class="tab" onclick="showTab('students',this)">By Student</button>
+    <button class="tab" onclick="showTab('codes',this)">Session Codes</button>
+    <button class="tab" onclick="showTab('banks',this)">Question Banks</button>
+    <button class="tab" onclick="showTab('sync',this)">Sync Log</button>
+    <button class="tab" onclick="showTab('export',this)">Export</button>
+  </div>
+
+  <div class="panel on" id="panel-sessions">
+    <div class="toolbar">
+      <select id="f-subj" onchange="renderSessions()"><option value="">All Subjects</option></select>
+      <select id="f-code" onchange="renderSessions()"><option value="">All Codes</option></select>
+      <select id="f-date" onchange="renderSessions()"><option value="">All Time</option><option value="1">Today</option><option value="7">This Week</option><option value="30">This Month</option></select>
+      <input id="f-stu" placeholder="Search student..." oninput="renderSessions()" style="width:140px">
+      <button class="btn btn-b btn-sm" onclick="loadAll()">&#8635; Refresh</button>
+      <button class="btn btn-o btn-sm" onclick="exportCSV('sessions')">&#8681; CSV</button>
+      <button class="btn btn-g btn-sm" onclick="dedupSessions()">&#9986; Dedup</button>
+      <button class="btn btn-r btn-sm" onclick="clearAll()">&#128465; Clear All</button>
+    </div>
+    <div class="sum-bar" id="sessions-sum"></div>
+    <div class="tbl-wrap"><div id="tbl-sessions"><div class="empty">Connect to server to see data</div></div></div>
+  </div>
+
+  <div class="panel" id="panel-students">
+    <div class="toolbar">
+      <select id="f-stu2" onchange="renderStudents()"><option value="">All Students</option></select>
+      <button class="btn btn-b btn-sm" onclick="loadAll()">Refresh</button>
+      <button class="btn btn-o btn-sm" onclick="exportCSV('students')">CSV</button>
+    </div>
+    <div class="tbl-wrap"><div id="tbl-students"><div class="empty">Connect to server to see data</div></div></div>
+  </div>
+
+  <div class="panel" id="panel-codes">
+    <div class="toolbar">
+      <button class="btn btn-b btn-sm" onclick="loadCodes()">Refresh</button>
+      <span style="font-size:12px;color:#64748B">Each code = one teacher classroom session</span>
+    </div>
+    <div class="tbl-wrap"><div id="tbl-codes"><div class="empty">Connect to server to see data</div></div></div>
+  </div>
+
+  <div class="panel" id="panel-banks">
+    <div class="toolbar">
+      <button class="btn btn-b btn-sm" onclick="loadBanks()">Refresh</button>
+      <span style="font-size:12px;color:#64748B">Teacher-created custom question banks</span>
+    </div>
+    <div class="tbl-wrap"><div id="tbl-banks"><div class="empty">Connect to server to see data</div></div></div>
+  </div>
+
+  <div class="panel" id="panel-sync">
+    <div class="toolbar">
+      <button class="btn btn-b btn-sm" onclick="loadSync()">Refresh</button>
+      <span style="font-size:12px;color:#64748B">Offline to online sync audit trail</span>
+    </div>
+    <div class="tbl-wrap"><div id="tbl-sync"><div class="empty">Connect to server to see data</div></div></div>
+  </div>
+
+  <div class="panel" id="panel-export">
+    <div style="padding:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+      <div style="background:var(--bg);border-radius:12px;padding:18px;border:1px solid var(--border)">
+        <div style="font-size:20px;margin-bottom:8px">&#128221;</div>
+        <div style="font-weight:700;color:var(--navy);margin-bottom:5px">All Sessions CSV</div>
+        <div style="font-size:12px;color:#64748B;margin-bottom:12px">Every result with scores, concepts, timestamps</div>
+        <button class="btn btn-b" onclick="exportCSV('sessions')">Download CSV</button>
+      </div>
+      <div style="background:var(--bg);border-radius:12px;padding:18px;border:1px solid var(--border)">
+        <div style="font-size:20px;margin-bottom:8px">&#128101;</div>
+        <div style="font-weight:700;color:var(--navy);margin-bottom:5px">Student Summary CSV</div>
+        <div style="font-size:12px;color:#64748B;margin-bottom:12px">Per-student averages across all subjects</div>
+        <button class="btn btn-o" onclick="exportCSV('students')">Download CSV</button>
+      </div>
+      <div style="background:var(--bg);border-radius:12px;padding:18px;border:1px solid var(--border)">
+        <div style="font-size:20px;margin-bottom:8px">&#128273;</div>
+        <div style="font-weight:700;color:var(--navy);margin-bottom:5px">Session Codes CSV</div>
+        <div style="font-size:12px;color:#64748B;margin-bottom:12px">All teacher codes with student counts</div>
+        <button class="btn btn-g" onclick="exportCSV('codes')">Download CSV</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+let API = 'http://localhost:3000';
+let allSess = [], allSessRaw = [];
+
+// ── fetchAPI: no AbortSignal.timeout (compatibility fix) ─────────────────────
+async function fetchAPI(path, opts){
+  return new Promise((resolve, reject)=>{
+    const ctrl = new AbortController();
+    const tid = setTimeout(()=>{ ctrl.abort(); reject(new Error('Timeout')); }, 8000);
+    fetch(API + path, { signal: ctrl.signal, ...opts })
+      .then(r=>{ clearTimeout(tid); resolve(r); })
+      .catch(e=>{ clearTimeout(tid); reject(e); });
+  });
+}
+
+async function connectServer(){
+  API = (document.getElementById('srv-url').value||'').trim().replace(/\/$/,'');
+  localStorage.setItem('bodhAdminUrl', API);
+  if(!API){ toast('Enter server URL first'); return; }
+  setConn('checking','Connecting...');
+  try{
+    const r = await fetchAPI('/api/health');
+    const d = await r.json();
+    if(d.status === 'ok'){
+      setConn('ok','MySQL Connected');
+      loadAll();
+      // Quick DB test after connect — logs any table issues to console
+      fetchAPI('/api/test-db').then(r=>r.json()).then(d=>{
+        const failed=Object.entries(d).filter(([,v])=>!v.ok).map(([k])=>k);
+        if(failed.length) console.warn('⚠️ DB table issues:', failed, d);
+        else console.log('✅ All DB tables OK:', d);
+      }).catch(()=>{});
+    } else {
+      setConn('warn','Server OK but DB disconnected');
+    }
+  }catch(e){
+    setConn('err','Cannot reach server: '+e.message);
+  }
+}
+
+let _adminRefreshTimer=null;
+function setConn(state, msg){
+  const dot = document.getElementById('conn-dot');
+  const lbl = document.getElementById('conn-lbl');
+  lbl.textContent = msg;
+  const colors = {ok:'#22C55E', warn:'#F59E0B', err:'#EF4444', checking:'#94A3B8'};
+  dot.style.background = colors[state] || '#94A3B8';
+  // Auto-refresh every 10s when connected
+  if(state==='ok' && !_adminRefreshTimer){
+    _adminRefreshTimer=setInterval(()=>{
+      loadAll();
+      const ts=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      const el=document.getElementById('conn-lbl');
+      if(el)el.textContent='MySQL Connected · Updated '+ts;
+    },10000);
+  }
+  if(state!=='ok' && _adminRefreshTimer){
+    clearInterval(_adminRefreshTimer);_adminRefreshTimer=null;
+  }
+}
+
+// ── Load all data ─────────────────────────────────────────────────────────────
+async function loadAll(){
+  const refreshBtn=document.querySelector('.btn-b.btn-sm');
+  if(refreshBtn){refreshBtn.textContent='⏳ Loading...';refreshBtn.disabled=true;}
+
+  // Load sessions first (most important), then others in parallel
+  await loadSessions();
+  await Promise.all([loadCodes(), loadBanks(), loadSync()]);
+  await loadSummary();
+
+  if(refreshBtn){refreshBtn.textContent='↻ Refresh';refreshBtn.disabled=false;}
+}
+
+async function loadSummary(){
+  // Compute KPIs from allSessRaw (already loaded) — no extra API call needed
+  if(allSessRaw && allSessRaw.length){
+    document.getElementById('k-sessions').textContent = allSessRaw.length;
+    document.getElementById('k-students').textContent = new Set(allSessRaw.map(s=>s.student)).size;
+    const avg=Math.round(allSessRaw.reduce((a,s)=>a+(s.score/s.total*100),0)/allSessRaw.length);
+    document.getElementById('k-avg').textContent = avg+'%';
+  }
+  // Session codes count
+  try{
+    const r = await fetchAPI('/api/session-codes');
+    if(r.ok){
+      const raw=await r.json();
+      const d=Array.isArray(raw)?raw:[];
+      document.getElementById('k-codes').textContent = d.length;
+    }
+  }catch(e){}
+  // Custom banks count
+  try{
+    const r = await fetchAPI('/api/custom-banks');
+    if(r.ok){
+      const raw=await r.json();
+      const d=Array.isArray(raw)?raw:[];
+      document.getElementById('k-banks').textContent = d.length;
+    }
+  }catch(e){}
+}
+
+async function loadSessions(){
+  if(allSessRaw.length) renderSessions(); // show cached data immediately
+
+  let loaded=false;
+  let lastError='';
+
+  // Try progressively smaller limits — fetchAPI handles timeout internally (8s each)
+  for(const limit of [2000,1000,500]){
+    try{
+      const r=await fetchAPI('/api/sessions?limit='+limit); // NO extra signal — fetchAPI has own timeout
+      if(!r.ok){ lastError='HTTP '+r.status; continue; }
+      const raw=await r.json();
+      const data=Array.isArray(raw)?raw:(raw.sessions||raw.data||[]);
+      allSessRaw=data; loaded=true;
+      break;
+    }catch(e){
+      lastError=e.message;
+      if(e.message==='Timeout') break; // server unreachable — stop trying larger sets
+    }
+  }
+
+  if(!loaded){
+    if(allSessRaw.length){
+      // Have stale data — show it with a warning banner
+      const tbl=document.getElementById('tbl-sessions');
+      if(tbl) tbl.insertAdjacentHTML('afterbegin',
+        '<div style="background:#FFFBEB;border-left:4px solid #D97706;padding:9px 14px;font-size:12px;color:#92400E;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">'+
+        '<span>⚠️ Could not refresh — showing last loaded data</span>'+
+        '<button onclick="loadAll()" style="background:#D97706;color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700">↻ Retry</button></div>');
+      renderSessions();
+    } else {
+      setErr('tbl-sessions',
+        '<div style="text-align:center;padding:32px">'+
+        '<div style="font-size:32px;margin-bottom:12px">⚠️</div>'+
+        '<div style="font-weight:700;color:#B91C1C;font-size:15px;margin-bottom:6px">Cannot reach server</div>'+
+        '<div style="font-size:12px;color:#64748B;margin-bottom:4px">'+lastError+'</div>'+
+        '<div style="font-size:12px;color:#64748B;margin-bottom:16px">Check Railway is running — visit <b>/api/health</b></div>'+
+        '<button onclick="loadAll()" style="background:#2563EB;color:#fff;border:none;padding:9px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">↻ Try Again</button></div>');
+    }
+    return; // STOP — no auto-retry loop (was causing infinite hang)
+  }
+
+  if(!allSessRaw.length){ setErr('tbl-sessions','No sessions yet'); renderStudents(); return; }
+
+  // Populate dropdowns
+  const subjs=[...new Set(allSessRaw.map(s=>s.subject||'').filter(Boolean))].sort();
+  const codes=[...new Set(allSessRaw.map(s=>s.sessionCode||s.session_code||'').filter(Boolean))].sort();
+  const stus=[...new Set(allSessRaw.map(s=>s.student||'').filter(Boolean))].sort();
+  const se=document.getElementById('f-subj');
+  if(se){const cv=se.value;se.innerHTML='<option value="">All Subjects</option>'+subjs.map(s=>`<option${s===cv?' selected':''}>${s}</option>`).join('');}
+  const ce=document.getElementById('f-code');
+  if(ce){const cc=ce.value;ce.innerHTML='<option value="">All Codes</option>'+codes.map(c=>`<option${c===cc?' selected':''}>${c}</option>`).join('');}
+  const se2=document.getElementById('f-stu2');
+  if(se2){const sc2=se2.value;se2.innerHTML='<option value="">All Students</option>'+stus.map(s=>`<option${s===sc2?' selected':''}>${s}</option>`).join('');}
+  renderSessions();
+  renderStudents();
+}
+
+function renderSessions(){
+  const subj=document.getElementById('f-subj')?.value||'';
+  const code=document.getElementById('f-code')?.value||'';
+  const days=parseInt(document.getElementById('f-date')?.value||'0')||0;
+  const stu=(document.getElementById('f-stu')?.value||'').toLowerCase();
+  const now=Date.now();
+  let data=allSessRaw.filter(s=>{
+    if(subj && s.subject!==subj)return false;
+    if(code && s.sessionCode!==code)return false;
+    if(days && (now-(s.timestamp||0))>days*86400000)return false;
+    if(stu && !(s.student||'').toLowerCase().includes(stu))return false;
+    return true;
+  });
+  const avg=data.length?Math.round(data.reduce((a,s)=>a+(s.score/s.total*100),0)/data.length):0;
+  document.getElementById('sessions-sum').innerHTML=
+    `<span>Showing <b>${data.length}</b></span><span>Avg: <b>${avg}%</b></span>`+
+    `<span>Need help: <b>${data.filter(s=>(s.score/s.total*100)<50).length}</b></span>`+
+    `<span>Students: <b>${new Set(data.map(s=>s.student)).size}</b></span>`;
+  if(!data.length){ setErr('tbl-sessions','No sessions match filters'); return; }
+  const rows=data.map(s=>{
+    const p=s.total?Math.round(s.score/s.total*100):0;
+    const g=p>=85?'A+':p>=70?'A':p>=55?'B':p>=40?'C':'D';
+    const gcls=p>=70?'gA':p>=55?'gB':p>=40?'gC':'gD';
+    const flags=(s.flags||[]).filter(f=>f.reason==='TOO_FAST').length;
+    const cm=s.conceptMap||{};
+    const cpills=Object.entries(cm).slice(0,3).map(([k,v])=>`<span class="cpill ${v>=70?'cg':v>=45?'co':'cr'}">${k} ${v}%</span>`).join('');
+    const dt=s.timestamp?new Date(s.timestamp).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'--';
+    return `<tr><td><b>${s.student||'--'}</b></td><td>${s.roll||'--'}</td><td>${s.subject||'--'}</td>
+      <td>${s.score||0}/${s.total||0}</td><td><span class="gp ${gcls}">${p}% ${g}</span></td>
+      <td>${cpills||'--'}</td><td>${flags?`<span style="color:#B45309;font-weight:700">&#9889;${flags}</span>`:''}</td>
+      <td style="font-family:monospace;font-size:10.5px">${s.sessionCode||'--'}</td>
+      <td style="font-size:11px">${s.source||'--'}</td>
+      <td style="font-size:11px;white-space:nowrap">${dt}</td></tr>`;
+  });
+  document.getElementById('tbl-sessions').innerHTML=
+    '<table><thead><tr><th>Student</th><th>Roll</th><th>Subject</th><th>Score</th><th>Grade</th><th>Concepts</th><th>Flags</th><th>Code</th><th>Source</th><th>Date</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+}
+
+function renderStudents(){
+  const chosen=document.getElementById('f-stu2')?.value||'';
+  const map={};
+  allSessRaw.forEach(s=>{
+    const n=s.student||'?';
+    if(!map[n])map[n]={student:n,sessions:[],total:0,correct:0,subjects:{}};
+    map[n].sessions.push(s);
+    map[n].total+=s.total||0;
+    map[n].correct+=s.score||0;
+    const sub=s.subject||'?';
+    if(!map[n].subjects[sub])map[n].subjects[sub]=[];
+    map[n].subjects[sub].push(s.total?Math.round(s.score/s.total*100):0);
+  });
+  const data=chosen?{[chosen]:map[chosen]}:map;
+  const rows=Object.values(data).map(d=>{
+    const p=d.total?Math.round(d.correct/d.total*100):0;
+    const g=p>=70?'gA':p>=55?'gB':p>=40?'gC':'gD';
+    const grade=p>=85?'A+':p>=70?'A':p>=55?'B':p>=40?'C':'D';
+    const subPills=Object.entries(d.subjects).map(([sub,pts])=>{
+      const a=Math.round(pts.reduce((x,y)=>x+y,0)/pts.length);
+      return `<span class="cpill ${a>=70?'cg':a>=45?'co':'cr'}">${sub}: ${a}%</span>`;
+    }).join('');
+    const last=d.sessions.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))[0];
+    return `<tr><td><b>${d.student}</b></td><td>${d.sessions.length}</td>
+      <td><span class="gp ${g}">${p}% ${grade}</span></td><td>${subPills}</td>
+      <td style="font-size:11px">${last?new Date(last.timestamp).toLocaleDateString('en-IN'):'--'}</td></tr>`;
+  });
+  if(!rows.length){setErr('tbl-students','No data');return;}
+  document.getElementById('tbl-students').innerHTML=
+    '<table><thead><tr><th>Student</th><th>Sessions</th><th>Overall</th><th>Per Subject</th><th>Last Active</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+}
+
+async function loadCodes(){
+  try{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),8000);
+    const r=await fetchAPI('/api/session-codes',{signal:ctrl.signal});
+    clearTimeout(tid);
+    if(!r.ok){ setErr('tbl-codes','Session codes unavailable ('+r.status+') — try refreshing'); return; }
+    const raw2=await r.json();
+    const d=Array.isArray(raw2)?raw2:[];
+    if(!d.length){setErr('tbl-codes','No session codes yet. Teacher needs to open the dashboard.');return;}
+    const rows=d.map(c=>`<tr>
+      <td style="font-family:monospace;font-size:13px;font-weight:700;color:#0B2447">${c.code}</td>
+      <td>${c.label||'--'}</td>
+      <td style="font-weight:700;color:var(--teal)">${c.student_count||0}</td>
+      <td>${c.avg_score?Math.round(c.avg_score)+'%':'--'}</td>
+      <td style="font-size:11px">${c.created_at?new Date(c.created_at).toLocaleString('en-IN'):'--'}</td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:${c.active?'#DCFCE7':'#F1F5F9'};color:${c.active?'#15803D':'#64748B'}">${c.active?'Active':'Inactive'}</span></td>
+    </tr>`);
+    document.getElementById('tbl-codes').innerHTML=
+      '<table><thead><tr><th>Code</th><th>Label</th><th>Students</th><th>Avg</th><th>Created</th><th>Status</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+  }catch(e){setErr('tbl-codes','Error: '+e.message);}
+}
+
+async function loadBanks(){
+  try{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),8000);
+    const r=await fetchAPI('/api/custom-banks',{signal:ctrl.signal});
+    clearTimeout(tid);
+    if(!r.ok){ setErr('tbl-banks','Custom banks unavailable ('+r.status+')'); return; }
+    const rawb=await r.json();
+    const d=Array.isArray(rawb)?rawb:[];
+    if(!d.length){setErr('tbl-banks','No custom banks yet. Add questions in Teacher Quiz Creator.');return;}
+    const rows=d.map(b=>`<tr>
+      <td style="font-weight:700;color:var(--navy)">${b.subject}</td>
+      <td style="font-weight:700">${(b.questions||[]).length}</td>
+      <td>${(b.questions||[]).slice(0,3).map(q=>`<div style="font-size:11px;padding:1px 0">&#8226; ${(q.q?.en||q.q||'').toString().substring(0,55)}${(q.q?.en||q.q||'').toString().length>55?'...':''}</div>`).join('')}</td>
+      <td style="font-size:11px">${b.updated_at?new Date(b.updated_at).toLocaleString('en-IN'):'--'}</td>
+    </tr>`);
+    document.getElementById('tbl-banks').innerHTML=
+      '<table><thead><tr><th>Subject</th><th>Questions</th><th>Preview</th><th>Updated</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+  }catch(e){setErr('tbl-banks','Error: '+e.message);}
+}
+
+async function loadSync(){
+  try{
+    const r=await fetchAPI('/api/sync-queue');
+    const d=await r.json();
+    if(!d.length){setErr('tbl-sync','No sync events yet.');return;}
+    const rows=d.map(s=>`<tr>
+      <td>${s.id}</td>
+      <td style="font-family:monospace;font-size:11px">${s.device_id||'--'}</td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:#DCFCE7;color:#15803D">Synced</span></td>
+      <td style="font-size:11px">${s.created_at?new Date(s.created_at).toLocaleString('en-IN'):'--'}</td>
+      <td style="font-size:11px">${s.synced_at?new Date(s.synced_at).toLocaleString('en-IN'):'--'}</td>
+    </tr>`);
+    document.getElementById('tbl-sync').innerHTML=
+      '<table><thead><tr><th>ID</th><th>Device</th><th>Status</th><th>Session Time</th><th>Synced At</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+  }catch(e){setErr('tbl-sync','Error: '+e.message);}
+}
+
+async function exportCSV(type){
+  if(!API){ toast('Not connected to server'); return; }
+  // Server generates CSV directly — no JSON parsing, no client-side conversion
+  // Browser opens the URL and downloads the file automatically
+  const urls = {
+    sessions: API+'/api/export/sessions.csv',
+    students: API+'/api/export/students.csv',
+    codes:    API+'/api/export/codes.csv',
+  };
+  const url = urls[type];
+  if(!url){ toast('Unknown export type'); return; }
+  toast('⏳ Downloading '+type+' CSV...');
+  try{
+    // Verify server is reachable first
+    const r = await fetchAPI('/api/health');
+    if(!r.ok){ toast('Server error — check connection'); return; }
+    // Open URL — browser handles download automatically
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = ''; // let server set filename via Content-Disposition
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast('✅ Download started');
+  }catch(e){ toast('Export failed: '+e.message); }
+}
+
+async function clearAll(){
+  if(!confirm('DELETE ALL SESSIONS from MySQL? This cannot be undone!'))return;
+  try{
+    const r=await fetchAPI('/api/sessions',{method:'DELETE'});
+    if(r.ok){toast('All sessions cleared');loadAll();}
+  }catch(e){toast('Error: '+e.message);}
+}
+
+function showTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('panel-'+id).classList.add('on');
+}
+function setErr(id,msg){ const e=document.getElementById(id);if(e)e.innerHTML=`<div class="empty">${msg}</div>`; }
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3500);}
+
+
+async function dedupSessions(){
+  if(!confirm('Remove all duplicate sessions from MySQL? Keeps first occurrence of each.'))return;
+  try{
+    const r=await fetchAPI('/api/sessions/duplicates',{method:'DELETE'});
+    const d=await r.json();
+    toast('Removed '+d.deleted+' duplicate rows');
+    loadAll();
+  }catch(e){toast('Dedup failed: '+e.message);}
+}
+
+window.addEventListener('load',()=>{
+  const saved=localStorage.getItem('bodhAdminUrl');
+  if(saved&&saved.length>5){
+    document.getElementById('srv-url').value=saved;
+  } else {
+    // Auto-detect from current page URL (works on Railway/LAN/localhost)
+    const h=location.hostname;
+    if(h&&h!==''&&h!=='null'){
+      let auto;
+      if(h==='localhost'||h==='127.0.0.1'||h.startsWith('192.168.')||h.startsWith('10.')||h.startsWith('172.')){
+        auto=location.protocol+'//'+h+':'+(location.port||'3000');
+      } else {
+        auto=location.protocol+'//'+h+(location.port?':'+location.port:'');
+      }
+      document.getElementById('srv-url').value=auto;
+    }
+  }
+  setTimeout(connectServer,600);
+});
+document.getElementById('srv-url').addEventListener('keydown',e=>{if(e.key==='Enter')connectServer();});
+</script>
+</body>
+</html>

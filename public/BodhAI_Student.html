@@ -1,0 +1,2906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BodhAI — AI Learning Gap Detector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap" rel="stylesheet">
+<style>
+/* ═══ RESET & VARS ═══ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F0F5FF; --bg2:#E8EFFC; --white:#fff;
+  --navy:#0B2447; --blue:#2563EB; --blue-lt:#EFF6FF; --blue-mid:#DBEAFE;
+  --ora:#F4841F; --ora-lt:#FFF7ED; --ora-dk:#C56510;
+  --teal:#059669; --teal-lt:#ECFDF5;
+  --red:#DC2626; --red-lt:#FEF2F2;
+  --yel:#D97706; --yel-lt:#FFFBEB;
+  --pur:#7C3AED; --pur-lt:#F5F3FF;
+  --text:#1E293B; --text2:#475569; --text3:#94A3B8;
+  --border:#E2E8F0; --border2:#CBD5E1;
+  --shadow: 0 2px 12px rgba(37,99,235,.08), 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 24px rgba(37,99,235,.12), 0 2px 8px rgba(0,0,0,.08);
+  --r:14px; --r-sm:10px; --r-lg:20px;
+}
+html,body{height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+body{min-height:100vh}
+
+/* ═══ LAYOUT ═══ */
+.app{display:grid;grid-template-columns:240px 1fr 260px;min-height:100vh;gap:0}
+/* Tablet: hide right panel, sidebar stays */
+@media(max-width:1100px){.app{grid-template-columns:200px 1fr}}
+/* Mobile/tablet ≤1024px: hide sidebar, make app scroll properly */
+@media(max-width:1024px){
+  html,body{height:100%;overflow:hidden}
+  .app{grid-template-columns:1fr!important;height:100%!important;overflow:hidden}
+  .sidebar{display:none!important}
+  .rpanel{display:none!important}
+  .main{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}
+}
+@media(max-width:780px){.app{grid-template-columns:1fr!important}.sidebar,.rpanel{display:none!important}}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{background:var(--navy);min-height:100vh;padding:28px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-brand{font-family:'Fraunces',serif;font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px;margin-bottom:2px}
+.sb-sub{font-size:10px;color:rgba(255,255,255,.35);margin-bottom:8px;font-weight:500}
+.role-toggle{display:flex;background:rgba(255,255,255,.08);border-radius:22px;padding:3px;margin-bottom:20px}
+.rt-btn{flex:1;text-align:center;padding:6px 8px;border-radius:18px;font-size:11px;font-weight:700;cursor:pointer;color:rgba(255,255,255,.5);transition:all .2s}
+.rt-btn.on{background:var(--ora);color:#fff;box-shadow:0 2px 8px rgba(244,132,31,.3)}
+.sb-section{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.25);margin:14px 0 6px}
+.sb-nav{display:flex;flex-direction:column;gap:2px}
+.sn-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:11px;cursor:pointer;transition:all .2s;border-left:3px solid transparent}
+.sn-item:hover{background:rgba(255,255,255,.07)}
+.sn-item.on{background:rgba(255,255,255,.1);border-left-color:var(--ora)}
+.sn-item.done .sn-dot{background:var(--teal)!important;color:#fff!important}
+.sn-dot{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba(255,255,255,.5);flex-shrink:0;transition:all .2s}
+.sn-item.on .sn-dot{background:var(--ora);color:#fff}
+.sn-lbl{font-size:12px;font-weight:600;color:rgba(255,255,255,.65);line-height:1.3}
+.sn-sub{font-size:9.5px;color:rgba(255,255,255,.3);margin-top:1px}
+.sb-status{margin-top:auto;background:rgba(255,255,255,.06);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,.08)}
+.sb-st-title{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.25);margin-bottom:8px}
+.sb-st-item{font-size:10.5px;color:rgba(255,255,255,.45);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+#sb-db-status{font-size:10px;color:rgba(255,255,255,.35);margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}
+
+/* ═══ MAIN CONTENT ═══ */
+.main{padding:20px 24px;overflow-y:auto;min-height:0}
+@media(max-width:780px){.main{padding:14px}}
+
+/* ═══ RIGHT PANEL ═══ */
+.rpanel{background:var(--white);border-left:1px solid var(--border);padding:20px 16px;overflow-y:auto;position:sticky;top:0;height:100vh}
+.rp-h{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:10px}
+.rp-card{background:var(--bg);border-radius:var(--r-sm);padding:12px;margin-bottom:10px;border:1px solid var(--border)}
+.rp-num{font-size:26px;font-weight:800;color:var(--ora)} .rp-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.rp-badge{background:var(--teal-lt);border:1px solid rgba(5,150,105,.2);border-radius:8px;padding:8px 10px;font-size:10.5px;color:var(--teal);display:flex;gap:7px;align-items:center;margin-bottom:7px;font-weight:600}
+.rp-score-item{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text2);padding:5px 0;border-bottom:1px solid var(--border)}
+.rp-score-item:last-child{border-bottom:none}
+.rp-score-item span:last-child{color:var(--ora);font-weight:700}
+
+/* ═══ SCREENS ═══ */
+.screen{display:none} .screen.active{display:block}
+
+/* ═══ CARD ═══ */
+.card{background:var(--white);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:16px}
+.card-sm{padding:14px}
+.card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+/* ═══ BUTTONS ═══ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border-radius:12px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;border:none;transition:all .2s;text-decoration:none}
+.btn:active{transform:scale(.97)} .btn-full{width:100%;display:flex}
+.btn-p{background:var(--blue);color:#fff;box-shadow:0 4px 16px rgba(37,99,235,.25)}
+.btn-p:hover{background:#1D4ED8;transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,99,235,.3)}
+.btn-o{background:var(--ora);color:#fff;box-shadow:0 4px 14px rgba(244,132,31,.25)}
+.btn-o:hover{background:var(--ora-dk);transform:translateY(-2px)}
+.btn-t{background:var(--teal);color:#fff}
+.btn-g{background:var(--bg);color:var(--text2);border:1px solid var(--border)}
+.btn-g:hover{background:var(--bg2)}
+.btn-outline{background:transparent;color:var(--blue);border:2px solid var(--blue)}
+.btn-sm{padding:8px 16px;font-size:12px;border-radius:10px}
+
+/* ═══ TAGS ═══ */
+.tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.tbl{background:var(--blue-mid);color:#1D4ED8} .ttl{background:var(--teal-lt);color:var(--teal)}
+.tor{background:var(--ora-lt);color:var(--ora-dk)} .trd{background:var(--red-lt);color:var(--red)}
+.tpu{background:var(--pur-lt);color:var(--pur)} .tye{background:var(--yel-lt);color:var(--yel)}
+.tgr{background:var(--bg2);color:var(--text2)}
+
+/* ═══ PROGRESS BAR ═══ */
+.pb-wrap{height:8px;background:var(--bg2);border-radius:4px;overflow:hidden}
+.pb-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.25,.8,.25,1)}
+
+/* ═══ SPLASH ═══ */
+.splash-hero{text-align:center;padding:60px 20px 32px;background:linear-gradient(145deg,var(--navy) 0%,#1A4080 55%,#0A5C50 100%);border-radius:var(--r-lg);margin-bottom:20px;position:relative;overflow:hidden}
+.splash-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.04)}
+.splash-hero::after{content:'';position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;border-radius:50%;background:rgba(5,150,105,.1)}
+.hero-logo{font-family:'Fraunces',serif;font-size:56px;font-weight:900;color:#fff;letter-spacing:-2px;margin-bottom:4px;position:relative;z-index:1}
+.hero-meaning{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:12px;font-weight:500;position:relative;z-index:1}
+.hero-tag{font-size:15px;color:rgba(255,255,255,.75);line-height:1.6;max-width:500px;margin:0 auto 20px;position:relative;z-index:1}
+.hero-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;position:relative;z-index:1}
+.hero-chip{padding:6px 14px;background:rgba(255,255,255,.1);border-radius:20px;font-size:11.5px;color:#fff;border:1px solid rgba(255,255,255,.18);font-weight:600}
+.splash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+@media(max-width:600px){.splash-stats{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:var(--white);border-radius:var(--r-sm);padding:16px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border)}
+.stat-card .sn{font-size:28px;font-weight:800;color:var(--navy)} .stat-card .sl{font-size:10px;color:var(--text3);margin-top:2px;font-weight:500}
+.role-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.role-cards{grid-template-columns:1fr}}
+.role-card{background:var(--white);border-radius:var(--r);padding:24px;box-shadow:var(--shadow);cursor:pointer;transition:all .25s;border:2px solid var(--border);text-align:center}
+.role-card:hover{border-color:var(--blue);transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.rc-icon{font-size:42px;margin-bottom:12px} .rc-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px} .rc-desc{font-size:12.5px;color:var(--text2);line-height:1.5}
+
+/* ═══ PAGE HEADERS ═══ */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.ph-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.4px}
+.ph-sub{font-size:13px;color:var(--text3);margin-top:2px}
+.ph-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+/* ═══ TEACHER DASHBOARD ═══ */
+.teacher-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.teacher-grid{grid-template-columns:1fr}}
+.class-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:700px){.class-stats{grid-template-columns:repeat(2,1fr)}}
+.cs-card{background:var(--white);border-radius:var(--r-sm);padding:14px;box-shadow:var(--shadow);border:1px solid var(--border);text-align:center}
+.cs-num{font-size:28px;font-weight:800;margin-bottom:2px}
+.cs-lbl{font-size:10px;color:var(--text3);font-weight:500}
+/* Dot grid */
+.dot-legend{display:flex;gap:14px;margin-bottom:8px;font-size:10.5px;color:var(--text2);font-weight:600}
+.dl-i{display:flex;align-items:center;gap:5px}
+.sdot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:800;color:#fff;cursor:pointer;transition:transform .15s;position:relative;border:1.5px solid transparent}
+.sdot:hover{transform:scale(1.4);z-index:10;border-color:rgba(0,0,0,.2)}
+.sdot.ok{background:var(--teal)} .sdot.par{background:var(--yel);color:var(--text)} .sdot.mis{background:var(--red)} .sdot.na{background:#CBD5E1;color:var(--text3)}
+.sdot-tip{position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:9px;padding:3px 7px;border-radius:6px;white-space:nowrap;z-index:100;font-weight:500;pointer-events:none;display:none}
+.sdot:hover .sdot-tip{display:block}
+.student-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.student-row:last-child{border-bottom:none}
+.stu-ava{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--pur));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0}
+.stu-info{flex:1}
+.stu-name{font-size:13px;font-weight:700;color:var(--text)}
+.stu-detail{font-size:11px;color:var(--text3);margin-top:1px}
+.stu-score{font-size:14px;font-weight:800}
+.ai-suggestion{background:var(--yel-lt);border-radius:10px;padding:10px 12px;border-left:3px solid var(--yel);margin-top:7px;font-size:11.5px;color:var(--text);line-height:1.55}
+.ai-suggestion strong{color:var(--yel)}
+
+/* ═══ LANGUAGE SELECTION ═══ */
+.lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:500px){.lang-grid{grid-template-columns:repeat(2,1fr)}}
+.lang-card{background:var(--white);border:2px solid var(--border);border-radius:var(--r);padding:18px 12px;text-align:center;cursor:pointer;transition:all .22s;box-shadow:var(--shadow)}
+.lang-card:hover,.lang-card.sel{border-color:var(--blue);background:var(--blue-lt);transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.lc-s{font-size:32px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.lc-n{font-size:12.5px;font-weight:700;color:var(--text)}
+.lc-v{font-size:10.5px;color:var(--text3)}
+.voice-avail{display:flex;align-items:center;gap:5px;font-size:10px;margin-top:5px;justify-content:center;font-weight:600}
+.va-yes{color:var(--teal)} .va-no{color:var(--text3)}
+
+/* ═══ STUDENT PROFILE ═══ */
+.profile-form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.profile-form{grid-template-columns:1fr}}
+.inp-g label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px}
+.inp-g input{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;font-weight:600;color:var(--text);outline:none;transition:all .2s}
+.inp-g input:focus{border-color:var(--blue);background:var(--blue-lt)}
+.subj-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:500px){.subj-grid{grid-template-columns:repeat(2,1fr)}}
+.subj-opt{background:var(--white);border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 8px;text-align:center;cursor:pointer;transition:all .2s;box-shadow:var(--shadow)}
+.subj-opt:hover,.subj-opt.sel{border-color:var(--blue);background:var(--blue-lt)}
+.so-ic{font-size:22px;margin-bottom:4px} .so-nm{font-size:12px;font-weight:700;color:var(--text)}
+
+/* ═══ QUIZ SCREEN ═══ */
+.quiz-layout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+@media(max-width:900px){.quiz-layout{grid-template-columns:1fr}}
+/* Hide quiz side panel whenever main area could be too narrow */
+@media(max-width:1200px){
+  #quiz-side-panel{display:none!important}
+}
+.quiz-card{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}
+/* Quiz header */
+.qhdr{background:var(--navy);padding:18px 20px 14px}
+.qhdr-row{display:flex;align-items:flex-start;justify-content:space-between}
+.qtype-b{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:4px}
+.qnum-t{font-size:11px;color:rgba(255,255,255,.5);font-weight:600;margin-bottom:2px}
+.qconcept-t{font-size:13.5px;font-weight:700;color:rgba(255,255,255,.9)}
+/* Timer */
+.timer-wrap{position:relative;width:58px;height:58px;flex-shrink:0}
+.timer-svg{transform:rotate(-90deg)}
+.t-bg{fill:none;stroke:rgba(255,255,255,.12);stroke-width:5}
+.t-arc{fill:none;stroke-width:5;stroke-linecap:round;}
+.t-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;transition:color .3s}
+.q-progress{height:3px;background:rgba(255,255,255,.12);overflow:hidden}
+.q-pf{height:100%;background:linear-gradient(90deg,var(--ora),#FBBF24);transition:width .6s ease}
+/* Visual area */
+.vis-area{background:var(--bg);min-height:180px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.vis-label{position:absolute;top:8px;left:10px;font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;background:rgba(255,255,255,.9);padding:3px 8px;border-radius:20px;border:1px solid var(--border)}
+.ai-vis-badge{position:absolute;top:8px;right:10px;font-size:9px;font-weight:700;color:var(--blue);background:var(--blue-lt);padding:3px 8px;border-radius:20px;border:1px solid var(--blue-mid);display:none}
+.vis-loading{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--text2)}
+.vis-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Question body */
+.q-body{padding:16px 20px 12px}
+.q-txt{font-size:15px;font-weight:700;color:var(--text);line-height:1.45;margin-bottom:4px}
+.q-txt-en{font-size:12px;color:var(--text3);line-height:1.4;margin-bottom:10px}
+.aud-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--teal-lt);border:1px solid rgba(5,150,105,.25);border-radius:20px;cursor:pointer;font-size:11.5px;color:var(--teal);font-weight:700;margin-bottom:10px;transition:all .2s;user-select:none}
+.aud-btn:hover{background:rgba(5,150,105,.15)} .aud-btn.loading{background:var(--bg);border-color:var(--border);color:var(--text3)}
+.aud-btn.playing{background:var(--red-lt);border-color:rgba(220,38,38,.25);color:var(--red)}
+.aud-note{font-size:10.5px;color:var(--text3);margin-bottom:6px;font-style:italic;line-height:1.45;display:none}
+.fast-warn{background:var(--yel-lt);border:1px solid rgba(217,119,6,.25);border-radius:8px;padding:6px 12px;font-size:11px;color:var(--yel);font-weight:600;margin-bottom:8px;display:none;text-align:center}
+.fast-warn.show{display:block}
+/* Options */
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 20px 12px}
+.opt{background:var(--bg);border:2px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:all .2s;text-align:left;font-family:inherit;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:10px;user-select:none}
+.opt:hover{border-color:var(--blue);background:var(--blue-lt);transform:scale(1.01)}
+.opt.sel{border-color:var(--blue);background:var(--blue-lt)}
+.opt.correct{border-color:var(--teal);background:var(--teal-lt);animation:cpop .4s ease}
+.opt.wrong{border-color:var(--red);background:var(--red-lt);animation:shake .35s ease}
+.opt.reveal{border-color:var(--teal);background:var(--teal-lt)}
+@keyframes cpop{0%,100%{transform:scale(1)}40%{transform:scale(1.03)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.opt-ltr{width:26px;height:26px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;transition:all .2s;color:var(--text2)}
+.opt.sel .opt-ltr{background:var(--blue);color:#fff} .opt.correct .opt-ltr{background:var(--teal);color:#fff} .opt.wrong .opt-ltr{background:var(--red);color:#fff}
+/* Voice row */
+.voice-section{padding:4px 20px 8px}
+.vbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;background:var(--bg);border:1.5px dashed var(--border2);border-radius:12px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--text2);transition:all .2s;user-select:none}
+.vbtn:hover{background:var(--teal-lt);border-color:var(--teal);color:var(--teal)}
+.vbtn.listening{background:var(--red-lt);border:2px solid var(--red);color:var(--red);border-style:solid;animation:vp 1s infinite}
+.vbtn.processing{background:var(--yel-lt);border-color:var(--yel);color:var(--yel);border-style:solid}
+@keyframes vp{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.15)}50%{box-shadow:0 0 0 5px rgba(220,38,38,0)}}
+.v-transcript{font-size:11px;color:var(--text3);padding:3px 20px 6px;font-style:italic;min-height:18px;line-height:1.4}
+/* Hint */
+.hint-section{padding:0 20px 8px}
+.hint-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--yel-lt);border:1px solid rgba(217,119,6,.2);border-radius:10px;cursor:pointer;font-size:11px;color:var(--yel);font-weight:600;transition:all .2s}
+.hint-pill:hover{background:rgba(217,119,6,.15)}
+.hint-txt{font-size:12px;color:var(--text2);line-height:1.5;padding:8px 12px;background:var(--yel-lt);border-radius:10px;margin-top:6px;display:none;border:1px solid rgba(217,119,6,.15)}
+.hint-txt.show{display:block}
+.next-section{padding:4px 20px 16px}
+/* Confetti */
+.cnf{position:fixed;inset:0;pointer-events:none;z-index:999;overflow:hidden}
+.cnf-p{position:absolute;width:8px;height:8px;border-radius:2px;animation:cf 1.5s ease forwards}
+@keyframes cf{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(300px) rotate(720deg);opacity:0}}
+
+/* ═══ RIGHT QUIZ INFO PANEL ═══ */
+.qinfo-card{background:var(--white);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:14px}
+.qic-title{font-size:11.5px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px}
+.progress-steps{display:flex;flex-direction:column;gap:6px}
+.ps-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:9px;font-size:12px;font-weight:600;color:var(--text2);background:var(--bg);border:1px solid var(--border);transition:all .2s}
+.ps-item.current{background:var(--blue-lt);border-color:var(--blue);color:var(--blue)}
+.ps-item.done{background:var(--teal-lt);border-color:rgba(5,150,105,.25);color:var(--teal)}
+.ps-item.wrong{background:var(--red-lt);border-color:rgba(220,38,38,.2);color:var(--red)}
+.ps-dot{width:20px;height:20px;border-radius:50%;background:var(--border2);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;flex-shrink:0}
+.ps-item.current .ps-dot{background:var(--blue);color:#fff} .ps-item.done .ps-dot{background:var(--teal);color:#fff} .ps-item.wrong .ps-dot{background:var(--red);color:#fff}
+
+/* ═══ SCORING ═══ */
+.scoring-hero{background:linear-gradient(145deg,var(--navy) 0%,#1A4080 55%,#0A5C50 100%);border-radius:var(--r-lg);padding:60px 24px;text-align:center;margin-bottom:20px}
+.sc-brain{width:90px;height:90px;position:relative;margin:0 auto 20px}
+.sc-ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(244,132,31,.2);animation:rp 2.5s infinite}
+.sc-ring:nth-child(2){inset:-14px;animation-delay:.4s;border-color:rgba(244,132,31,.1)}
+.sc-ring:nth-child(3){inset:-28px;animation-delay:.8s;border-color:rgba(244,132,31,.05)}
+@keyframes rp{0%{transform:scale(.85);opacity:1}100%{transform:scale(1.2);opacity:0}}
+.sc-core{position:absolute;inset:9px;background:rgba(255,255,255,.08);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;border:1px solid rgba(255,255,255,.15)}
+.sc-step{display:flex;align-items:center;gap:11px;padding:11px 16px;font-size:12.5px;color:rgba(255,255,255,.4);border-bottom:1px solid rgba(255,255,255,.06);transition:all .4s;background:rgba(255,255,255,.04)}
+.sc-step:last-child{border-bottom:none} .sc-step.done{color:#5CFA9C} .sc-step.active{color:var(--ora);font-weight:600}
+.sc-d{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.sc-step.done .sc-d{background:#5CFA9C;color:#022C22} .sc-step.active .sc-d{background:var(--ora);color:#fff;animation:spin .9s linear infinite}
+
+/* ═══ ANALYSIS ═══ */
+.analysis-hero{background:linear-gradient(135deg,var(--navy),#1E3A7A);border-radius:var(--r-lg);padding:28px 24px;margin-bottom:20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.ah-ava{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--pur));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;flex-shrink:0}
+.ah-info{flex:1}
+.ah-name{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.4px;margin-bottom:2px}
+.ah-sub{font-size:12px;color:rgba(255,255,255,.5)}
+.ah-pills{display:flex;gap:10px;flex-wrap:wrap}
+.ah-pill{background:rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;text-align:center;border:1px solid rgba(255,255,255,.12);min-width:72px}
+.ahp-n{font-size:22px;font-weight:800} .ahp-l{font-size:9.5px;color:rgba(255,255,255,.45);margin-top:1px}
+.analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.analysis-grid{grid-template-columns:1fr}}
+/* Donut */
+.donut-wrap{display:flex;align-items:center;gap:16px}
+.dleg{display:flex;flex-direction:column;gap:7px}
+.dl-i{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);font-weight:500}
+.dl-d{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+/* Q bars */
+.qbar-row{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.qbar-lbl{font-size:10px;color:var(--text3);width:22px;flex-shrink:0;font-weight:700}
+.qbar-track{flex:1;height:20px;background:var(--bg2);border-radius:6px;overflow:hidden;position:relative}
+.qbar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:8px;font-size:9.5px;font-weight:700;color:#fff;transition:width 1.2s cubic-bezier(.25,.8,.25,1)}
+.qbar-time{font-size:10px;color:var(--text3);width:28px;text-align:right;flex-shrink:0}
+/* Time histogram */
+.time-hist{display:flex;align-items:flex-end;gap:6px;height:70px}
+.th-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.th-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height 1s ease}
+.th-lbl{font-size:8.5px;color:var(--text3);font-weight:600}
+/* Concept bars */
+.cbr{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.cbn{font-size:11px;font-weight:600;color:var(--text2);width:100px;flex-shrink:0;line-height:1.3}
+.cbb{flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden}
+.cbf{height:100%;border-radius:4px;transition:width 1.2s cubic-bezier(.25,.8,.25,1)}
+.cbpc{font-size:11px;font-weight:700;width:28px;text-align:right;flex-shrink:0}
+/* AI suggestion cards */
+.ai-card{border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;border:1px solid}
+.ai-card.ok{background:var(--teal-lt);border-color:rgba(5,150,105,.2)} .ai-card.warn{background:var(--yel-lt);border-color:rgba(217,119,6,.2)} .ai-card.bad{background:var(--red-lt);border-color:rgba(220,38,38,.2)} .ai-card.info{background:var(--blue-lt);border-color:var(--blue-mid)}
+.ai-card-txt{font-size:12px;color:var(--text);line-height:1.55} .ai-card-txt strong{font-weight:700}
+
+/* ═══ FEEDBACK ═══ */
+.fb-hero{background:linear-gradient(145deg,var(--teal) 0%,#047857 100%);border-radius:var(--r-lg);padding:28px 24px;text-align:center;margin-bottom:20px;color:#fff}
+.fb-score-ring{width:90px;height:90px;border-radius:50%;border:5px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:12px auto}
+.fsr-n{font-size:28px;font-weight:900;line-height:1} .fsr-l{font-size:10px;color:rgba(255,255,255,.65)}
+.lang-pills{display:flex;gap:7px;overflow-x:auto;margin-bottom:14px;padding-bottom:2px;scrollbar-width:none}
+.lang-pills::-webkit-scrollbar{display:none}
+.lp{flex-shrink:0;padding:7px 14px;border-radius:22px;font-size:11.5px;font-weight:700;cursor:pointer;border:2px solid var(--border);color:var(--text3);background:var(--white);transition:all .2s}
+.lp.on{border-color:var(--teal);color:var(--teal);background:var(--teal-lt)}
+.apl{display:flex;align-items:center;gap:12px;background:var(--navy);border-radius:14px;padding:14px 16px;margin-bottom:14px;cursor:pointer;border:1px solid rgba(255,255,255,.08);transition:all .2s}
+.apl:hover{border-color:rgba(255,255,255,.15)}
+.apb{width:42px;height:42px;border-radius:50%;background:var(--ora);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 4px 12px rgba(244,132,31,.3)}
+.apb.on{background:var(--red)} .aw-wrap{flex:1;height:22px;display:flex;align-items:center;gap:2px}
+.aw{width:3px;background:rgba(255,255,255,.18);border-radius:2px}
+.aw.lit{background:var(--ora);animation:ab .5s infinite alternate}
+@keyframes ab{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+.fbm{background:var(--teal-lt);border-radius:14px;padding:14px;border-left:4px solid var(--teal);margin-bottom:14px}
+.fbl{font-size:9.5px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.fbt{font-size:13.5px;color:var(--text);line-height:1.65;font-weight:500}
+.cfi{background:var(--white);border-radius:12px;padding:12px;margin-bottom:9px;display:flex;gap:10px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.cfb{flex:1} .cfhd{display:flex;align-items:center;gap:7px;margin-bottom:3px;flex-wrap:wrap}
+.cft{font-size:12.5px;font-weight:700;color:var(--text)} .cfp{font-size:11.5px;color:var(--text2);line-height:1.5}
+.cfpb{height:5px;background:var(--bg2);border-radius:3px;overflow:hidden;margin-top:6px}
+.cfpf{height:100%;border-radius:3px;transition:width 1s ease}
+
+/* ═══ SVG ANIMATIONS ═══ */
+.anim-group{opacity:0;transform:translateY(8px);transition:opacity .5s ease,transform .5s ease}
+.anim-group.visible{opacity:1;transform:none}
+.bar-rect{transition:height .9s cubic-bezier(.25,.8,.25,1),y .9s cubic-bezier(.25,.8,.25,1)}
+.circle-arc{transition:stroke-dashoffset 1.2s cubic-bezier(.25,.8,.25,1)}
+.slide-dot{transition:cx 1.2s cubic-bezier(.25,.8,.25,1)}
+.grow-rect{transition:width 1s cubic-bezier(.25,.8,.25,1)}
+@keyframes pulseGlow{0%,100%{opacity:.7}50%{opacity:1}}
+@keyframes floatUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes rotate360{to{transform:rotate(360deg)}}
+@keyframes dashFlow{to{stroke-dashoffset:-20}}
+@keyframes popIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.1);opacity:.9}100%{transform:scale(1);opacity:1}}
+
+
+/* ── MOBILE HAMBURGER OVERLAY SIDEBAR ── */
+.ham-btn{display:none;position:fixed;top:12px;left:12px;z-index:600;width:40px;height:40px;
+  border-radius:10px;background:var(--navy);border:none;cursor:pointer;
+  align-items:center;justify-content:center;font-size:18px;color:#fff;box-shadow:0 2px 12px rgba(11,36,71,.3)}
+@media(max-width:1024px){.ham-btn{display:flex}}
+
+/* ── STICKY ACTION BUTTONS ON MOBILE ── */
+.sticky-action{
+  background:var(--bg);border-top:1px solid var(--border);
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));
+  margin:0 -20px -20px; /* negative margin to break out of parent padding */
+}
+@media(max-width:1024px){
+  .sticky-action{
+    position:sticky;bottom:66px;left:0;right:0;z-index:100;
+    padding:10px 0 10px;margin:0;
+    box-shadow:0 -4px 16px rgba(11,36,71,.08);
+  }
+  /* Add space so content isn't hidden behind sticky button + bottom nav */
+  .screen.active{padding-bottom:140px}
+}
+
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:700}
+.sidebar-overlay.open{display:block}
+.sidebar-drawer{position:fixed;left:0;top:0;bottom:0;width:260px;background:var(--navy);z-index:800;
+  transform:translateX(-100%);transition:transform .3s cubic-bezier(.25,.8,.25,1);overflow-y:auto;padding:20px 16px}
+.sidebar-drawer.open{transform:translateX(0)}
+/* When sidebar is a drawer, adjust the top padding for close button */
+.drawer-close{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.drawer-close-btn{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);
+  font-size:20px;cursor:pointer;border-radius:8px;padding:4px 10px}
+
+@media(max-width:1024px){
+  .main{padding-top:58px!important;padding-left:16px!important;padding-right:16px!important}
+}
+@media(max-width:600px){
+  .main{padding-top:54px!important;padding-left:12px!important;padding-right:12px!important}
+}
+
+/* ══ MOBILE RESPONSIVE ══════════════════════════════════════ */
+@media(max-width:780px){
+  .main{padding-bottom:74px!important}
+}
+@media(max-width:600px){
+  .main{padding:10px!important}
+  .quiz-layout{grid-template-columns:1fr!important}
+  .opts-grid{grid-template-columns:1fr 1fr!important;gap:6px!important;padding:0 12px 8px!important}
+  .analysis-grid{grid-template-columns:1fr!important}
+  .teacher-grid{grid-template-columns:1fr!important}
+  .class-stats{grid-template-columns:1fr 1fr!important}
+  .subj-grid{grid-template-columns:1fr 1fr!important}
+  .lang-grid{grid-template-columns:1fr 1fr!important}
+  .splash-stats{grid-template-columns:1fr 1fr!important}
+  .vis-area{min-height:140px!important}
+  #quiz-side-panel{display:none!important}
+  .ph-title{font-size:17px!important}
+  .q-body{padding:9px 12px 6px!important}
+  .voice-section,.hint-section,.next-section{padding-left:12px!important;padding-right:12px!important}
+  .vis-area svg{max-width:100%!important;height:auto!important}
+  .scoring-hero{padding:36px 16px!important}
+  .analysis-hero{padding:18px 14px!important;flex-wrap:wrap!important}
+  .fb-hero{padding:28px 14px 14px!important}
+  .ah-pills{flex-wrap:wrap!important}
+  .hero-logo{font-size:42px!important}
+  .hero-tag{font-size:12.5px!important}
+  .hero-chips{gap:6px!important}
+  .hero-chip{font-size:10px!important;padding:4px 9px!important}
+  .role-card{padding:18px 14px!important}
+  .btn{font-size:13px!important}
+  .card{padding:14px!important}
+  .browser-screenshot-hide{display:none!important}
+}
+
+/* ══ MOBILE BOTTOM NAVIGATION ══════════════════════════════ */
+.mobile-bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--navy);z-index:500;
+  padding:7px 0 calc(8px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid rgba(255,255,255,.1);box-shadow:0 -4px 20px rgba(11,36,71,.18)}
+.mbn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;
+  font-weight:600;color:rgba(255,255,255,.4);cursor:pointer;padding:3px 0;transition:color .2s;user-select:none}
+.mbn-item.on,.mbn-item:hover{color:#fff}
+.mbn-ic{font-size:20px;line-height:1}
+@media(max-width:780px){.mobile-bnav{display:flex}}
+</style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+<!-- ════════════ SIDEBAR ════════════ -->
+<aside class="sidebar">
+  <div class="sb-brand">BodhAI</div>
+  <div class="sb-sub">बोध = Awakening · Understanding</div>
+  <div class="role-toggle">
+    <div class="rt-btn on" id="rtTeacher" onclick="setRole('teacher')">👩‍🏫 Teacher</div>
+    <div class="rt-btn" id="rtStudent" onclick="setRole('student')">👦 Student</div>
+  </div>
+
+  <div class="sb-section">Teacher</div>
+  <div class="sb-nav" id="sb-teacher-nav">
+    <div class="sn-item" id="sn-home" onclick="goto('s-splash')">
+      <div class="sn-dot">🏠</div><div><div class="sn-lbl">Home</div><div class="sn-sub">Main menu</div></div>
+    </div>
+    <div class="sn-item" id="sn-teacher" onclick="goto('s-teacher')">
+      <div class="sn-dot">📊</div><div><div class="sn-lbl">Teacher Dashboard</div><div class="sn-sub">Class overview + AI</div></div>
+    </div>
+  </div>
+
+  <div class="sb-section">Student Flow</div>
+  <div class="sb-nav" id="sb-student-nav">
+    <div class="sn-item" id="sn-lang" onclick="goto('s-lang')">
+      <div class="sn-dot">🌐</div><div><div class="sn-lbl">Language</div><div class="sn-sub">Select your language</div></div>
+    </div>
+    <div class="sn-item" id="sn-profile" onclick="goto('s-profile')">
+      <div class="sn-dot">👤</div><div><div class="sn-lbl">Student Profile</div><div class="sn-sub">Name & subject</div></div>
+    </div>
+    <div class="sn-item" id="sn-quiz" onclick="curQ>=0&&goto('s-quiz')">
+      <div class="sn-dot">📝</div><div><div class="sn-lbl">Quiz</div><div class="sn-sub">7 animated types</div></div>
+    </div>
+    <div class="sn-item" id="sn-score" onclick="goto('s-score')">
+      <div class="sn-dot">🧠</div><div><div class="sn-lbl">AI Scoring</div><div class="sn-sub">TinyBERT on-device</div></div>
+    </div>
+    <div class="sn-item" id="sn-analysis" onclick="goto('s-analysis')">
+      <div class="sn-dot">📈</div><div><div class="sn-lbl">My Analysis</div><div class="sn-sub">Charts & AI insights</div></div>
+    </div>
+    <div class="sn-item" id="sn-feedback" onclick="goto('s-feedback')">
+      <div class="sn-dot">💬</div><div><div class="sn-lbl">Feedback</div><div class="sn-sub">Audio in 6 languages</div></div>
+    </div>
+  </div>
+
+  <div class="sb-status">
+    <div class="sb-st-title">System Status</div>
+    <div class="sb-st-item">📴 Offline-first · IndexedDB</div>
+    <div class="sb-st-item">🔊 TTS · 🎙️ STT enabled</div>
+    <div class="sb-st-item">🤖 AI visuals · TinyBERT</div>
+    <div id="sb-db-status">🗄 Connecting to IndexedDB...</div>
+  </div>
+</aside>
+
+<!-- ════════════ MAIN ════════════ -->
+<main class="main" id="main-content">
+
+<!-- ══ SPLASH ══ -->
+<div id="student-status-bar" style="position:fixed;top:0;left:0;right:0;z-index:500;background:#0B2447;padding:4px 14px;display:flex;align-items:center;justify-content:space-between;font-size:10.5px;font-family:inherit">
+  <span style="color:rgba(255,255,255,.5)">BodhAI Student</span>
+  <span id="stu-conn-status" style="color:#94A3B8;font-weight:600">&#11044; Local</span>
+</div>
+<div style="height:26px"></div>
+<div id="s-splash" class="screen active">
+  <div class="splash-hero">
+    <div class="hero-logo">BodhAI</div>
+    <div class="hero-meaning">बोध · বোধ · புரிதல் = Awakening & Understanding</div>
+    <div class="hero-tag">AI-powered learning gap detection for every classroom — offline-first, voice-enabled, multilingual.</div>
+    <div class="hero-chips">
+      <span class="hero-chip">📴 Offline-First</span><span class="hero-chip">🎬 AI Animated Visuals</span>
+      <span class="hero-chip">🔊 TTS 6 Languages</span><span class="hero-chip">🎙️ STT Voice Answers</span>
+      <span class="hero-chip">🗄 IndexedDB Offline Storage</span><span class="hero-chip">🤖 BodhAI Insights</span>
+    </div>
+  </div>
+  <div class="splash-stats">
+    <div class="stat-card"><div class="sn">250M+</div><div class="sl">Students in India</div></div>
+    <div class="stat-card"><div class="sn">7</div><div class="sl">Animated visual types</div></div>
+    <div class="stat-card"><div class="sn">6</div><div class="sl">Languages supported</div></div>
+    <div class="stat-card"><div class="sn">100%</div><div class="sl">Offline capable</div></div>
+  </div>
+  <div class="role-cards">
+    <div class="role-card" onclick="goto('s-teacher')">
+      <div class="rc-icon">👩‍🏫</div>
+      <div class="rc-title">I am a Teacher</div>
+      <div class="rc-desc">View class gap map, per-student AI insights, session history, and start new quizzes.</div>
+    </div>
+    <div class="role-card" onclick="goto('s-lang')">
+      <div class="rc-icon">👦</div>
+      <div class="rc-title">I am a Student</div>
+      <div class="rc-desc">Take an animated quiz in your language with voice questions, answers, and personalised AI feedback.</div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--text3)">Wadhwani AI × Google.org · School Education Track · Problem 2.4</div>
+</div>
+
+<!-- ══ TEACHER DASHBOARD ══ -->
+<div id="s-teacher" class="screen">
+  <div class="page-header">
+    <div><div class="ph-title">👩‍🏫 Teacher Dashboard</div><div class="ph-sub" id="td-sub">Class 6B · Mathematics — Live from IndexedDB</div></div>
+    <div class="ph-actions">
+      <button class="btn btn-p btn-sm" onclick="openCreateQuiz()">+ Create Quiz</button>
+      <button class="btn btn-g btn-sm" onclick="refreshTeacher()">↻ Refresh</button>
+      <button class="btn btn-g btn-sm" onclick="openHelp()">❓ Help</button>
+    </div>
+  </div>
+  <div class="class-stats" id="class-stats">
+    <div class="cs-card"><div class="cs-num" style="color:var(--navy)">0</div><div class="cs-lbl">Sessions Today</div></div>
+    <div class="cs-card"><div class="cs-num" style="color:var(--teal)">0%</div><div class="cs-lbl">Class Average</div></div>
+    <div class="cs-card"><div class="cs-num" style="color:var(--red)">0</div><div class="cs-lbl">Need Help</div></div>
+    <div class="cs-card"><div class="cs-num" style="color:var(--ora)">0s</div><div class="cs-lbl">Avg Time/Q</div></div>
+  </div>
+  <div class="teacher-grid">
+    <div>
+      <div class="card">
+        <div class="card-title">📊 Concept Health — Last Quiz</div>
+        <div id="td-concept-bars"><div style="font-size:12px;color:var(--text3)">No quiz data yet. Ask students to take a quiz first.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">👨‍👩‍👧‍👦 Student Gap Map <span style="font-size:11px;font-weight:400;color:var(--text3)">(tap dot for AI insight)</span></div>
+        <div class="dot-legend">
+          <div class="dl-i"><div style="width:10px;height:10px;border-radius:50%;background:var(--teal)"></div>Understood</div>
+          <div class="dl-i"><div style="width:10px;height:10px;border-radius:50%;background:var(--yel)"></div>Partial</div>
+          <div class="dl-i"><div style="width:10px;height:10px;border-radius:50%;background:var(--red)"></div>Needs Help</div>
+          <div class="dl-i"><div style="width:10px;height:10px;border-radius:50%;background:#CBD5E1"></div>Not yet</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px" id="td-dots"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">🤖 BodhAI Class Insights</div>
+        <div id="td-ai-insights"><div style="font-size:12px;color:var(--text3)">Complete a quiz to see AI-generated insights.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">👤 Per-Student Analysis</div>
+        <div id="td-students"><div style="font-size:12px;color:var(--text3)">No student sessions found in IndexedDB.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🗄 Session History (IndexedDB)</div>
+        <div id="td-history"><div style="font-size:12px;color:var(--text3)">No sessions yet.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LANGUAGE SELECTION ══ -->
+<div id="s-lang" class="screen">
+  <div class="page-header">
+    <div><div class="ph-title">🌐 Choose Your Language</div><div class="ph-sub">Questions & feedback will appear in your language and be read aloud.</div></div>
+  </div>
+  <div class="card">
+    <div class="lang-grid" id="lang-grid"></div>
+    <div style="margin-top:16px;padding:12px;background:var(--blue-lt);border-radius:12px;font-size:12px;color:var(--text2)">
+      💡 <strong>TTS Audio Note:</strong> <span id="tts-note">Checking available voices...</span>
+    </div>
+  </div>
+  <div class="sticky-action"><button class="btn btn-p btn-full" onclick="goto('s-profile')">Continue → Choose Language</button></div>
+</div>
+
+<!-- ══ STUDENT PROFILE ══ -->
+<div id="s-profile" class="screen">
+  <div class="page-header">
+    <div><div class="ph-title">👤 Student Profile</div><div class="ph-sub">Your progress is saved offline via IndexedDB.</div></div>
+  </div>
+  <div class="card">
+    <div class="profile-form">
+      <div class="inp-g"><label>Your Name</label><input id="inp-name" type="text" placeholder="e.g. Rajan Kumar"></div>
+      <div class="inp-g"><label>Roll Number</label><input id="inp-roll" type="number" placeholder="e.g. 14" min="1" max="99"></div>
+      <div class="inp-g" style="grid-column:1/-1">
+        <label>📡 Teacher Session Code <span style="font-weight:400;color:var(--text3);font-size:10px">(from teacher's board)</span></label>
+        <input id="inp-session" type="text" placeholder="e.g. BODH-K7M2P4X9" maxlength="14" style="text-transform:uppercase;letter-spacing:1.5px;font-weight:700;font-family:monospace;font-size:15px">
+      </div>
+      <div id="auto-join-banner" style="margin-top:8px;padding:10px 14px;border-radius:10px;border:1.5px solid #E2E8F0;background:#F8FAFF;transition:all 0.3s;font-size:12px;color:#64748B"><span>&#128225; Connecting to classroom server...</span></div>
+      <div class="inp-g"><label>Class</label><input id="inp-cls" type="text" placeholder="e.g. 6B" value="6B"></div>
+      <div class="inp-g" style="grid-column:1/-1">
+        <label>Choose Subject</label>
+        <div class="subj-grid">
+          <div class="subj-opt sel" id="so-Math" onclick="pickSubj('Math',this)"><div class="so-ic">📐</div><div class="so-nm">Math</div></div>
+          <div class="subj-opt" id="so-Hindi" onclick="pickSubj('Hindi',this)"><div class="so-ic">📖</div><div class="so-nm">Hindi</div></div>
+          <div class="subj-opt" id="so-Science" onclick="pickSubj('Science',this)"><div class="so-ic">🔬</div><div class="so-nm">Science</div></div>
+          <div class="subj-opt" id="so-English" onclick="pickSubj('English',this)"><div class="so-ic">🌍</div><div class="so-nm">English</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="lang-indicator" style="margin:0 0 8px;background:#EFF6FF;border-radius:12px;padding:10px 16px;font-size:13px;color:#1D4ED8;display:flex;align-items:center;justify-content:space-between"><span>&#127760; Language: <b id="lang-name-display">Hindi</b></span><a id="change-lang-btn" style="font-size:12px;color:#1D4ED8;text-decoration:underline;cursor:pointer">Change &#8594;</a></div><div class="sticky-action"><button class="btn btn-p btn-full" onclick="startQuiz()">&#9654; Start Quiz Now</button></div>
+</div>
+
+<!-- ══ QUIZ ══ -->
+<div id="s-quiz" class="screen">
+  <div class="quiz-layout">
+    <div>
+      <div class="quiz-card">
+        <div class="qhdr">
+          <div class="qhdr-row">
+            <div>
+              <span class="qtype-b" id="qbadge">DIAGRAM</span>
+              <div class="qnum-t" id="qnum">Q1 of 7 · Student</div>
+              <div class="qconcept-t" id="qconcept">Loading...</div>
+            </div>
+            <div class="timer-wrap">
+              <svg class="timer-svg" width="58" height="58" viewBox="0 0 58 58">
+                <circle class="t-bg" cx="29" cy="29" r="24"/>
+                <circle class="t-arc" id="tarc" cx="29" cy="29" r="24" stroke="#F4841F" stroke-dasharray="150.8" stroke-dashoffset="0"/>
+              </svg>
+              <div class="t-num" id="tnum">30</div>
+            </div>
+          </div>
+          <div class="q-progress"><div class="q-pf" id="qpf" style="width:14%"></div></div>
+        </div>
+        <div class="vis-area" id="vis-area">
+          <div class="vis-label" id="vis-label">Animated Visual</div>
+          <div class="ai-vis-badge" id="ai-vis-badge">🤖 AI Generated</div>
+        </div>
+        <div class="q-body">
+          <div class="q-txt" id="qtxt">Loading...</div>
+          <div class="q-txt-en" id="qtxt-en"></div>
+          <div class="aud-btn" id="aud-btn" onclick="readQuestion()"><span id="aud-ic">🔊</span> <span id="aud-lbl">Listen</span></div>
+          <div class="aud-note" id="aud-note"></div>
+        </div>
+        <div class="fast-warn" id="fast-w">⚡ Answered very quickly — BodhAI flagged for verification</div>
+        <div class="opts-grid" id="opts-grid"></div>
+        <div class="voice-section">
+          <div class="vbtn" id="vbtn" onclick="toggleSTT()"><span id="vic">🎙️</span><span id="vtxt">Speak your answer</span></div>
+        </div>
+        <div class="v-transcript" id="vtr"></div>
+        <div class="hint-section">
+          <div class="hint-pill" onclick="showHint()">💡 <span id="hlbl">Show Hint</span></div>
+          <div class="hint-txt" id="htxt"></div>
+        </div>
+        <div class="next-section">
+          <button class="btn btn-p btn-full" id="next-btn" style="opacity:.4;pointer-events:none" onclick="nextQ()">Next Question →</button>
+        </div>
+      </div>
+    </div>
+    <!-- Right quiz panel -->
+    <div id="quiz-side-panel">
+      <div class="qinfo-card">
+        <div class="qic-title">Progress</div>
+        <div class="progress-steps" id="progress-steps"></div>
+      </div>
+      <div class="qinfo-card" id="live-ai-box" style="display:none">
+        <div class="qic-title">🤖 BodhAI Live Insight</div>
+        <div id="live-ai-txt" style="font-size:12px;color:var(--text2);line-height:1.5"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cnf" id="cnf"></div>
+</div>
+
+<!-- ══ SCORING ══ -->
+<div id="s-score" class="screen">
+  <div class="scoring-hero">
+    <div class="sc-brain"><div class="sc-ring"></div><div class="sc-ring"></div><div class="sc-ring"></div><div class="sc-core">🧠</div></div>
+    <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:-.4px;margin-bottom:8px">Analysing Your Answers</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:20px">TinyBERT on-device · timing analysis · concept mapping · IndexedDB save</div>
+    <div style="background:rgba(255,255,255,.06);border-radius:14px;overflow:hidden;max-width:500px;margin:0 auto 20px;padding:4px">
+      <div class="sc-step" id="sc3"><div class="sc-ic">⚡</div><div class="sc-tx">Collected responses + timing data</div><div class="sc-d">3</div></div>
+      <div class="sc-step" id="sc4"><div class="sc-ic">🎯</div><div class="sc-tx">Detected fast-answer patterns</div><div class="sc-d">4</div></div>
+      <div class="sc-step" id="sc5"><div class="sc-ic">🧠</div><div class="sc-tx">Running TinyBERT concept classifier</div><div class="sc-d">5</div></div>
+      <div class="sc-step" id="sc6"><div class="sc-ic">📊</div><div class="sc-tx">Generating per-student gap map</div><div class="sc-d">6</div></div>
+      <div class="sc-step" id="sc7"><div class="sc-ic">💬</div><div class="sc-tx">Building personalised AI feedback</div><div class="sc-d">7</div></div>
+      <div class="sc-step" id="sc8"><div class="sc-ic">🗄</div><div class="sc-tx">Saving session to IndexedDB</div><div class="sc-d">8</div></div>
+    </div>
+  </div>
+
+  <!-- ── Share Result Section ── -->
+  <div id="qr-share-wrap" style="display:none;max-width:420px;margin:0 auto 16px;padding:0 16px">
+    <div style="background:rgba(255,255,255,.08);border-radius:16px;padding:18px;border:1px solid rgba(255,255,255,.12)">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-bottom:14px">📤 Share Your Result with Teacher</div>
+
+      <!-- QR code (when library loads) -->
+      <div id="qr-canvas-wrap" style="display:none;background:#fff;border-radius:10px;padding:10px;text-align:center;margin-bottom:12px"></div>
+
+      <!-- Share buttons -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <button onclick="shareResultWhatsApp()" style="background:#25D366;color:#fff;border:none;padding:13px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <span style="font-size:22px">💬</span>
+          <span>WhatsApp</span>
+          <span style="font-size:10px;opacity:.8">Send to teacher</span>
+        </button>
+        <button id="copy-btn" onclick="copyResultCode(this)" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:13px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <span style="font-size:22px">📋</span>
+          <span>Copy Code</span>
+          <span style="font-size:10px;opacity:.6">Paste to teacher</span>
+        </button>
+      </div>
+
+      <!-- Code display box -->
+      <div id="code-length-display" style="font-size:9px;color:rgba(255,255,255,.3);text-align:right;margin-bottom:3px"></div>
+      <div id="result-code-display" onclick="copyResultCode(null)"
+        style="background:rgba(0,0,0,.3);border-radius:9px;padding:10px 12px;font-family:monospace;font-size:10px;color:rgba(255,255,255,.4);word-break:break-all;text-align:center;line-height:1.5;cursor:pointer;border:1px solid rgba(255,255,255,.08);min-height:40px">
+        Generating code...
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,.3);text-align:center;margin-top:6px">
+        Teacher: tap "Scan Student QR" → "Manual entry" → paste code
+      </div>
+    </div>
+  </div>
+
+  <div class="sticky-action" style="text-align:center;margin-top:8px">
+    <button class="btn btn-o" style="max-width:320px;margin:0 auto" onclick="goto('s-analysis')">📊 View My Analysis</button>
+  </div>
+
+<!-- ══ STUDENT ANALYSIS ══ -->
+</div><div id="s-analysis" class="screen">
+  <div class="analysis-hero" id="an-hero">
+    <div class="ah-ava" id="an-ava">R</div>
+    <div class="ah-info">
+      <div class="ah-name" id="an-name">Rajan Kumar</div>
+      <div class="ah-sub" id="an-sub">Class 6B · Math · Roll 14</div>
+    </div>
+    <div class="ah-pills" id="an-pills"></div>
+  </div>
+  <div class="analysis-grid" id="analysis-body"></div>
+  <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+    <button class="btn btn-t" onclick="goto('s-feedback')">🗣 Detailed Feedback</button>
+    <button class="btn btn-p" onclick="nextStudent()" style="background:#059669;border-color:#059669;font-weight:800">👉 Next Student (Same Phone)</button>
+    <button class="btn btn-g" onclick="goto('s-lang')">↩ New Quiz (Change Language)</button>
+    <button class="btn btn-outline" onclick="goto('s-teacher')">👩‍🏫 Teacher View</button>
+  </div>
+</div>
+
+<!-- ══ FEEDBACK ══ -->
+<div id="s-feedback" class="screen">
+  <div class="fb-hero">
+    <div style="font-size:40px;margin-bottom:6px" id="fb-em">🌟</div>
+    <div style="font-size:22px;font-weight:800;letter-spacing:-.4px" id="fb-nm">Rajan — Feedback</div>
+    <div class="fb-score-ring"><div class="fsr-n" id="fb-sc">5/7</div><div class="fsr-l">Score</div></div>
+    <div id="fb-grade"></div>
+    <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:5px" id="fb-sub">Math · Fractions</div>
+  </div>
+  <div class="lang-pills" id="fb-langs"></div>
+  <div class="apl" onclick="playFBAudio()" id="fb-apl">
+    <div class="apb" id="fb-pb">▶</div>
+    <div style="flex:1"><div style="font-size:9.5px;color:rgba(255,255,255,.4);margin-bottom:3px" id="fb-albl">🎙️ Audio Feedback</div><div class="aw-wrap" id="fb-aw"></div></div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4)">0:12</div>
+  </div>
+  <div class="fbm" id="fb-msg"><div class="fbl" id="fb-lbl">✅ AI Feedback</div><div class="fbt" id="fb-txt">Loading...</div></div>
+  <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:9px">📚 Concept Breakdown</div>
+  <div id="fb-concepts"></div>
+  <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-p" onclick="goto('s-splash')">✓ Done — New Quiz</button>
+    <button class="btn btn-g" onclick="goto('s-analysis')">← Back to Analysis</button>
+  </div>
+
+
+</div></main>
+
+<!-- ════════════ RIGHT PANEL ════════════ -->
+<aside class="rpanel" id="rpanel">
+  <div class="rp-h">Live Metrics</div>
+  <div class="rp-card"><div class="rp-num">7</div><div class="rp-lbl">Animated visual types</div></div>
+  <div class="rp-card"><div class="rp-num">30s</div><div class="rp-lbl">Per-question timer</div></div>
+  <div class="rp-card"><div class="rp-num">&lt;3s</div><div class="rp-lbl">Fast-answer flag threshold</div></div>
+  <div class="rp-h" style="margin-top:12px">Features</div>
+  <div class="rp-badge">🎬 AI-generated SVG visuals</div>
+  <div class="rp-badge">⏱ Per-question countdown</div>
+  <div class="rp-badge">🔊 TTS 6 languages</div>
+  <div class="rp-badge">🎙️ STT voice recognition</div>
+  <div class="rp-badge">📊 Student analytics</div>
+  <div class="rp-badge">🗄 IndexedDB offline</div>
+  <div class="rp-badge">👩‍🏫 Live teacher view</div>
+  <div class="rp-h" style="margin-top:12px">Scoring Rubric</div>
+  <div class="rp-score-item"><span>AI Approach</span><span>25%</span></div>
+  <div class="rp-score-item"><span>Equity &amp; Language</span><span>20%</span></div>
+  <div class="rp-score-item"><span>Problem Framing</span><span>15%</span></div>
+  <div class="rp-score-item"><span>Prototype Quality</span><span>15%</span></div>
+  <div class="rp-score-item"><span>Innovation</span><span>10%</span></div>
+  <div class="rp-score-item"><span>Impact &amp; Scale</span><span>10%</span></div>
+  <div class="rp-score-item"><span>Implementation</span><span>5%</span></div>
+  <div id="rp-live-info" style="margin-top:12px;font-size:11px;color:var(--text3);line-height:1.6"></div>
+</aside>
+
+<!-- ════ HELP MODAL ════ -->
+<div id="help-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;max-width:620px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="background:linear-gradient(135deg,var(--navy),#1E3A7A);border-radius:20px 20px 0 0;padding:24px 28px;display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-family:'Fraunces',serif;font-size:26px;font-weight:900;color:#fff">BodhAI Help</div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:3px">Your guide to the platform</div></div>
+      <div onclick="closeHelp()" style="cursor:pointer;font-size:22px;color:rgba(255,255,255,.6);padding:4px">✕</div>
+    </div>
+    <div style="padding:24px 28px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div style="background:var(--blue-lt);border-radius:12px;padding:16px;border:1px solid var(--blue-mid)">
+          <div style="font-size:20px;margin-bottom:8px">👩‍🏫 Teacher Flow</div>
+          <ol style="font-size:12.5px;color:var(--text2);padding-left:18px;line-height:1.7">
+            <li>Click <strong>Teacher Dashboard</strong></li>
+            <li>View concept health bars</li>
+            <li>Tap student dots for AI insights</li>
+            <li>Click <strong>Create Quiz</strong> to build a quiz</li>
+            <li>Share with students — they take the quiz</li>
+            <li>Hit <strong>Refresh</strong> to see updated data</li>
+          </ol>
+        </div>
+        <div style="background:var(--teal-lt);border-radius:12px;padding:16px;border:1px solid rgba(5,150,105,.2)">
+          <div style="font-size:20px;margin-bottom:8px">👦 Student Flow</div>
+          <ol style="font-size:12.5px;color:var(--text2);padding-left:18px;line-height:1.7">
+            <li>Pick your <strong>Language</strong></li>
+            <li>Enter your <strong>Name, Roll No, Subject</strong></li>
+            <li>Answer 7 animated questions</li>
+            <li>Tap <strong>🔊 Listen</strong> to hear the question</li>
+            <li>Tap <strong>🎙️</strong> to speak your answer</li>
+            <li>View <strong>Analysis</strong> with AI insights</li>
+          </ol>
+        </div>
+        <div style="background:var(--yel-lt);border-radius:12px;padding:16px;border:1px solid rgba(217,119,6,.2)">
+          <div style="font-size:20px;margin-bottom:8px">🔊 Audio / Voice</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.65">
+            <strong>TTS (Listen button):</strong> Works in Chrome. If your language voice isn't installed, English plays as fallback.<br><br>
+            <strong>STT (Speak button):</strong> Tap the mic, speak clearly. Say "A", "B", "C", or "D" — or speak the option text.<br><br>
+            <strong>For native voices:</strong> Go to System Settings → Accessibility → Speech or Language → install voice pack.
+          </div>
+        </div>
+        <div style="background:var(--purple-lt);border-radius:12px;padding:16px;border:1px solid rgba(124,58,237,.2)">
+          <div style="font-size:20px;margin-bottom:8px">⏱ Timer & AI Flags</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.65">
+            Each question has a countdown (30s default). BodhAI tracks:<br><br>
+            <strong>⚡ Too Fast (&lt;3s):</strong> May be guessing — flagged for verification.<br><br>
+            <strong>⏱ Timeout:</strong> Time ran out — concept needs more practice.<br><br>
+            Both flags appear in Student Analysis and Teacher Dashboard.
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--bg);border-radius:12px;padding:14px;margin-top:16px;border:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">🗄 How IndexedDB Works</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6">IndexedDB is a real offline database built into your browser. Every time a student completes a quiz, their session (name, subject, score, timing, AI flags) is saved to this database — no internet needed. The Teacher Dashboard reads all sessions from IndexedDB in real time. Sessions persist even when you close and reopen the browser.</div>
+      </div>
+      <div style="margin-top:16px;text-align:center;font-size:11.5px;color:var(--text3)">BodhAI · Wadhwani AI × Google.org · Problem 2.4 — Learning Gaps & Timely Feedback</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ CREATE QUIZ MODAL ════ -->
+<div id="create-quiz-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="background:linear-gradient(135deg,#059669,#047857);border-radius:20px 20px 0 0;padding:22px 26px;display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-size:20px;font-weight:800;color:#fff">+ Create a Quiz</div><div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:2px">Configure and share with your class</div></div>
+      <div onclick="closeCreateQuiz()" style="cursor:pointer;font-size:22px;color:rgba(255,255,255,.6)">✕</div>
+    </div>
+    <div style="padding:22px 26px;display:flex;flex-direction:column;gap:14px">
+      <div><label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:5px">Subject</label>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="cq-subj-grid">
+          <div class="subj-opt sel" id="cqs-Math" onclick="cqPickSubj('Math',this)"><div class="so-ic">📐</div><div class="so-nm">Math</div></div>
+          <div class="subj-opt" id="cqs-Hindi" onclick="cqPickSubj('Hindi',this)"><div class="so-ic">📖</div><div class="so-nm">Hindi</div></div>
+          <div class="subj-opt" id="cqs-Science" onclick="cqPickSubj('Science',this)"><div class="so-ic">🔬</div><div class="so-nm">Science</div></div>
+          <div class="subj-opt" id="cqs-English" onclick="cqPickSubj('English',this)"><div class="so-ic">🌍</div><div class="so-nm">English</div></div>
+        </div>
+      </div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:5px">Quiz Language for Students</label>
+        <select id="cq-lang" style="width:100%;padding:11px 13px;border-radius:12px;border:1.5px solid var(--border);font-family:inherit;font-size:14px;color:var(--text);background:var(--bg);outline:none">
+          <option value="hi">Hindi (हिन्दी)</option>
+          <option value="en" selected>English</option>
+          <option value="bn">Bengali (বাংলা)</option>
+          <option value="ta">Tamil (தமிழ்)</option>
+          <option value="mr">Marathi (मराठी)</option>
+          <option value="te">Telugu (తెలుగు)</option>
+        </select>
+      </div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:5px">Class</label>
+        <input id="cq-class" type="text" value="6B" style="width:100%;padding:11px 13px;border-radius:12px;border:1.5px solid var(--border);font-family:inherit;font-size:14px;color:var(--text);background:var(--bg);outline:none">
+      </div>
+      <div style="background:var(--bg);border-radius:12px;padding:12px;border:1px solid var(--border);font-size:12px;color:var(--text2)">
+        <strong>📋 Quiz Preview:</strong> <span id="cq-preview">7 Math questions — Fractions, Patterns, Number Line, Bar Graph, Word Problems, Comparison, Formula</span>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-t btn-full" onclick="launchCreatedQuiz()">▶ Launch Quiz Now</button>
+        <button class="btn btn-g" onclick="closeCreateQuiz()" style="min-width:80px">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── HAMBURGER BUTTON ── -->
+<button class="ham-btn" id="ham-btn" onclick="openDrawer()" aria-label="Open menu">☰</button>
+
+<!-- ── SIDEBAR OVERLAY DRAWER ── -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeDrawer()"></div>
+<div class="sidebar-drawer" id="sidebar-drawer">
+  <div class="drawer-close">
+    <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px">BodhAI</div>
+    <button class="drawer-close-btn" onclick="closeDrawer()">✕</button>
+  </div>
+  <div style="font-size:9.5px;color:rgba(255,255,255,.35);margin-bottom:18px">बोध = Awakening · Understanding</div>
+  <div class="role-toggle" style="margin-bottom:16px">
+    <div class="rt-btn on" id="drt-teacher" onclick="setRole('teacher');closeDrawer()">👩‍🏫 Teacher</div>
+    <div class="rt-btn" id="drt-student" onclick="setRole('student');closeDrawer()">👦 Student</div>
+  </div>
+  <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.25);margin-bottom:6px">Teacher</div>
+  <div onclick="goto('s-splash');closeDrawer()" style="display:flex;gap:8px;align-items:center;padding:9px 10px;border-radius:10px;cursor:pointer;color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-bottom:3px">🏠 Home</div>
+  <div onclick="goto('s-teacher');closeDrawer()" style="display:flex;gap:8px;align-items:center;padding:9px 10px;border-radius:10px;cursor:pointer;color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-bottom:12px">📊 Teacher Dashboard</div>
+  <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.25);margin-bottom:6px">Student Flow</div>
+  <div onclick="goto('s-lang');closeDrawer()" style="display:flex;gap:8px;align-items:center;padding:9px 10px;border-radius:10px;cursor:pointer;color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-bottom:3px">🌐 Language</div>
+  <div onclick="goto('s-profile');closeDrawer()" style="display:flex;gap:8px;align-items:center;padding:9px 10px;border-radius:10px;cursor:pointer;color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-bottom:3px">👤 Student Profile</div>
+  <div onclick="goto('s-quiz');closeDrawer()" style="display:flex;gap:8px;align-items:center;padding:9px 10px;border-radius:10px;cursor:pointer;color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-bottom:3px">📝 Quiz</div>
+  <div onclick="goto('s-analysis');closeDrawer()" style="display:flex;gap:8px;align-items:center;padding:9px 10px;border-radius:10px;cursor:pointer;color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-bottom:3px">📊 My Analysis</div>
+  <div onclick="goto('s-feedback');closeDrawer()" style="display:flex;gap:8px;align-items:center;padding:9px 10px;border-radius:10px;cursor:pointer;color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-bottom:3px">💬 Feedback</div>
+  <div onclick="openHelp();closeDrawer()" style="display:flex;gap:8px;align-items:center;padding:9px 10px;border-radius:10px;cursor:pointer;color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-top:12px">❓ Help</div>
+</div>
+
+<!-- ── MOBILE BOTTOM NAV ── -->
+<div class="mobile-bnav" id="mobile-bnav">
+  <div class="mbn-item" id="mbn-home" onclick="goto('s-splash')"><div class="mbn-ic">🏠</div><span>Home</span></div>
+  <div class="mbn-item" id="mbn-teacher" onclick="goto('s-teacher')"><div class="mbn-ic">👩‍🏫</div><span>Teacher</span></div>
+  <div class="mbn-item" id="mbn-quiz" onclick="goto('s-lang')"><div class="mbn-ic">📝</div><span>Quiz</span></div>
+  <div class="mbn-item" id="mbn-results" onclick="goto('s-analysis')"><div class="mbn-ic">📊</div><span>Results</span></div>
+  <div class="mbn-item" id="mbn-help" onclick="openHelp()"><div class="mbn-ic">❓</div><span>Help</span></div>
+</div>
+
+<!-- /app -->
+
+<script type="module">
+import{pipeline,env}from'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+env.allowLocalModels=false;env.useBrowserCache=true;
+const ML=window.BodhAI_ML={pipe:null,loaded:false,loading:false,loadMs:0,inferCount:0,totalInfMs:0,
+  get avgMs(){return this.inferCount?Math.round(this.totalInfMs/this.inferCount):0;},
+  async init(){
+    if(this.loaded||this.loading)return;this.loading=true;const t0=performance.now();
+    try{
+      this.pipe=await pipeline('feature-extraction','Xenova/all-MiniLM-L6-v2',{
+        progress_callback:d=>{if(d.status==='progress'){const p=Math.round((d.loaded/d.total)*100)||0;setBadge('loading','🤖 '+p+'%');}}
+      });
+      this.loaded=true;this.loading=false;this.loadMs=Math.round(performance.now()-t0);
+      setBadge('ready','🤖 TinyBERT · '+(this.loadMs/1000).toFixed(1)+'s');
+    }catch(e){this.loading=false;setBadge('off','🤖 Offline mode');}
+  },
+  async embed(t){if(!this.pipe)return null;const o=await this.pipe(t,{pooling:'mean',normalize:true});return o.data;},
+  cos(a,b){if(!a||!b)return 0;let d=0;for(let i=0;i<a.length;i++)d+=a[i]*b[i];return Math.max(0,Math.min(1,d));},
+  async matchAnswer(spoken,options){
+    if(!this.loaded)return null;const t0=performance.now();
+    const embs=await Promise.all([spoken,...options].map(t=>this.embed(t)));
+    const sims=embs.slice(1).map(e=>this.cos(embs[0],e));
+    const best=sims.indexOf(Math.max(...sims));
+    const ms=Math.round(performance.now()-t0);this.inferCount++;this.totalInfMs+=ms;
+    return{idx:best,confidence:sims[best],ms};
+  }
+};
+function setBadge(state,text){
+  const b=document.getElementById('ai-badge'),d=document.getElementById('ai-dot'),t=document.getElementById('ai-txt');
+  if(!b)return;b.style.display='flex';if(t)t.textContent=text;
+  const c={ready:'#22C55E',loading:'#F59E0B',off:'#94A3B8'};
+  if(d)d.style.background=c[state]||'#94A3B8';
+}
+window.semanticSTTMatch=async(transcript,opts)=>{if(!ML.loaded)return null;return ML.matchAnswer(transcript,opts);};
+window.getMLInfo=()=>({loaded:ML.loaded,loadTime:ML.loadMs?ML.loadMs/1000+'s':'—',avgInference:ML.avgMs?ML.avgMs+'ms':'—',inferences:ML.inferCount});
+document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{setBadge('loading','🤖 Loading…');ML.init();},2500);});
+</script>
+
+</div><script>// ============================================================================
+// BodhAI API Sync Layer — Hybrid Offline + Online Mode
+// When API_URL is set: writes to MySQL via REST + IndexedDB (dual write)
+// When offline: writes to IndexedDB only, queues for later sync
+// ============================================================================
+
+const API_URL = (()=>{
+  const h = location.hostname;
+  if(!h || h === '' || h === 'null') return ''; // file:// mode → offline
+  // LAN/local — port must be specified (server runs on custom port)
+  if(h.startsWith('192.168.') || h.startsWith('10.') || h.startsWith('172.') ||
+     h === 'localhost' || h === '127.0.0.1'){
+    const p = location.port || '3000';
+    return location.protocol + '//' + h + ':' + p;
+  }
+  // Public HTTPS deployment (Railway/Render/etc) — use location.port ONLY if
+  // explicitly present in the URL; otherwise let browser use default 443/80
+  if(location.protocol === 'http:' || location.protocol === 'https:'){
+    return location.protocol + '//' + h + (location.port ? ':'+location.port : '');
+  }
+  return '';
+})();
+
+// Issue 7 clarity: "online" = MySQL server reachable (NOT general internet)
+// Quiz always works offline — this only affects whether data saves to MySQL
+function updateStudentConnStatus(online){
+  const el = document.getElementById('stu-conn-status');
+  if(!el) return;
+  if(!API_URL){
+    el.textContent = '⚫ Local Mode (no server)';
+    el.style.color = '#94A3B8';
+  } else if(online){
+    el.textContent = '🟢 MySQL Connected';
+    el.style.color = '#22C55E';
+  } else {
+    el.textContent = '🟡 MySQL Offline — data saved locally';
+    el.style.color = '#F59E0B';
+  }
+}
+
+let isOnline = false;
+let offlineQueue = JSON.parse(localStorage.getItem('bodhOfflineQueue') || '[]');
+const DEVICE_ID = (()=>{
+  let id = localStorage.getItem('bodhDeviceId');
+  if(!id){ id = 'dev-'+Math.random().toString(36).slice(2,10); localStorage.setItem('bodhDeviceId',id); }
+  return id;
+})();
+
+// ── Connection status ─────────────────────────────────────────────────────
+async function checkOnlineStatus(){
+  if(!API_URL){ setConnectionStatus(false); return false; }
+  try{
+    const r = await fetch(API_URL+'/api/health', {signal: AbortSignal.timeout(3000)});
+    const data = await r.json();
+    setConnectionStatus(data.status === 'ok');
+    return data.status === 'ok';
+  }catch(e){
+    setConnectionStatus(false);
+    return false;
+  }
+}
+
+function setConnectionStatus(online){
+  isOnline = online;
+  const el = document.getElementById('conn-status');
+  if(!el) return;
+  el.textContent = online ? '🟢 Online — MySQL' : (API_URL ? '🔴 Offline — Local DB' : '⚫ Local Only');
+  el.style.color = online ? '#059669' : (API_URL ? '#DC2626' : '#94A3B8');
+}
+
+// ── Save session (dual write) ─────────────────────────────────────────────
+async function saveSessionOnline(sessionData){
+  if(!API_URL || !isOnline) return false;
+  try{
+    const r = await fetch(API_URL+'/api/sessions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({...sessionData, deviceId: DEVICE_ID})
+    });
+    return r.ok;
+  }catch(e){
+    // Queue for later sync
+    offlineQueue.push(sessionData);
+    localStorage.setItem('bodhOfflineQueue', JSON.stringify(offlineQueue.slice(-100)));
+    return false;
+  }
+}
+
+// ── Load sessions from server (teacher) ──────────────────────────────────
+async function loadSessionsFromServer(){
+  if(!API_URL || !isOnline) return null;
+  try{
+    const r = await fetch(API_URL+'/api/sessions?limit=1000');
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(e){ return null; }
+}
+
+// ── Load custom banks from server ─────────────────────────────────────────
+async function loadCustomBanksFromServer(){
+  if(!API_URL || !isOnline) return null;
+  try{
+    const r = await fetch(API_URL+'/api/custom-banks');
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(e){ return null; }
+}
+
+// ── Save custom bank to server ────────────────────────────────────────────
+async function saveCustomBankOnline(subject, questions){
+  if(!API_URL || !isOnline) return false;
+  try{
+    const r = await fetch(API_URL+'/api/custom-banks', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({subject, questions})
+    });
+    return r.ok;
+  }catch(e){ return false; }
+}
+
+// ── Sync offline queue to server ──────────────────────────────────────────
+
+
+// ── WebSocket for real-time teacher updates ───────────────────────────────
+let ws = null;
+function connectWebSocket(){
+  if(!API_URL || !isOnline) return;
+  try{
+    const wsUrl = API_URL.replace('http','ws').replace('https','wss') + '/ws';
+    ws = new WebSocket(wsUrl);
+    ws.onopen = ()=>{ console.log('WS connected'); };
+    ws.onmessage = e=>{
+      try{
+        const data = JSON.parse(e.data);
+        if(typeof handleWSMessage === 'function') handleWSMessage(data);
+      }catch(er){}
+    };
+    ws.onerror = ()=>{};
+    ws.onclose = ()=>{ ws=null; setTimeout(connectWebSocket, 5000); };
+  }catch(e){}
+}
+
+// ── API URL setter (for settings UI) ─────────────────────────────────────
+function setApiUrl(url){
+  const clean = url.trim().replace(/\/$/,'');
+  localStorage.setItem('bodhApiUrl', clean);
+  location.reload();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+async function initApiSync(){
+  const online = await checkOnlineStatus();
+  if(online){
+    connectWebSocket();
+    setTimeout(syncOfflineQueue, 2000);
+  }
+  // Recheck every 30s
+  setInterval(async ()=>{
+    const was = isOnline;
+    const now = await checkOnlineStatus();
+    if(!was && now){ connectWebSocket(); syncOfflineQueue(); }
+  }, 30000);
+}
+
+
+
+// ── Student: override saveSession for dual write ──────────────────────────
+
+// MySQL sync handled inside saveSession directly
+
+
+// Add connection indicator to score screen
+function showConnStatus(){
+  const el=document.getElementById('online-badge');
+  if(!el)return;
+  el.textContent = isOnline ? '🌐 Saved to cloud DB' : '💾 Saved locally';
+  el.style.display = 'block';
+}
+
+// Init API sync on load
+document.addEventListener('DOMContentLoaded', ()=>{
+  initApiSync().then(()=>{ if(isOnline) loadCustomBanksFromServer().then(banks=>{
+    if(banks && banks.length){
+      banks.forEach(b=>{
+        if(b.questions && b.questions.length){
+          customSubjects[b.subject]=b.questions.map(normalizeCustomQ);
+          if(typeof BANKS!=='undefined') BANKS[b.subject]=customSubjects[b.subject];
+        }
+      });
+      injectCustomSubjects();
+    }
+  });});
+});
+
+
+
+// ═══════════ LANGUAGE META ═══════════
+const LM={hi:{n:'Hindi',v:'हिन्दी',voice:'hi-IN'},bn:{n:'Bengali',v:'বাংলা',voice:'bn-IN'},ta:{n:'Tamil',v:'தமிழ்',voice:'ta-IN'},en:{n:'English',v:'English',voice:'en-US'},mr:{n:'Marathi',v:'मराठी',voice:'mr-IN'},te:{n:'Telugu',v:'తెలుగు',voice:'te-IN'}};
+
+// ═══════════ QUESTION BANKS (abridged — same as v5) ═══════════
+const BANKS={
+  Math:[
+    {type:'DIAGRAM',concept:'Fraction Basics',tl:30,text:{en:'The shaded part of this circle shows a fraction. What fraction is shaded?',hi:'इस वृत्त का छायांकित भाग एक भिन्न दर्शाता है। कौन सा भिन्न छायांकित है?',bn:'এই বৃত্তের ছায়াযুক্ত অংশ কোন ভগ্নাংশ দেখায়?',ta:'இந்த வட்டத்தின் நிழலிடப்பட்ட பகுதி எந்த பின்னம்?',mr:'या वर्तुळाचा छायांकित भाग कोणता अपूर्णांक?',te:'ఈ వృత్తంలో నీడ భాగం ఏ భిన్నం?'},hint:{en:'Count total slices and shaded ones.',hi:'कुल और छायांकित टुकड़े गिनो।'},opts:{en:['3/8','5/8','3/5','5/3'],hi:['३/८','५/८','३/५','५/३'],bn:['৩/৮','৫/৮','৩/৫','৫/৩'],ta:['3/8','5/8','3/5','5/3'],mr:['३/८','५/८','३/५','५/३'],te:['3/8','5/8','3/5','5/3']},ans:0,vis:'PIE',vc:{total:8,shaded:3,color:'#2563EB'}},
+    {type:'PATTERN',concept:'Fraction Patterns',tl:25,text:{en:'Look at the growing fraction bars. What comes NEXT?',hi:'बढ़ती हुई भिन्न पट्टियाँ देखो। आगे क्या आएगा?',bn:'ভগ্নাংশ বারের প্যাটার্ন দেখো। পরবর্তী কী?',ta:'வளரும் பட்டைகளைப் பாருங்கள். அடுத்தது என்ன?',mr:'वाढत्या भिन्न पट्ट्या पहा. पुढे काय?',te:'పెరుగుతున్న పట్టీలు చూడండి. తర్వాత ఏమిటి?'},hint:{en:'Numerator increases by 1.',hi:'अंश 1 बढ़ता है।'},opts:{en:['4/5','5/5 (=1)','3/5','6/5'],hi:['४/५','५/५','३/५','६/५'],bn:['৪/৫','৫/৫','৩/৫','৬/৫'],ta:['4/5','5/5','3/5','6/5'],mr:['४/५','५/५','३/५','६/५'],te:['4/5','5/5','3/5','6/5']},ans:1,vis:'PATTERN',vc:{fracs:[1,2,3,4],denom:5}},
+    {type:'NUMERICAL',concept:'Number Line',tl:30,text:{en:'The dot slides to ¾ on the number line. Which point is it?',hi:'संख्या रेखा पर बिंदु ¾ पर जाता है। वह कौन सा बिंदु है?',bn:'সংখ্যা রেখায় বিন্দু ¾ তে যায়। কোন বিন্দু?',ta:'எண் கோட்டில் புள்ளி ¾ இல் நகர்கிறது. எந்த புள்ளி?',mr:'संख्या रेषेवर बिंदू ¾ वर जातो. कोणता बिंदू?',te:'సంఖ్య రేఖపై బిందువు ¾ కు వెళ్తుంది. ఏ బిందువు?'},hint:{en:'¾ = 0.75, between ½ and 1.',hi:'¾ = 0.75, ½ और 1 के बीच।'},opts:{en:['Point A (¼)','Point B (½)','Point C (¾)','Point D (1)'],hi:['बिंदु A (¼)','बिंदु B (½)','बिंदु C (¾)','बिंदु D (1)'],bn:['বিন্দু A','বিন্দু B','বিন্দু C','বিন্দু D'],ta:['புள்ளி A','புள்ளி B','புள்ளி C','புள்ளி D'],mr:['बिंदू A','बिंदू B','बिंदू C','बिंदू D'],te:['బిందువు A','బిందువు B','బిందువు C','బిందువు D']},ans:2,vis:'NUMLINE',vc:{pts:[0.25,0.5,0.75,1],labels:['A','B','C','D'],target:2}},
+    {type:'GRAPH',concept:'Graph Reading',tl:35,text:{en:'Bar graph: students vs score range. How many scored ½ to ¾?',hi:'बार ग्राफ: ½ से ¾ के बीच कितने छात्र?',bn:'বার গ্রাফ: ½ থেকে ¾ পর্যন্ত কতজন?',ta:'பட்டை வரைபடம்: ½ முதல் ¾ வரை எத்தனை?',mr:'बार ग्राफ: ½ ते ¾ किती विद्यार्थी?',te:'బార్ గ్రాఫ్: ½ నుండి ¾ వరకు ఎంత మంది?'},hint:{en:'Look at the orange bar.',hi:'नारंगी पट्टी देखो।'},opts:{en:['6 students','12 students','8 students','15 students'],hi:['6 छात्र','12 छात्र','8 छात्र','15 छात्र'],bn:['৬ জন','১২ জন','৮ জন','১৫ জন'],ta:['6','12','8','15'],mr:['6','12','8','15'],te:['6','12','8','15']},ans:1,vis:'BARGRAPH',vc:{vals:[6,12,8,10],colors:['#2563EB','#F4841F','#059669','#7C3AED'],labels:['<¼','½-¾','¾-1','=1']}},
+    {type:'VISUAL',concept:'Word Problems',tl:35,text:{en:'Pizza has 8 slices. Rajan eats 3. What fraction is LEFT?',hi:'पिज़्ज़ा के 8 टुकड़े हैं। रजन 3 खाता है। कितना बचा?',bn:'পিজ্জায় ৮ টুকড়া। রাজন ৩ খায়। কত বাকি?',ta:'பீட்சா 8 துண்டு. ரஜன் 3 சாப்பிடுகிறான். எவ்வளவு மிஞ்சியது?',mr:'पिझ्झाचे 8 तुकडे. रजन 3 खातो. किती शिल्लक?',te:'పిజ్జా 8 ముక్కలు. రాజన్ 3 తింటాడు. ఎంత మిగిలింది?'},hint:{en:'Left = 8-3 = 5. Fraction = 5/8.',hi:'बचा = 8-3 = 5. भिन्न = 5/8।'},opts:{en:['3/8','5/8','3/5','5/3'],hi:['३/८','५/८','३/५','५/३'],bn:['৩/৮','৫/৮','৩/৫','৫/৩'],ta:['3/8','5/8','3/5','5/3'],mr:['३/८','५/८','३/५','५/३'],te:['3/8','5/8','3/5','5/3']},ans:1,vis:'PIZZA',vc:{total:8,eaten:3}},
+    {type:'COMPARE',concept:'Fraction Comparison',tl:30,text:{en:'Animated bars show ⅔ and ¾. Which is LARGER?',hi:'एनिमेटेड पट्टियाँ ⅔ और ¾ दिखाती हैं। कौन बड़ा?',bn:'অ্যানিমেটেড বার ⅔ ও ¾ দেখায়। কোনটি বড়?',ta:'அனிமேட்டட் பட்டைகள் ⅔ மற்றும் ¾. எது பெரியது?',mr:'अ‍ॅनिमेटेड पट्ट्या ⅔ आणि ¾. कोणता मोठा?',te:'యానిమేటెడ్ పట్టీలు ⅔ మరియు ¾. ఏది పెద్దది?'},hint:{en:'⅔=8/12, ¾=9/12.',hi:'⅔=8/12, ¾=9/12।'},opts:{en:['⅔ larger','¾ larger','Equal','Cannot compare'],hi:['⅔ बड़ा','¾ बड़ा','बराबर','तुलना नहीं'],bn:['⅔ বড়','¾ বড়','সমান','হয় না'],ta:['⅔ பெரியது','¾ பெரியது','சமம்','ஒப்பிட முடியாது'],mr:['⅔ मोठा','¾ मोठा','समान','नाही'],te:['⅔ పెద్దది','¾ పెద్దది','సమానం','పోల్చలేము']},ans:1,vis:'COMPARE',vc:{a:{n:2,d:3,col:'#2563EB'},b:{n:3,d:4,col:'#F4841F'}}},
+    {type:'FORMULA',concept:'Unlike Denominators',tl:40,text:{en:'Watch the animation. What is ¾ + ⅕?',hi:'एनिमेशन देखो। ¾ + ⅕ = ?',bn:'অ্যানিমেশন দেখো। ¾ + ⅕ = ?',ta:'அனிமேஷன் பாருங்கள். ¾ + ⅕ = ?',mr:'अ‍ॅनिमेशन पहा. ¾ + ⅕ = ?',te:'యానిమేషన్ చూడు. ¾ + ⅕ = ?'},hint:{en:'LCM(4,5)=20. ¾=15/20, ⅕=4/20.',hi:'LCM=20. ¾=15/20, ⅕=4/20।'},opts:{en:['4/9','19/20','8/20','15/9'],hi:['४/९','१९/२०','८/२०','१५/९'],bn:['৪/৯','১৯/২০','৮/২০','১৫/৯'],ta:['4/9','19/20','8/20','15/9'],mr:['४/९','१९/२०','८/२०','१५/९'],te:['4/9','19/20','8/20','15/9']},ans:1,vis:'FORMULA',vc:{a:{n:3,d:4},b:{n:1,d:5},lcm:20,res:{n:19,d:20}}},
+  ],
+  Hindi:[
+    {type:'DIAGRAM',concept:'Vachan',tl:30,text:{en:"Plural of 'Raja' (King)?",hi:"'राजा' का बहुवचन?",bn:"'রাজা' এর বহুবচন?",ta:"'ராஜா' இன் பன்மை?",mr:"'राजा' चे बहुवचन?",te:"'రాజా' బహువచనం?"},hint:{en:"Raja → Rajaon",hi:"राजा → राजाओं"},opts:{en:['Raje','Rajaon','Rajayen','Rajon'],hi:['राजे','राजाओं','राजाएं','राजों'],bn:['রাজে','রাজাদের','রাজারা','রাজাওন'],ta:['ராஜே','ராஜாவின்','ராஜாஓன்','ராஜாகள்'],mr:['राजे','राजाओं','राजाएं','राजों'],te:['రాజే','రాజాఓన్','రాజాయేన్','రాజోన్']},ans:1,vis:'WORDFILL',vc:{word:'राजा',answer:'राजाओं',pattern:'आ → ओं'}},
+    {type:'VISUAL',concept:'Kriya (Verb)',tl:30,text:{en:"Verb in 'Vah bazar jata hai'?",hi:"'वह बाज़ार जाता है' में क्रिया?",bn:"'সে বাজারে যায়' — ক্রিয়া কোনটি?",ta:"'அவன் சந்தை செல்கிறான்' — வினை?",mr:"'तो बाजारात जातो' — क्रिया?",te:"'అతను మార్కెట్ వెళ్తాడు' — క్రియ?"},hint:{en:"Verb = action word. He is 'going'.",hi:"क्रिया = काम — वह 'जाता' है।"},opts:{en:['Vah','Bazar','Jata','Hai'],hi:['वह','बाज़ार','जाता','है'],bn:['সে','বাজার','যায়','আছে'],ta:['அவன்','சந்தை','செல்கிறான்','இருக்கிறான்'],mr:['तो','बाजार','जातो','आहे'],te:['అతను','మార్కెట్','వెళ్తాడు','ఉంది']},ans:2,vis:'SENTENCE',vc:{words:['वह','बाज़ार','जाता','है'],highlight:2,type:'verb'}},
+    {type:'PATTERN',concept:'Vilom Shabd',tl:25,text:{en:"Opposite (Vilom) of 'Khushi' (Happiness)?",hi:"'खुशी' का विलोम?",bn:"'খুশি' এর বিপরীত?",ta:"'மகிழ்ச்சி' இன் எதிர்ச்சொல்?",mr:"'आनंद' चा विलोम?",te:"'సంతోషం' వ్యతిరేకం?"},hint:{en:"Opposite of happiness = sadness",hi:"खुशी ↔ दुख"},opts:{en:['Anand','Dukh','Harsha','Prasannata'],hi:['आनंद','दुख','हर्ष','प्रसन्नता'],bn:['আনন্দ','দুঃখ','হর্ষ','প্রসন্নতা'],ta:['ஆனந்தம்','துக்கம்','மகிழ்ச்சி','மகிழ்வு'],mr:['आनंद','दुख','हर्ष','प्रसन्नता'],te:['ఆనందం','దుఃఖం','హర్షం','ప్రసన్నత']},ans:1,vis:'ANTONYM',vc:{word:'खुशी',opp:'दुख'}},
+    {type:'NUMERICAL',concept:'Paryayavaachi',tl:25,text:{en:"Synonym (Paryayavaachi) of 'Chand' (Moon)?",hi:"'चाँद' का पर्यायवाची?",bn:"'চাঁদ' এর প্রতিশব্দ?",ta:"'சந்திரன்' ஒத்த சொல்?",mr:"'चंद्र' पर्यायवाची?",te:"'చంద్రుడు' పర్యాయపదం?"},hint:{en:"Moon = Shashi/Chandrama",hi:"चाँद = शशि / चन्द्रमा"},opts:{en:['Surya','Tara','Shashi','Akash'],hi:['सूरज','तारा','शशि','आकाश'],bn:['সূর্য','তারা','শশী','আকাশ'],ta:['சூரியன்','நட்சத்திரம்','சசி','வானம்'],mr:['सूर्य','तारा','शशी','आकाश'],te:['సూర్యుడు','నక్షత్రం','శశి','ఆకాశం']},ans:2,vis:'SYNONYM',vc:{word:'चाँद',syns:['शशि','चन्द्रमा','निशाकर','राकेश']}},
+    {type:'GRAPH',concept:'Kaal (Tense)',tl:30,text:{en:"'Bacche khel rahe the' — which tense?",hi:"'बच्चे खेल रहे थे' — कौन सा काल?",bn:"'শিশুরা খেলছিল' — কোন কাল?",ta:"'குழந்தைகள் விளையாடிக்கொண்டிருந்தனர்' — காலம்?",mr:"'मुले खेळत होती' — कोणते काल?",te:"'పిల్లలు ఆడుతున్నారు' — ఏ కాలం?"},hint:{en:"'Rahe the' = past continuous",hi:"'रहे थे' = भूतकाल"},opts:{en:['Present','Past','Future','Simple'],hi:['वर्तमान','भूत','भविष्य','सामान्य'],bn:['বর্তমান','অতীত','ভবিষ্যৎ','সরল'],ta:['நிகழ்','இறந்த','எதிர்','எளிய'],mr:['वर्तमान','भूत','भविष्य','साधे'],te:['వర్తమానం','భూతం','భవిష్యత్','సాధారణ']},ans:1,vis:'TENSE',vc:{sentence:'बच्चे खेल रहे थे।',tenses:['वर्तमान','भूत','भविष्य'],answer:1}},
+    {type:'VISUAL',concept:'Akshar (Syllables)',tl:20,text:{en:"How many syllables in 'Vidyalaya' (School)?",hi:"'विद्यालय' में कितने अक्षर?",bn:"'বিদ্যালয়' এ কয়টি অক্ষর?",ta:"'பள்ளி' எத்தனை எழுத்துகள்?",mr:"'शाळा' किती अक्षरे?",te:"'పాఠశాల' లో ఎన్ని అక్షరాలు?"},hint:{en:"Vi-dya-la-ya = 4",hi:"वि-द्या-ल-य = 4"},opts:{en:['2','3','4','5'],hi:['२','३','४','५'],bn:['২','৩','৪','৫'],ta:['2','3','4','5'],mr:['२','३','४','५'],te:['2','3','4','5']},ans:2,vis:'SYLLABLE',vc:{word:'विद्यालय',split:['वि','द्या','ल','य'],count:4}},
+  ],
+  Science:[
+    {type:'DIAGRAM',concept:'Photosynthesis',tl:35,text:{en:'Animated plant diagram: what gas do plants ABSORB?',hi:'एनिमेटेड पौधे का चित्र: पौधे कौन सी गैस लेते हैं?',bn:'অ্যানিমেটেড উদ্ভিদ চিত্র: গাছ কোন গ্যাস গ্রহণ করে?',ta:'அனிமேட்டட் தாவர படம்: தாவரங்கள் என்ன வாயு உறிஞ்சுகின்றன?',mr:'अ‍ॅनिमेटेड वनस्पती चित्र: झाडे कोणता वायू घेतात?',te:'యానిమేటెడ్ మొక్క చిత్రం: మొక్కలు ఏ వాయువు తీసుకుంటాయి?'},hint:{en:'Plants take CO₂ and release O₂.',hi:'पौधे CO₂ लेते हैं, O₂ छोड़ते हैं।'},opts:{en:['O₂ (Oxygen)','CO₂ (Carbon Dioxide)','N₂ (Nitrogen)','H₂ (Hydrogen)'],hi:['O₂ ऑक्सीजन','CO₂ कार्बन डाईऑक्साइड','N₂ नाइट्रोजन','H₂ हाइड्रोजन'],bn:['O₂','CO₂','N₂','H₂'],ta:['O₂','CO₂','N₂','H₂'],mr:['O₂','CO₂','N₂','H₂'],te:['O₂','CO₂','N₂','H₂']},ans:1,vis:'PLANT',vc:{type:'photosynthesis'}},
+    {type:'VISUAL',concept:'Water Cycle',tl:30,text:{en:'Animated water cycle: water to vapour is called?',hi:'एनिमेटेड जल चक्र: जल से वाष्प बनने की प्रक्रिया?',bn:'অ্যানিমেটেড জলচক্র: জল থেকে বাষ্প হওয়াকে বলে?',ta:'அனிமேட்டட் நீர்சுழற்சி: நீர் ஆவியாவது?',mr:'अ‍ॅनिमेटेड जलचक्र: पाणी वाफ होण्याची प्रक्रिया?',te:'యానిమేటెడ్ జల చక్రం: నీరు ఆవిరిగా మారడం?'},hint:{en:'Evaporation = liquid → vapour',hi:'वाष्पीकरण = तरल → वाष्प'},opts:{en:['Condensation','Precipitation','Evaporation','Transpiration'],hi:['संघनन','वर्षण','वाष्पीकरण','वाष्पोत्सर्जन'],bn:['ঘনীভবন','বৃষ্টিপাত','বাষ্পীভবন','প্রস্বেদন'],ta:['ஆவியாதல்','மழை','நீராவி','வியர்வை'],mr:['संघनन','पर्जन्य','बाष्पीभवन','बाष्पोत्सर्जन'],te:['సంఘటన','వర్షం','బాష్పీభవనం','ట్రాన్స్పిరేషన్']},ans:2,vis:'WATERCYCLE',vc:{highlight:'evaporation'}},
+    {type:'NUMERICAL',concept:'Plant Parts',tl:25,text:{en:'Animated plant: which part absorbs water from SOIL?',hi:'एनिमेटेड पौधा: मिट्टी से पानी कौन अवशोषित करता है?',bn:'অ্যানিমেটেড উদ্ভিদ: মাটি থেকে জল কোন অংশ শোষণ করে?',ta:'அனிமேட்டட் தாவரம்: மண்ணிலிருந்து நீர் எந்த பகுதி உறிஞ்சுகிறது?',mr:'अ‍ॅनिमेटेड वनस्पती: मातीतून पाणी कोण शोषतो?',te:'యానిమేటెడ్ మొక్క: మట్టి నుండి నీరు ఏ భాగం గ్రహిస్తుంది?'},hint:{en:'Roots anchor + absorb.',hi:'जड़ें टिकाती हैं और अवशोषित करती हैं।'},opts:{en:['Leaves','Stem','Flowers','Roots'],hi:['पत्तियाँ','तना','फूल','जड़ें'],bn:['পাতা','কান্ড','ফুল','শিকড়'],ta:['இலைகள்','தண்டு','பூக்கள்','வேர்கள்'],mr:['पाने','खोड','फुले','मुळे'],te:['ఆకులు','కాండం','పువ్వులు','వేర్లు']},ans:3,vis:'PLANT',vc:{type:'parts',highlight:'roots'}},
+    {type:'COMPARE',concept:'Animal Classification',tl:30,text:{en:'Animated grid: Frog lives on land AND water. What type?',hi:'एनिमेटेड ग्रिड: मेंढक जल और ज़मीन पर — किस प्रकार का?',bn:'অ্যানিমেটেড গ্রিড: ব্যাঙ জল ও স্থলে — কোন ধরনের?',ta:'அனிமேட்டட் கட்டம்: தவளை நீரிலும் நிலத்திலும் — வகை?',mr:'अ‍ॅनिमेटेड ग्रिड: बेडूक पाण्यात व जमिनीवर — प्रकार?',te:'యానిమేటెడ్ గ్రిడ్: కప్ప నీటిలో మరియు భూమిపై — రకం?'},hint:{en:'Amphibians = land + water',hi:'उभयचर = जल + थल'},opts:{en:['Mammal','Reptile','Amphibian','Bird'],hi:['स्तनधारी','सरीसृप','उभयचर','पक्षी'],bn:['স্তন্যপায়ী','সরীসৃপ','উভচর','পাখি'],ta:['பாலூட்டி','ஊர்வன','நீர்நில வாழ்வன','பறவை'],mr:['सस्तन','सरपटणारे','उभयचर','पक्षी'],te:['క్షీరదం','సరీసృపం','ఉభయచరం','పక్షి']},ans:2,vis:'ANIMALS',vc:{animals:['Mammal','Reptile','Amphibian','Bird'],highlight:2}},
+    {type:'GRAPH',concept:'Food Chain',tl:30,text:{en:'Animated food chain: herbivores eat?',hi:'एनिमेटेड खाद्य श्रृंखला: शाकाहारी जंतु क्या खाते हैं?',bn:'অ্যানিমেটেড খাদ্য শৃঙ্খল: তৃণভোজীরা কী খায়?',ta:'அனிமேட்டட் உணவு சங்கிலி: தாவர உண்ணிகள் என்ன சாப்பிடுகின்றன?',mr:'अ‍ॅनिमेटेड अन्न साखळी: शाकाहारी काय खातात?',te:'యానిమేటెడ్ ఆహార గొలుసు: శాకాహారులు ఏమి తింటారు?'},hint:{en:'Herbivore = plant eater',hi:'शाकाहारी = पौधे खाता है'},opts:{en:['Animals','Fungi','Plants','Soil'],hi:['जंतु','कवक','पौधे','मिट्टी'],bn:['প্রাণী','ছত্রাক','গাছপালা','মাটি'],ta:['விலங்கு','பூஞ்சை','தாவரம்','மண்'],mr:['प्राणी','बुरशी','वनस्पती','माती'],te:['జంతువులు','శిలీంధ్రాలు','మొక్కలు','మట్టి']},ans:2,vis:'FOODCHAIN',vc:{chain:['Sun','Plants','Herbivore','Carnivore'],highlight:2}},
+    {type:'FORMULA',concept:'DNA',tl:25,text:{en:'Animated letters: what does DNA stand for?',hi:'एनिमेटेड अक्षर: DNA का पूरा नाम?',bn:'অ্যানিমেটেড অক্ষর: DNA এর পূর্ণ রূপ?',ta:'அனிமேட்டட் எழுத்துகள்: DNA என்றால்?',mr:'अ‍ॅनिमेटेड अक्षरे: DNA चे पूर्ण नाव?',te:'యానిమేటెడ్ అక్షరాలు: DNA అంటే ఏమిటి?'},hint:{en:'D=Deoxyribo, N=Nucleic, A=Acid',hi:'D=Deoxyribo, N=Nucleic, A=Acid'},opts:{en:['Deoxyribonucleic Acid','Dioxynucleic Acid','Deoxyribose Amino','Dinucleic Acid'],hi:['डीऑक्सीराइबोन्यूक्लिक एसिड','डाईऑक्सी','डीऑक्सीराइबोस','डाईन्यूक्लिक'],bn:['ডিঅক্সিরাইবোনিউক্লিক অ্যাসিড','ডাইঅক্সি','ডিঅক্সিরাইবোস','ডাইনিউক্লিক'],ta:['டியோக்சிரைபோ நியூக்ளிக் அமிலம்','டையாக்சி','டியோக்சி','டைநியூக்ளிக்'],mr:['डीऑक्सीरायबोन्यूक्लिक आम्ल','डायऑक्सी','डीऑक्सीरायबोस','डायन्यूक्लिक'],te:['డియాక్సీరైబోన్యూక్లిక్ యాసిడ్','డైయాక్సీ','డియాక్సీరైబోస్','డైన్యూక్లిక్']},ans:0,vis:'DNA',vc:{letters:['D','N','A'],full:['Deoxyribonucleic','Nucleic','Acid']}},
+  ],
+  English:[
+    {type:'DIAGRAM',concept:'Subject-Verb Agreement',tl:30,text:{en:"Choose the CORRECT sentence:",hi:"सही वाक्य चुनो:",bn:"সঠিক বাক্য বেছে নাও:",ta:"சரியான வாக்கியம் தேர்ந்தெடுக்கவும்:",mr:"योग्य वाक्य निवडा:",te:"సరైన వాక్యం ఎంచుకోండి:"},hint:{en:"He/She/It + doesn't + base verb.",hi:"He/She/It + doesn't + base verb।"},opts:{en:["He don't know.","He doesn't knows.","He doesn't know.","He not know."],hi:["गलत 1","गलत 2","सही ✓","गलत 3"],bn:["ভুল 1","ভুল 2","সঠিক ✓","ভুল 3"],ta:["தவறு 1","தவறு 2","சரி ✓","தவறு 3"],mr:["चूक 1","चूक 2","बरोबर ✓","चूक 3"],te:["తప్పు 1","తప్పు 2","సరైనది ✓","తప్పు 3"]},ans:2,vis:'SENTENCE',vc:{words:["He","doesn't","know","the","answer."],highlight:1,type:'verb'}},
+    {type:'PATTERN',concept:'Irregular Plurals',tl:25,text:{en:"What is the plural of 'Child'?",hi:"'Child' का बहुवचन?",bn:"'Child' এর বহুবচন?",ta:"'Child' இன் பன்மை?",mr:"'Child' चे बहुवचन?",te:"'Child' బహువచనం?"},hint:{en:"Child is irregular. NOT 'Childs'.",hi:"'Child' अनियमित है।"},opts:{en:['Childs','Childrens','Children','Childer'],hi:['Childs','Childrens','Children','Childer'],bn:['Childs','Childrens','Children','Childer'],ta:['Childs','Childrens','Children','Childer'],mr:['Childs','Childrens','Children','Childer'],te:['Childs','Childrens','Children','Childer']},ans:2,vis:'ANTONYM',vc:{word:'Child → ?',opp:'Children',pair:false}},
+    {type:'NUMERICAL',concept:'Simple Present Tense',tl:25,text:{en:"Fill blank: 'The sun _____ in the east.'",hi:"रिक्त: 'The sun _____ in the east.'",bn:"শূন্যস্থান: 'The sun _____ in the east.'",ta:"'The sun _____ in the east.'",mr:"'The sun _____ in the east.'",te:"'The sun _____ in the east.'"},hint:{en:"Sun (singular) → 'rises'",hi:"Sun singular → 'rises'"},opts:{en:['rise','risen','rises','is risen'],hi:['rise','risen','rises','is risen'],bn:['rise','risen','rises','is risen'],ta:['rise','risen','rises','is risen'],mr:['rise','risen','rises','is risen'],te:['rise','risen','rises','is risen']},ans:2,vis:'WORDFILL',vc:{word:'The sun',answer:'rises',pattern:'Singular → -s'}},
+    {type:'VISUAL',concept:'Parts of Speech',tl:25,text:{en:"ADJECTIVE in: 'She has a beautiful voice.'",hi:"'She has a beautiful voice.' — विशेषण?",bn:"'She has a beautiful voice.' — বিশেষণ?",ta:"'She has a beautiful voice.' — பெயரடை?",mr:"'She has a beautiful voice.' — विशेषण?",te:"'She has a beautiful voice.' — విశేషణం?"},hint:{en:"Adjective describes a noun ('voice').",hi:"विशेषण संज्ञा का वर्णन करता है।"},opts:{en:['She','has','beautiful','voice'],hi:['She','has','beautiful','voice'],bn:['She','has','beautiful','voice'],ta:['She','has','beautiful','voice'],mr:['She','has','beautiful','voice'],te:['She','has','beautiful','voice']},ans:2,vis:'SENTENCE',vc:{words:['She','has','a','beautiful','voice.'],highlight:3,type:'adjective'}},
+    {type:'COMPARE',concept:'Prepositions',tl:25,text:{en:"'The cat sat ___ the mat.' Which preposition?",hi:"'The cat sat ___ the mat.' — preposition?",bn:"'The cat sat ___ the mat.' — preposition?",ta:"'The cat sat ___ the mat.' — preposition?",mr:"'The cat sat ___ the mat.' — preposition?",te:"'The cat sat ___ the mat.' — preposition?"},hint:{en:"'On' is for surfaces.",hi:"'On' = सतह पर।"},opts:{en:['in','at','on','by'],hi:['in','at','on','by'],bn:['in','at','on','by'],ta:['in','at','on','by'],mr:['in','at','on','by'],te:['in','at','on','by']},ans:2,vis:'COMPARE',vc:{a:{n:1,d:1,col:'#059669',label:'on ✓'},b:{n:0,d:1,col:'#DC2626',label:'in ✗'}}},
+  ]
+};
+
+const FEEDBACK_TEXT={
+  Math:{hi:{m:'बहुत बढ़िया! भिन्न की मूल अवधारणाएं अच्छे से समझीं। असमान हरों पर और अभ्यास करो।',v:'बहुत बढ़िया! भिन्न अच्छे समझीं।'},en:{m:'Well done! Fraction basics understood. Practice unlike denominators more.',v:'Well done! Fractions understood well.'},bn:{m:'খুব ভালো! ভগ্নাংশের মূল ধারণা বুঝেছ। অসমান হরে আরও অনুশীলন করো।',v:'খুব ভালো!'},ta:{m:'மிகவும் நல்லது! பின்னத்தின் அடிப்படை புரிந்தது.',v:'மிகவும் நல்லது!'},mr:{m:'खूप छान! अपूर्णांक समजले. वेगळ्या छेदांवर सराव करा.',v:'खूप छान!'},te:{m:'చాలా బాగుంది! భిన్నాలు అర్థమయ్యాయి.',v:'చాలా బాగుంది!'}},
+  Hindi:{hi:{m:'बहुत बढ़िया! वचन, क्रिया, विलोम अच्छे से समझे। काल पर ध्यान दो।',v:'बहुत बढ़िया! हिन्दी व्याकरण समझे।'},en:{m:'Well done! Hindi grammar basics understood.',v:'Well done!'},bn:{m:'খুব ভালো! হিন্দি ব্যাকরণ বুঝেছ।',v:'খুব ভালো!'},ta:{m:'மிகவும் நல்லது!',v:'நல்லது!'},mr:{m:'खूप छान!',v:'छान!'},te:{m:'చాలా బాగుంది!',v:'బాగుంది!'}},
+  Science:{hi:{m:'शाबाश! प्रकाश संश्लेषण और जल चक्र समझे। जंतु वर्गीकरण पर ध्यान दो।',v:'शाबाश! विज्ञान के मूल विषय समझे।'},en:{m:'Excellent! Photosynthesis and water cycle understood. Revise animal classification.',v:'Excellent! Science basics understood.'},bn:{m:'বাহ! বিজ্ঞানের মূল বিষয় বুঝেছ।',v:'বাহ!'},ta:{m:'சாபாஷ்! அறிவியல் புரிந்தது.',v:'சாபாஷ்!'},mr:{m:'शाबास! विज्ञान समजले.',v:'शाबास!'},te:{m:'చాలా బాగుంది! విజ్ఞానం అర్థమైంది.',v:'బాగుంది!'}},
+  English:{hi:{m:'बहुत अच्छे! English grammar समझी। Prepositions पर और अभ्यास करो।',v:'बहुत अच्छे!'},en:{m:'Well done! Grammar basics understood. Practice prepositions and irregular plurals.',v:'Well done!'},bn:{m:'খুব ভালো! ইংরেজি ব্যাকরণ বুঝেছ।',v:'খুব ভালো!'},ta:{m:'மிகவும் நல்லது!',v:'நல்லது!'},mr:{m:'खूप छान!',v:'छान!'},te:{m:'చాలా బాగుంది!',v:'బాగుంది!'}}
+};
+
+const CONCEPTS={
+  Math:[{icon:'✅',t:'Fraction Basics',s:'ok',tip:'You know fractions, numerator, denominator.',pct:88},{icon:'✅',t:'Pattern Recognition',s:'ok',tip:'Pattern identified correctly.',pct:82},{icon:'⚠️',t:'Word Problems',s:'par',tip:'Read carefully, then solve step by step.',pct:60},{icon:'✅',t:'Graph Reading',s:'ok',tip:'Bar graph understood correctly.',pct:80},{icon:'❌',t:'Unlike Denominators',s:'mis',tip:'Step 1: Find LCM. Step 2: Make equal. Step 3: Add.',pct:35}],
+  Hindi:[{icon:'✅',t:'Vachan (Number)',s:'ok',tip:'Singular/plural identified correctly.',pct:85},{icon:'✅',t:'Kriya (Verb)',s:'ok',tip:'Verb found in sentence correctly.',pct:80},{icon:'⚠️',t:'Vilom (Antonyms)',s:'par',tip:'Make a list and revise daily.',pct:60},{icon:'✅',t:'Paryayavaachi',s:'ok',tip:'Synonyms known well.',pct:78},{icon:'❌',t:'Kaal (Tense)',s:'mis',tip:'Practice identifying tenses from sentences.',pct:40}],
+  Science:[{icon:'✅',t:'Photosynthesis',s:'ok',tip:'CO₂ → O₂ understood correctly.',pct:90},{icon:'✅',t:'Water Cycle',s:'ok',tip:'Evaporation, condensation understood.',pct:85},{icon:'✅',t:'Plant Parts',s:'ok',tip:'Roots absorb water from soil.',pct:82},{icon:'⚠️',t:'Animal Classification',s:'par',tip:'Mammals, reptiles, amphibians — examples help.',pct:60},{icon:'❌',t:'DNA & Cells',s:'mis',tip:'DNA = Deoxyribonucleic Acid. Re-read Ch.8.',pct:35}],
+  English:[{icon:'✅',t:'Subject-Verb Agreement',s:'ok',tip:"Use 'doesn't' with he/she/it.",pct:88},{icon:'⚠️',t:'Irregular Plurals',s:'par',tip:'child→children, man→men, tooth→teeth.',pct:60},{icon:'✅',t:'Simple Present Tense',s:'ok',tip:'Add -s/-es with singular subjects.',pct:85},{icon:'✅',t:'Parts of Speech',s:'ok',tip:'Adjective, noun, verb identified.',pct:82},{icon:'⚠️',t:'Prepositions',s:'par',tip:'Learn in/on/at/by with sentence examples.',pct:58}]
+};
+
+// ═══════════ STATE ═══════════
+let lang=(function(){try{var _l=localStorage.getItem('bodhai_lang');return(_l&&_l.length>=2&&_l.length<=5)?_l:'hi';}catch(e){return 'hi';}})(), subj='Math', sName='', sRoll='14', sCls='6B';
+let curQ=0, answers=[], timings=[], flags=[], qStart=0;
+let timerInt=null, timerLeft=30;
+let isTTS=false, isSTT=false, voicesCache=[];
+let recognition=null, fbLang='hi', fbPlaying=false, fbInt=null;
+let db=null;
+const CIRC=150.8;
+let currentRole='teacher';
+let currentHintFn=null; // set by each draw fn
+
+// ═══════════ IndexedDB ═══════════
+function initDB(){
+  const r=indexedDB.open('bodhaiDB',2);
+  r.onupgradeneeded=e=>{
+    const d=e.target.result;
+    // sessions store
+    if(!d.objectStoreNames.contains('sessions')){
+      const st=d.createObjectStore('sessions',{keyPath:'id',autoIncrement:true});
+      st.createIndex('student','student');
+    }
+    // custom_banks store for teacher-created questions
+    if(!d.objectStoreNames.contains('custom_banks')){
+      d.createObjectStore('custom_banks',{keyPath:'subject'});
+    }
+  };
+  r.onsuccess=e=>{
+    db=e.target.result;
+    const el=document.getElementById('sb-db-status');
+    if(el)el.textContent='🗄 IndexedDB connected ✓';
+    refreshTeacher();
+    loadCustomSubjects(); // load teacher-created subjects
+    startTeacherSync();  // real-time sync to teacher tab
+  };
+  r.onerror=()=>{const el=document.getElementById('sb-db-status');if(el)el.textContent='⚠️ IndexedDB unavailable';};
+}
+function saveSession(){
+  if(!db)return;
+  const qs=getQs();
+  const c=answers.filter((a,i)=>i<qs.length&&a===qs[i].ans).length;
+  // Build concept map
+  const cmap={},ccount={};
+  qs.forEach((q,i)=>{const cn=(q.concept||q.con||'General').trim();if(!cmap[cn])cmap[cn]=0;if(!ccount[cn])ccount[cn]=0;ccount[cn]++;if(answers[i]===q.ans)cmap[cn]++;});
+  const conceptMap={};Object.keys(cmap).forEach(k=>conceptMap[k]=Math.round(cmap[k]/ccount[k]*100));
+  const roll=parseInt(document.getElementById('inp-roll')?.value||'0')||0;
+  const code=(document.getElementById('inp-session')?.value||'').toUpperCase().trim()||'DIRECT';
+  const sessionData={student:sName,roll,subject:subj,lang,score:c,total:qs.length,
+    timings:[...timings],flags:[...flags],answers:[...answers],
+    conceptMap,sessionCode:code,timestamp:Date.now()};
+  const tx=db.transaction('sessions','readwrite');
+  const req=tx.objectStore('sessions').add(sessionData);
+  req.onsuccess=()=>{
+    sessionData.id=req.result;
+    // Notify teacher tab via BroadcastChannel (Chrome/same origin)
+    try{const bc=new BroadcastChannel('bodhai-sync');bc.postMessage({type:'session-saved',data:sessionData});bc.close();}catch(e){}
+    setTimeout(refreshTeacher,400);
+    // Save to MySQL when server is available
+    if(typeof saveSessionOnline==='function')saveSessionOnline(sessionData);
+  };
+}
+function loadAllSessions(cb){
+  if(!db){cb([]);return;}
+  const r=db.transaction('sessions','readonly').objectStore('sessions').getAll();
+  r.onsuccess=e=>cb(e.target.result||[]);
+  r.onerror=()=>cb([]);
+}
+
+// ═══════════ NAVIGATION ═══════════
+const SCREEN_SN={
+  's-splash':'sn-home','s-teacher':'sn-teacher','s-lang':'sn-lang',
+  's-profile':'sn-profile','s-quiz':'sn-quiz','s-score':'sn-score',
+  's-analysis':'sn-analysis','s-feedback':'sn-feedback'
+};
+function goto(id){
+  stopTTS();stopTimer();stopFBAudio();stopSTT();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.sn-item').forEach(s=>s.classList.remove('on'));
+  if(SCREEN_SN[id])document.getElementById(SCREEN_SN[id])?.classList.add('on');
+  if(id==='s-score')animateScoring();
+  // Update mobile bottom nav highlight
+  const mbnMap={'s-splash':'mbn-home','s-teacher':'mbn-teacher','s-lang':'mbn-quiz','s-profile':'mbn-quiz','s-quiz':'mbn-quiz','s-score':'mbn-quiz','s-analysis':'mbn-results','s-feedback':'mbn-results'};
+  document.querySelectorAll('.mbn-item').forEach(el=>el.classList.remove('on'));
+  if(mbnMap[id])document.getElementById(mbnMap[id])?.classList.add('on');
+  if(id==='s-analysis')buildAnalysis();
+  if(id==='s-feedback')buildFeedback();
+  if(id==='s-teacher')refreshTeacher();
+  if(id==='s-lang')buildLangGrid();
+  window.scrollTo(0,0);
+}
+
+function setRole(r){
+  currentRole=r;
+  document.getElementById('rtTeacher').classList.toggle('on',r==='teacher');
+  document.getElementById('rtStudent').classList.toggle('on',r==='student');
+  if(r==='teacher') goto('s-teacher');
+  else goto('s-lang');
+}
+
+// ═══════════ QUIZ HELPERS ═══════════
+let customSubjects = {};
+
+function normalizeCustomQ(q){
+  // Convert teacher quiz format to built-in BANKS format
+  const rawTxt=q.text||q.q||{en:'Question'};
+  const txt=typeof rawTxt==='string'?rawTxt:(rawTxt.en||'');
+  const rawHint=q.hint||'';
+  const hint=typeof rawHint==='string'?rawHint:(rawHint.en||'');
+  const opts=(q.opts&&q.opts.en)?q.opts.en:(Array.isArray(q.opts)?q.opts:['A','B','C','D']);
+  const vis=q.vis||q.type||'TEXT';
+  // Generate visual config (vc) so drawBarGraph/drawPie etc. get data
+  let vc=null;
+  if(vis==='BARGRAPH')vc={vals:[62,44,78,55],cols:['#2563EB','#059669','#F4841F','#7C3AED'],labels:opts.map((_,i)=>String.fromCharCode(65+i))};
+  else if(vis==='PIE')vc={total:4,shaded:2,color:'#2563EB'};
+  else if(vis==='NUMLINE')vc={min:0,max:10,pts:[{v:2.5,lbl:'A'},{v:5,lbl:'B'},{v:7.5,lbl:'C'},{v:10,lbl:'D'}],hi:q.ans};
+  // Q2 ANSWER: Only English in teacher quiz → fall back to English for all langs
+  const mk=en=>({en,hi:en,bn:en,mr:en,te:en,ta:en});
+  return{
+    type:vis==='BARGRAPH'?'GRAPH':vis==='PIE'?'DIAGRAM':'DIAGRAM',
+    vis,vc,concept:q.concept||'General',tl:30,
+    text:mk(txt),hint:mk(hint),
+    opts:{en:opts,hi:opts,bn:opts,mr:opts,te:opts,ta:opts},
+    ans:q.ans||0,_custom:true
+  };
+}
+
+function loadCustomSubjects(){
+  if(!db)return;
+  try{
+    const tx=db.transaction('custom_banks','readonly');
+    const req=tx.objectStore('custom_banks').getAll();
+    req.onsuccess=()=>{
+      customSubjects={};
+      (req.result||[]).forEach(r=>{
+        if(r.questions&&r.questions.length){
+          // Normalize to built-in format (fixes q.q vs q.text, adds vc, etc.)
+          customSubjects[r.subject]=r.questions.map(normalizeCustomQ);
+        }
+      });
+      injectCustomSubjects();
+    };
+  }catch(e){console.debug('custom_banks not found');}
+}
+
+function injectCustomSubjects(){
+  // Q1 ANSWER: Same browser (Chrome file://) = same null origin = shared IndexedDB.
+  // Different browser (Firefox) = different origin = NO sharing → use QR code.
+  const grid=document.querySelector('.subj-grid');if(!grid)return;
+  grid.querySelectorAll('.subj-opt[data-custom]').forEach(el=>el.remove());
+  Object.keys(customSubjects).forEach(customSubj=>{
+    // Inject into BANKS so getQs() works without override
+    if(typeof BANKS!=='undefined')BANKS[customSubj]=customSubjects[customSubj];
+    if(['Math','Hindi','Science','English'].includes(customSubj))return;
+    const el=document.createElement('div');
+    el.className='subj-opt';el.dataset.custom='1';
+    el.id='so-'+customSubj.replace(/\s+/g,'_');
+    el.innerHTML='📌 '+customSubj;
+    el.onclick=function(){pickSubj(customSubj,el);};
+    grid.appendChild(el);
+  });
+}
+
+function startTeacherSync(){
+  try{
+    const bc=new BroadcastChannel('bodhai-sync');
+    bc.onmessage=e=>{
+      if(e.data.type==='custom-bank-updated')loadCustomSubjects();
+    };
+  }catch(e){}
+}
+
+function getQs(){
+  // Check teacher-created custom subjects first
+  if(customSubjects[subj]&&customSubjects[subj].length)return customSubjects[subj];
+  return BANKS[subj]||BANKS.Math;
+}
+function getQ(i){return getQs()[i]||getQs()[0];}
+function pickSubj(s,el){subj=s;document.querySelectorAll('.subj-opt').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
+
+function startQuiz(){
+  try{
+    readSessionCode();
+    sName=(document.getElementById('inp-name')?.value||'').trim()||'Student';
+    sRoll=document.getElementById('inp-roll')?.value||'1';
+    sCls=document.getElementById('inp-cls')?.value||'6B';
+    try{var _sl=localStorage.getItem('bodhai_lang');if(_sl&&_sl.length>=2)lang=_sl;}catch(e){}
+    if(!sName||sName==='Student')sName='Student';
+    curQ=0;answers=[];timings=[];flags=[];
+    buildProgressSteps();
+    goto('s-quiz');
+    renderQ();
+  }catch(e){
+    console.error('startQuiz error:',e);
+    alert('Quiz start error: '+e.message+'\nCheck browser console (F12)');
+  }
+}
+
+function buildProgressSteps(){
+  const ps=document.getElementById('progress-steps');if(!ps)return;
+  const qs=getQs();
+  ps.innerHTML=qs.map((q,i)=>`<div class="ps-item" id="ps${i}"><div class="ps-dot">${i+1}</div><span style="font-size:11.5px">${q.concept}</span></div>`).join('');
+}
+
+// ═══════════ RENDER QUESTION ═══════════
+const TC={DIAGRAM:{bg:'#DBEAFE',col:'#1D4ED8',lbl:'Diagram',TEXT:{bg:'#F8FAFF',col:'#475569',lbl:'Question'},BARGRAPH:{bg:'#FEF3C7',col:'#B45309',lbl:'Bar Graph'},PIE:{bg:'#DBEAFE',col:'#1D4ED8',lbl:'Pie Chart'},NUMLINE:{bg:'#DCFCE7',col:'#15803D',lbl:'Number Line'}},PATTERN:{bg:'#EDE9FE',col:'#6D28D9',lbl:'Pattern'},NUMERICAL:{bg:'#DCFCE7',col:'#15803D',lbl:'Numerical'},GRAPH:{bg:'#FEF3C7',col:'#B45309',lbl:'Graph'},VISUAL:{bg:'#FCE7F3',col:'#9D174D',lbl:'Visual'},COMPARE:{bg:'#FEE2E2',col:'#B91C1C',lbl:'Compare'},FORMULA:{bg:'#CCFBF1',col:'#0F766E',lbl:'Formula'}};
+
+function renderQ(){
+  const q=getQ(curQ),qs=getQs();
+  const pct=((curQ+1)/qs.length*100).toFixed(0);
+  const tc=TC[q.type]||TC.DIAGRAM;
+  const badge=document.getElementById('qbadge');
+  badge.textContent=tc.lbl;badge.style.background=tc.bg;badge.style.color=tc.col;
+  document.getElementById('qnum').textContent=`Q${curQ+1} of ${qs.length} · ${sName}`;
+  document.getElementById('qconcept').textContent=q.concept;
+  document.getElementById('qpf').style.width=pct+'%';
+  const qtext=(q.text&&(q.text[lang]||q.text.en))||(q.q&&(q.q[lang]||q.q.en))||'';
+  document.getElementById('qtxt').textContent=qtext;
+  document.getElementById('qtxt-en').textContent=(lang!=='en')?(q.text.en):'';
+  // Audio btn
+  setAudBtn('idle');document.getElementById('aud-note').style.display='none';
+  // Hint
+  document.getElementById('htxt').textContent=((q.hint&&(q.hint[lang]||q.hint.en))||'');
+  document.getElementById('htxt').classList.remove('show');
+  document.getElementById('fast-w').classList.remove('show');
+  // Options
+  const grid=document.getElementById('opts-grid');grid.innerHTML='';
+  const opts=q.opts[lang]||q.opts.en;
+  opts.forEach((opt,i)=>{
+    const d=document.createElement('div');d.className='opt';
+    d.innerHTML=`<div class="opt-ltr">${String.fromCharCode(65+i)}</div><span>${opt}</span>`;
+    d.onclick=()=>selectOpt(i);grid.appendChild(d);
+  });
+  // Next btn
+  const nb=document.getElementById('next-btn');
+  nb.style.opacity='.4';nb.style.pointerEvents='none';
+  nb.textContent=curQ<qs.length-1?'Next Question →':'Submit & View Analysis →';
+  // Voice
+  document.getElementById('vtr').textContent='';setVBtn('idle');
+  // Progress steps update
+  document.querySelectorAll('.ps-item').forEach((el,i)=>{
+    el.classList.remove('current','done','wrong');
+    if(i<curQ){const c=answers[i]===getQ(i).ans;el.classList.add(c?'done':'wrong');}
+    else if(i===curQ)el.classList.add('current');
+  });
+  // Live AI hint box
+  document.getElementById('live-ai-box').style.display='none';
+  // Render visual — wrapped so timer ALWAYS starts even if visual errors
+  try{renderVis(q);}catch(e){console.error('renderVis crash:',e);}
+  // These MUST always execute regardless of visual result
+  qStart=Date.now();
+  startTimer(q.tl||30);
+}
+
+function selectOpt(i){
+  if(document.querySelector('.opt.correct'))return;
+  const t=(Date.now()-qStart)/1000;
+  timings[curQ]=t;
+  if(t<3){flags.push({q:curQ,reason:'TOO_FAST',time:t});document.getElementById('fast-w').classList.add('show');}
+  answers[curQ]=i;
+  stopTimer();stopSTT();
+  const q=getQ(curQ);
+  document.querySelectorAll('.opt').forEach((o,j)=>{o.style.pointerEvents='none';if(j===q.ans)o.classList.add('correct');else if(j===i)o.classList.add('wrong');});
+  if(i!==q.ans)document.querySelectorAll('.opt')[q.ans].classList.add('reveal');
+  if(i===q.ans)showConfetti();
+  showLiveAI(i,q,t);
+  const nb=document.getElementById('next-btn');nb.style.opacity='1';nb.style.pointerEvents='auto';
+}
+
+function showLiveAI(chosen,q,t){
+  const box=document.getElementById('live-ai-box');const txt=document.getElementById('live-ai-txt');if(!box)return;
+  // Guard: if t is unrealistic (qStart wasn't set), cap at question time limit
+  const displayT=Math.min(t, q.tl||30);
+  const ts=displayT.toFixed(1);
+  const correct=chosen===q.ans;
+  let msg='';
+  if(correct&&displayT<3)msg=`⚡ Correct but very fast (${ts}s). Make sure you understood — don't just guess!`;
+  else if(correct&&displayT>20)msg=`✅ Correct! You took ${ts}s — good careful thinking on <strong>${q.concept}</strong>.`;
+  else if(correct)msg=`✅ Correct! <strong>${q.concept}</strong> understood well. Time: ${ts}s`;
+  else if(displayT<3)msg=`❌ Wrong and very fast (${ts}s). BodhAI flagged — revisit <strong>${q.concept}</strong>.`;
+  else msg=`❌ Wrong on <strong>${q.concept}</strong>. Time taken: ${ts}s. Hint: ${q.hint.en}`;
+  txt.innerHTML=msg;box.style.display='block';
+}
+
+function nextQ(){
+  curQ++;
+  if(curQ>=getQs().length){saveSession();goto('s-score');}
+  else{document.getElementById('cnf').innerHTML='';renderQ();}
+}
+
+// ═══════════ TIMER ═══════════
+function startTimer(total){
+  stopTimer();timerLeft=total;
+  // Reset arc to full circle immediately
+  const arc=document.getElementById('tarc');
+  if(arc){arc.setAttribute('stroke-dashoffset','0');arc.style.strokeDashoffset='0';arc.style.stroke='#F4841F';}
+  const num=document.getElementById('tnum');if(num){num.textContent=total;num.style.color='#fff';}
+  timerInt=setInterval(()=>{
+    timerLeft-=0.1;
+    if(timerLeft<=0){
+      stopTimer();
+      if(answers[curQ]===undefined){
+        timings[curQ]=total;flags.push({q:curQ,reason:'TIMEOUT',time:total});answers[curQ]=-1;
+        document.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none');
+        const qa=document.querySelectorAll('.opt')[getQ(curQ).ans];if(qa)qa.classList.add('reveal');
+        const nb=document.getElementById('next-btn');nb.style.opacity='1';nb.style.pointerEvents='auto';nb.textContent='⏱ Time up — '+nb.textContent;
+      }
+    }else updateTimerUI(timerLeft,total);
+  },100);
+}
+function stopTimer(){clearInterval(timerInt);}
+function updateTimerUI(rem,total){
+  const arc=document.getElementById('tarc');const num=document.getElementById('tnum');if(!arc)return;
+  const offset=CIRC*(1-rem/total);
+  // Both attribute + style = reliable in all browsers
+  arc.setAttribute('stroke-dashoffset',offset);
+  arc.style.strokeDashoffset=offset;
+  const col=rem>10?'#F4841F':rem>5?'#EF4444':'#DC2626';
+  arc.setAttribute('stroke',col);arc.style.stroke=col;
+  if(num){num.style.color=rem>10?'#fff':'#FCA5A5';num.textContent=Math.ceil(rem);}
+}
+
+// ═══════════ TTS ═══════════
+let voicesLoaded=false;
+function loadVoices(){
+  return new Promise(res=>{
+    if(voicesCache.length>0){res(voicesCache);return;}
+    const v=window.speechSynthesis?.getVoices()||[];
+    if(v.length>0){voicesCache=v;voicesLoaded=true;res(v);return;}
+    if(!window.speechSynthesis){res([]);return;}
+    const tid=setTimeout(()=>{voicesCache=speechSynthesis.getVoices();voicesLoaded=true;res(voicesCache);},2500);
+    speechSynthesis.onvoiceschanged=()=>{clearTimeout(tid);voicesCache=speechSynthesis.getVoices();voicesLoaded=true;res(voicesCache);};
+  });
+}
+function pickVoice(voices,lc,vl){
+  return voices.find(v=>v.lang===vl)||voices.find(v=>v.lang.toLowerCase().startsWith(lc.toLowerCase()))||voices.find(v=>v.lang==='en-US')||voices.find(v=>v.lang.startsWith('en'))||voices[0]||null;
+}
+function setAudBtn(state){
+  const btn=document.getElementById('aud-btn');const ic=document.getElementById('aud-ic');const lb=document.getElementById('aud-lbl');if(!btn)return;
+  const lN=LM[lang]?.v||lang;
+  const S={idle:{cls:'aud-btn',ic:'🔊',tx:`Listen (${lN})`},loading:{cls:'aud-btn loading',ic:'⏳',tx:'Loading...'},playing:{cls:'aud-btn playing',ic:'⏹',tx:'Tap to stop'},error:{cls:'aud-btn',ic:'❌',tx:'No audio'}};
+  const s=S[state]||S.idle;btn.className=s.cls;ic.textContent=s.ic;lb.textContent=s.tx;
+}
+async function readQuestion(){
+  if(isTTS){stopTTS();return;}
+  if(!window.speechSynthesis){document.getElementById('aud-note').textContent='❌ Use Chrome for audio.';document.getElementById('aud-note').style.display='block';return;}
+  setAudBtn('loading');
+  const voices=await loadVoices();
+  if(!voices.length){setAudBtn('error');document.getElementById('aud-note').textContent='❌ No voices found.';document.getElementById('aud-note').style.display='block';return;}
+  const lo=LM[lang];const voice=pickVoice(voices,lang,lo.voice);
+  const q=getQ(curQ);
+  let text=q.text[lang]||q.text.en;let fallback=false;
+  // Check if found voice actually supports the language
+  if(!voice||(voice.lang&&!voice.lang.toLowerCase().startsWith(lang.toLowerCase())&&lang!=='en')){
+    text=q.text.en;fallback=true;
+    const note=document.getElementById('aud-note');
+    note.textContent=`ℹ️ ${lo.n} voice not installed in this browser → playing English. To get native ${lo.n} audio: Go to System Settings → Speech/Language → Install "${lo.n}" TTS voice pack.`;
+    note.style.display='block';
+  }else{document.getElementById('aud-note').style.display='none';}
+  const utter=new SpeechSynthesisUtterance(text);
+  if(voice)utter.voice=voice;
+  utter.lang=voice?.lang||'en-US';utter.rate=lang==='ta'||lang==='te'?0.78:0.88;utter.volume=1.0;
+  utter.onstart=()=>{isTTS=true;setAudBtn('playing');};
+  utter.onend=()=>{isTTS=false;setAudBtn('idle');};
+  utter.onerror=(e)=>{isTTS=false;setAudBtn('error');document.getElementById('aud-note').textContent='❌ TTS error: '+e.error+' — try Chrome on Windows/Mac.';document.getElementById('aud-note').style.display='block';};
+  speechSynthesis.cancel();setTimeout(()=>{try{speechSynthesis.speak(utter);}catch(e){isTTS=false;setAudBtn('error');}},150);
+}
+function stopTTS(){if(window.speechSynthesis)speechSynthesis.cancel();isTTS=false;setAudBtn('idle');}
+
+// ═══════════ STT ═══════════
+function setVBtn(s){
+  const btn=document.getElementById('vbtn');const ic=document.getElementById('vic');const tx=document.getElementById('vtxt');if(!btn)return;
+  const S={idle:{cls:'vbtn',ic:'🎙️',tx:'Speak your answer'},listening:{cls:'vbtn listening',ic:'🔴',tx:'Listening... tap to stop'},processing:{cls:'vbtn processing',ic:'⏳',tx:'Processing...'},error:{cls:'vbtn',ic:'❌',tx:'Try again or tap option'}};
+  const st=S[s]||S.idle;btn.className=st.cls;ic.textContent=st.ic;tx.textContent=st.tx;
+}
+function stopSTT(){if(recognition)try{recognition.stop();}catch(e){}isSTT=false;setVBtn('idle');}
+
+function toggleSTT(){
+  if(isSTT){stopSTT();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){setVBtn('error');document.getElementById('vtr').textContent='❌ Voice recognition needs Chrome browser.';return;}
+  if(!recognition)recognition=new SR();
+  recognition.lang=LM[lang].voice;recognition.continuous=false;recognition.interimResults=true;recognition.maxAlternatives=3;
+  recognition.onstart=()=>{isSTT=true;setVBtn('listening');};
+  recognition.onresult=e=>{
+    let interim='',final='';
+    Array.from(e.results).forEach(r=>{if(r.isFinal)final+=r[0].transcript;else interim+=r[0].transcript;});
+    if(interim)document.getElementById('vtr').textContent=`🎙️ "${interim}"`;
+    if(final){document.getElementById('vtr').textContent=`Processing: "${final}"`;setVBtn('processing');setTimeout(()=>matchVoice(final),300);}
+  };
+  recognition.onerror=e=>{isSTT=false;setVBtn('error');document.getElementById('vtr').textContent=e.error==='not-allowed'?'❌ Mic permission denied.':'❌ Error: '+e.error;};
+  recognition.onend=()=>{isSTT=false;setVBtn('idle');};
+  try{recognition.start();}catch(e){setVBtn('error');}
+}
+function showHint(){
+  document.getElementById('htxt').classList.add('show');
+  // Trigger the visual hint animation if available
+  if(typeof currentHintFn==='function'){
+    try{currentHintFn();}catch(e){console.error('Hint anim error:',e);}
+    currentHintFn=null; // only fire once
+  }
+}
+
+// ═══════════ RAF ANIMATION HELPER ═══════════
+// Animates an SVG attribute from 0 to targetValue over duration ms
+function rafAttr(el, attr, targetVal, duration, delay, easeOut=true, baseAttr=null, baseVal=null){
+  setTimeout(()=>{
+    const start=performance.now();
+
+    requestAnimationFrame(frame);
+  },delay||0);
+}
+function rafStyle(el, prop, fromVal, toVal, duration, delay){
+  el.style[prop]=fromVal;
+  setTimeout(()=>{
+    const start=performance.now();
+
+    requestAnimationFrame(frame);
+  },delay||0);
+}
+function rafOpacity(el, fromOp, toOp, duration, delay){
+  el.style.opacity=fromOp;
+  setTimeout(()=>{
+    const start=performance.now();
+
+    requestAnimationFrame(frame);
+  },delay||0);
+}
+
+function makeSVG(W,H){const s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('viewBox',`0 0 ${W} ${H}`);s.setAttribute('preserveAspectRatio','xMidYMid meet');s.style.cssText='width:100%;max-height:175px;display:block';return s;}
+function svgEl(tag,attrs){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);if(attrs)Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));return e;}
+function svgTxt(s,txt,x,y,sz,col,bold,anchor){const t=svgEl('text',{x,y,fill:col,'font-size':sz,'font-weight':bold?'700':'400','text-anchor':anchor||'middle','font-family':'Plus Jakarta Sans,sans-serif'});t.textContent=txt;s.appendChild(t);return t;}
+
+function renderVis(q){
+  const area=document.getElementById('vis-area');if(!area)return;
+  // ── Only remove SVG/Canvas children — NOT the label divs ──
+  Array.from(area.children).forEach(child=>{
+    if(child.tagName.toLowerCase()!=='div') child.remove();
+  });
+  const lbl=document.getElementById('vis-label');
+  const badge=document.getElementById('ai-vis-badge');
+  const tc=TC[q.type]||TC.DIAGRAM;
+  if(lbl){lbl.textContent=tc.lbl+' · Animated';lbl.style.color=tc.col;}
+  if(badge)badge.style.display='none';
+  const map={PIE:drawPie,PATTERN:drawPattern,NUMLINE:drawNumLine,BARGRAPH:drawBarGraph,PIZZA:drawPizza,COMPARE:drawCompare,FORMULA:drawFormula,PLANT:drawPlant,WATERCYCLE:drawWaterCycle,ANIMALS:drawAnimals,FOODCHAIN:drawFoodChain,DNA:drawDNA,WORDFILL:drawWordFill,SENTENCE:drawSentence,ANTONYM:drawAntonym,SYNONYM:drawSynonym,TENSE:drawTense,SYLLABLE:drawSyllable};
+  currentHintFn=null;
+  const fn=map[q.vis];
+  if(fn){
+    try{const hintCb=fn(area,q.vc);if(typeof hintCb==='function')currentHintFn=hintCb;if(badge)badge.style.display='flex';}
+    catch(e){console.error('Visual error ['+q.vis+']:',e);
+      // Fallback: show text-based placeholder so quiz continues
+      const fb=document.createElement('div');
+      fb.style.cssText='padding:20px;text-align:center;font-size:14px;color:#475569;font-weight:600';
+      fb.textContent='📊 '+q.concept+' — Study the question carefully';
+      area.appendChild(fb);
+    }
+  }
+}
+
+function animateEls(area, delay=50){
+  setTimeout(()=>{area.querySelectorAll('.anim-group').forEach((el,i)=>{setTimeout(()=>el.classList.add('visible'),i*120);});},delay);
+}
+
+// ── PIE CHART (animated fill) ──
+function drawPie(area,c){
+  const W=380,H=175,R=72,cx=W/2-10,cy=H/2,sl=2*Math.PI/c.total;
+  const s=makeSVG(W,H);
+  s.appendChild(svgEl('circle',{cx,cy,r:R,fill:'#F1F5F9',stroke:c.color+'33','stroke-width':2}));
+  for(let i=c.shaded;i<c.total;i++){const a1=-Math.PI/2+sl*i,a2=a1+sl;s.appendChild(svgEl('path',{d:`M${cx},${cy} L${cx+R*Math.cos(a1)},${cy+R*Math.sin(a1)} A${R},${R} 0 0,1 ${cx+R*Math.cos(a2)},${cy+R*Math.sin(a2)} Z`,fill:'#E2E8F0',stroke:'#fff','stroke-width':2}));}
+  for(let i=0;i<c.shaded;i++){
+    const a1=-Math.PI/2+sl*i,a2=a1+sl;
+    const p=svgEl('path',{d:`M${cx},${cy} L${cx+R*Math.cos(a1)},${cy+R*Math.sin(a1)} A${R},${R} 0 0,1 ${cx+R*Math.cos(a2)},${cy+R*Math.sin(a2)} Z`,fill:c.color,stroke:'#fff','stroke-width':2});
+    p.style.opacity='0';s.appendChild(p);rafOpacity(p,0,0.9,450,i*140+220);
+  }
+  // Show "?" instead of answer
+  const qMark=svgTxt(s,'?',cx,cy+7,26,'#94A3B8',true,'middle');
+  svgTxt(s,`${c.total} equal slices`,W-15,18,11,'#94A3B8',false,'end');
+  area.appendChild(s);
+  // Hint callback: reveal fraction count + label
+  return ()=>{
+    qMark.textContent=`${c.shaded}/${c.total}`;
+    qMark.setAttribute('fill',c.color);qMark.setAttribute('font-size','22');
+    // Add counting labels on shaded slices
+    for(let i=0;i<c.shaded;i++){
+      const a=(sl*i+sl/2)-Math.PI/2;
+      const lx=cx+(R*0.62)*Math.cos(a),ly=cy+(R*0.62)*Math.sin(a);
+      const nl=svgTxt(s,(i+1)+'',lx,ly+4,10,'#fff',true,'middle');nl.style.opacity='0';
+      rafOpacity(nl,0,1,300,i*120);
+    }
+    const hint=svgTxt(s,`Hint: ${c.shaded} shaded ÷ ${c.total} total`,cx,H-8,10,'#D97706',true,'middle');
+    hint.style.opacity='0';rafOpacity(hint,0,1,400,c.shaded*120+100);
+  };
+}
+function drawPattern(area,c){
+  const W=380,H=165,bW=42,gap=14,maxH=100,baseY=H-28;
+  const total=c.fracs.length+1;const sx=(W-total*(bW+gap)+gap)/2;const s=makeSVG(W,H);const fills=[];
+  c.fracs.forEach((n,i)=>{
+    const x=sx+i*(bW+gap),bh=maxH*(n/c.denom);
+    s.appendChild(svgEl('rect',{x,y:H-30-maxH,width:bW,height:maxH,fill:'#F1F5F9',rx:'5'}));
+    const fill=svgEl('rect',{x,y:baseY,width:bW,height:'0',fill:`hsl(${210+i*35},75%,50%)`,rx:'4'});
+    s.appendChild(fill);fills.push({el:fill,targetH:bh,i});
+    svgTxt(s,`${n}/${c.denom}`,x+bW/2,H-13,11,'#475569',true,'middle');
+  });
+  const qx=sx+c.fracs.length*(bW+gap);
+  s.appendChild(svgEl('rect',{x:qx,y:H-30-maxH,width:bW,height:maxH,fill:'#F1F5F9',rx:'5',stroke:'#94A3B8','stroke-dasharray':'5 4','stroke-width':1.5}));
+  svgTxt(s,'?',qx+bW/2,H-30-maxH/2+8,26,'#94A3B8',true,'middle');
+  svgTxt(s,'?',qx+bW/2,H-13,11,'#94A3B8',false,'middle');
+  area.appendChild(s);
+  fills.forEach(({el,targetH,i})=>rafAttr(el,'height',targetH,700,i*150+250,true,'y',baseY));
+}
+function drawNumLine(area,c){
+  const W=380,H=128,lx=30,rx=350,y=65;const s=makeSVG(W,H);
+  s.appendChild(svgEl('line',{x1:lx,y1:y,x2:rx,y2:y,stroke:'#CBD5E1','stroke-width':3,'stroke-linecap':'round'}));
+  const cols=['#2563EB','#059669','#F4841F','#7C3AED'];
+  [0,.25,.5,.75,1].forEach((v,i)=>{const x=lx+(rx-lx)*v;s.appendChild(svgEl('line',{x1:x,y1:y-9,x2:x,y2:y+9,stroke:'#94A3B8','stroke-width':2}));svgTxt(s,['0','¼','½','¾','1'][i],x,y+22,12,'#94A3B8',false,'middle');});
+  c.pts.forEach((v,i)=>{
+    const x=lx+(rx-lx)*v;const dot=svgEl('circle',{cx:x,cy:y,r:'7',fill:cols[i]});dot.style.opacity='0';s.appendChild(dot);rafOpacity(dot,0,1,400,i*100+200);
+    svgTxt(s,c.labels[i],x,y-18,12,cols[i],true,'middle');
+    // NO "★ Here" star and NO ring — those reveal the answer
+  });
+  const tx=lx+(rx-lx)*c.pts[c.target];
+  const movDot=svgEl('circle',{cx:lx,cy:y,r:'9',fill:'#FBBF24',stroke:'#fff','stroke-width':'2'});
+  movDot.style.opacity='0'; // hidden initially
+  s.appendChild(movDot);area.appendChild(s);
+  // Hint callback: animate dot to correct position + show label
+  return ()=>{
+    rafOpacity(movDot,0,1,300,0);
+    setTimeout(()=>{const start=performance.now();function frame(now){let t=Math.min(1,(now-start)/1100);t=1-Math.pow(1-t,3);movDot.setAttribute('cx',lx+(tx-lx)*t);if(t<1)requestAnimationFrame(frame);}requestAnimationFrame(frame);},150);
+    const hint=svgTxt(s,'Hint: ¾ = 0.75 → between ½ and 1',W/2,H-5,9.5,'#D97706',true,'middle');
+    hint.style.opacity='0';rafOpacity(hint,0,1,400,1400);
+  };
+}
+function drawBarGraph(area,c){
+  const W=380,H=148,bW=50,gap=16,bY=118,maxH=88;
+  const sx=(W-c.vals.length*(bW+gap)+gap)/2;const mx=Math.max(...c.vals);const s=makeSVG(W,H);
+  s.appendChild(svgEl('line',{x1:20,y1:bY,x2:W-20,y2:bY,stroke:'#E2E8F0','stroke-width':1.5}));
+  const rects=[];
+  c.vals.forEach((v,i)=>{
+    const x=sx+i*(bW+gap),bh=maxH*(v/mx);
+    const r=svgEl('rect',{x,y:bY,width:bW,height:'0',fill:c.colors[i],rx:'5'});r.style.opacity='0.9';s.appendChild(r);rects.push({el:r,bh,i});
+    const vl=svgEl('text',{x:x+bW/2,y:bY-bh-7,fill:c.colors[i],'font-size':'11','font-weight':'700','text-anchor':'middle','font-family':'Plus Jakarta Sans,sans-serif'});vl.textContent=v+'';vl.style.opacity='0';s.appendChild(vl);
+    svgTxt(s,c.labels[i],x+bW/2,bY+14,10,'#94A3B8',false,'middle');
+    rafOpacity(vl,0,1,300,i*130+700);
+  });
+  area.appendChild(s);
+  rects.forEach(({el,bh,i})=>rafAttr(el,'height',bh,750,i*130+200,true,'y',bY));
+}
+function drawPizza(area,c){
+  const W=380,H=162,R=68,cx=W/2,cy=H/2,sl=2*Math.PI/c.total;const s=makeSVG(W,H);
+  s.appendChild(svgEl('circle',{cx,cy,r:R,fill:'#7C2D12',stroke:'#92400E','stroke-width':2}));
+  for(let i=0;i<c.total;i++){
+    const a1=-Math.PI/2+sl*i,a2=a1+sl,eaten=i<c.eaten;
+    const x1=cx+R*Math.cos(a1),y1=cy+R*Math.sin(a1),x2=cx+R*Math.cos(a2),y2=cy+R*Math.sin(a2);
+    const p=svgEl('path',{d:`M${cx},${cy} L${x1},${y1} A${R},${R} 0 0,1 ${x2},${y2} Z`,fill:eaten?'#F8FAFC':'#92400E',stroke:'#fff','stroke-width':1.5});
+    p.style.opacity='0';s.appendChild(p);rafOpacity(p,0,eaten?0.18:0.9,400,i*90+150);
+  }
+  // Show eaten count (given in question) but NOT the "left" count (that's the answer)
+  svgTxt(s,c.eaten+' eaten (given)',cx-R-14,cy,10,'#DC2626',true,'middle');
+  const leftLbl=svgTxt(s,'? left',cx+R+16,cy,12,'#059669',true,'middle');
+  area.appendChild(s);
+  // Hint: animate "? left" → actual count + calculation
+  return ()=>{
+    leftLbl.textContent=`${c.total-c.eaten} left`;
+    const calc=svgTxt(s,`${c.total} − ${c.eaten} = ${c.total-c.eaten}`,cx,H-7,10,'#D97706',true,'middle');
+    calc.style.opacity='0';rafOpacity(calc,0,1,400,200);
+  };
+}
+function drawCompare(area,c){
+  const W=380,H=142,mW=220,x0=60,bH=32;const s=makeSVG(W,H);const fills=[];
+  [[c.a,40],[c.b,88]].forEach(([f,y])=>{
+    const fw=mW*(f.n/f.d);
+    s.appendChild(svgEl('rect',{x:x0,y,width:mW,height:bH,fill:'#F1F5F9',rx:'6'}));
+    const fill=svgEl('rect',{x:x0,y,width:'0',height:bH,fill:f.col||f.color,rx:'6'});fill.style.opacity='0.88';s.appendChild(fill);fills.push({el:fill,fw});
+    const lbl=svgTxt(s,f.label||(f.n+'/'+f.d),x0+fw/2,y+bH/2+5,13,'#fff',true,'middle');lbl.style.opacity='0';
+    svgTxt(s,f.n+'/'+f.d,x0-10,y+bH/2+5,13,'#475569',false,'end');
+    rafOpacity(lbl,0,1,300,y===40?800:1000);
+  });
+  area.appendChild(s);
+  fills.forEach(({el,fw},i)=>rafAttr(el,'width',fw,850,i*220+200));
+}
+function drawFormula(area,c){
+  const W=380,H=148;const s=makeSVG(W,H);
+  // Steps 0-8: show the problem + LCM method (hint/context) 
+  // Steps 9-10 (= and answer): HIDDEN initially — revealed by hint
+  const steps=[[`${c.a.n}/${c.a.d}`,70,45,'#2563EB'],['+',132,45,'#94A3B8'],[`${c.b.n}/${c.b.d}`,195,45,'#F4841F'],['',0,0,''],['LCM('+c.a.d+','+c.b.d+')='+c.lcm,182,76,'#94A3B8'],['↓',182,92,'#CBD5E1'],[`${c.a.n*(c.lcm/c.a.d)}/${c.lcm}`,80,118,'#2563EB'],['+',132,118,'#94A3B8'],[`${c.b.n*(c.lcm/c.b.d)}/${c.lcm}`,195,118,'#F4841F']];
+  const answerSteps=[['=',248,118,'#94A3B8'],[`${c.res.n}/${c.res.d}`,300,118,'#059669']];
+  const ansEls=[];
+  steps.forEach(([txt,x,y,col],i)=>{
+    if(!txt)return;
+    const t=svgEl('text',{x,y,fill:col,'font-size':i<=2?'20':'11','font-weight':i<=2?'700':'400','text-anchor':'middle','font-family':'Plus Jakarta Sans,sans-serif'});
+    t.textContent=txt;t.style.opacity='0';s.appendChild(t);rafOpacity(t,0,1,400,i*200+100);
+  });
+  // Answer elements — invisible until hint
+  answerSteps.forEach(([txt,x,y,col])=>{
+    const t=svgEl('text',{x,y,fill:col,'font-size':'20','font-weight':'700','text-anchor':'middle','font-family':'Plus Jakarta Sans,sans-serif'});
+    t.textContent=txt;t.style.opacity='0';s.appendChild(t);ansEls.push(t);
+  });
+  const qmark=svgTxt(s,'= ?',268,118,18,'#94A3B8',true,'middle');
+  qmark.style.opacity='0';rafOpacity(qmark,0,1,400,steps.length*200+100);
+  area.appendChild(s);
+  // Hint: reveal answer
+  return ()=>{
+    qmark.style.opacity='0';
+    ansEls.forEach((el,i)=>rafOpacity(el,0,1,500,i*250));
+  };
+}
+// ── SCIENCE VISUALS ──
+function drawPlant(area,c){
+  const W=380,H=170;const s=makeSVG(W,H);
+  // Soil
+  s.appendChild(svgEl('rect',{x:0,y:H-35,width:W,height:35,fill:'#78350F',rx:'0'}));
+  // Stem
+  s.appendChild(svgEl('rect',{x:178,y:50,width:10,height:85,fill:'#16A34A',rx:'3'}));
+  // Leaves
+  [{cx:158,cy:82,rx:26,ry:11,rot:-30},{cx:200,cy:75,rx:26,ry:11,rot:30}].forEach(l=>{
+    const e=svgEl('ellipse',{cx:l.cx,cy:l.cy,rx:l.rx,ry:l.ry,fill:'#22C55E'});
+    e.setAttribute('transform',`rotate(${l.rot},${l.cx},${l.cy})`);s.appendChild(e);
+  });
+  // Roots
+  [{d:'M 183 135 Q 160 145 140 155'},{d:'M 183 135 Q 183 148 183 158'},{d:'M 183 135 Q 210 145 225 158'}].forEach(r=>{
+    s.appendChild(svgEl('path',{d:r.d,stroke:'#A16207','stroke-width':'2',fill:'none','stroke-linecap':'round'}));
+  });
+  // Sun (animated)
+  const sunG=svgEl('g',{style:'animation:rotate360 8s linear infinite;transform-origin:45px 35px'});
+  const sun=svgEl('circle',{cx:45,cy:35,r:18,fill:'#FBBF24'});sunG.appendChild(sun);
+  for(let i=0;i<8;i++){
+    const a=i*45*Math.PI/180,r=svgEl('line',{x1:45+20*Math.cos(a),y1:35+20*Math.sin(a),x2:45+27*Math.cos(a),y2:35+27*Math.sin(a),stroke:'#FBBF24','stroke-width':'2','stroke-linecap':'round'});
+    sunG.appendChild(r);
+  }
+  s.appendChild(sunG);
+  svgTxt(s,'☀️ Sunlight',45,62,9,'#D97706',false,'middle');
+  if(c.type==='photosynthesis'){
+    svgTxt(s,'CO₂ →',W-60,75,11,'#DC2626',true,'middle');svgTxt(s,'← O₂',W-60,92,11,'#059669',true,'middle');
+    svgTxt(s,'H₂O + Minerals',183,H-18,9,'#A16207',false,'middle');
+  }else{
+    svgTxt(s,'★ Roots',183,H-18,9,'#F59E0B',true,'middle');
+    svgTxt(s,'Absorb H₂O',183,H-7,8,'#92400E',false,'middle');
+  }
+  area.appendChild(s);
+}
+
+function drawWaterCycle(area,c){
+  const W=380,H=162;const s=makeSVG(W,H);
+  // Water body
+  const wg=svgEl('g',{style:'animation:pulseGlow 2.5s infinite'});
+  wg.appendChild(svgEl('ellipse',{cx:90,cy:138,rx:75,ry:18,fill:'#1D4ED8',opacity:'0.7'}));
+  s.appendChild(wg);svgTxt(s,'Ocean/Lake',90,141,10,'rgba(255,255,255,.7)',false,'middle');
+  // Cloud
+  s.appendChild(svgEl('ellipse',{cx:260,cy:35,rx:55,ry:22,fill:'#CBD5E1',opacity:'0.85'}));
+  svgTxt(s,'☁️ Cloud',260,38,11,'#475569',false,'middle');
+  const hl=c.highlight==='evaporation';
+  // Evaporation arrow (animated dashes)
+  const evPath=svgEl('path',{d:'M 90 120 Q 150 55 225 42',stroke:hl?'#F4841F':'#94A3B8','stroke-width':hl?3:2,fill:'none','stroke-dasharray':'8 5',style:hl?'animation:dashFlow 0.8s linear infinite':''});s.appendChild(evPath);
+  if(hl){svgTxt(s,'★ Evaporation',145,78,11,'#F4841F',true,'middle');}
+  // Rain
+  const rainG=svgEl('g',{style:'animation:floatUp 1.8s ease-in-out infinite'});
+  [{x:295,y:62},{x:310,y:72},{x:280,y:78},{x:300,y:85}].forEach(p=>{
+    rainG.appendChild(svgEl('circle',{cx:p.x,cy:p.y,r:'2.5',fill:'#2563EB',opacity:'0.6'}));
+  });
+  s.appendChild(rainG);
+  svgTxt(s,'Rain',310,100,9,'#64748B',false,'middle');
+  area.appendChild(s);
+}
+
+function drawAnimals(area,c){
+  const W=380,H=152;const s=makeSVG(W,H);
+  const data=[{n:'Mammal',e:'🐶'},{n:'Reptile',e:'🦎'},{n:'Amphibian',e:'🐸'},{n:'Bird',e:'🦅'}];
+  data.forEach((d,i)=>{
+    const x=14+i*88,hi=i===c.highlight;
+    const box=svgEl('rect',{x,y:22,width:78,height:108,fill:hi?'#DCFCE7':'#F8FAFC',rx:'8',stroke:hi?'#16A34A':'#E2E8F0','stroke-width':hi?2:1});s.appendChild(box);
+    const em=svgEl('text',{x:x+39,y:63,fill:'rgba(0,0,0,0)','font-size':'26','text-anchor':'middle'});em.textContent=d.e;s.appendChild(em);
+    svgTxt(s,d.n,x+39,80,10.5,hi?'#15803D':'#475569',hi,'middle');
+    if(hi){svgTxt(s,'★ Answer',x+39,17,9,'#D97706',true,'middle');}
+  });
+  area.appendChild(s);
+  setTimeout(()=>{s.querySelectorAll('text').forEach((t,i)=>{t.style.transition='fill 0.4s ease';t.style.fill=t.style.fill||'';});},300);
+}
+
+function drawFoodChain(area,c){
+  const W=380,H=142;const s=makeSVG(W,H);
+  const emap={Sun:'☀️',Plants:'🌿',Herbivore:'🐇',Carnivore:'🦁'};
+  c.chain.forEach((name,i)=>{
+    const x=14+i*91,hi=i===c.highlight;
+    s.appendChild(svgEl('rect',{x,y:38,width:76,height:78,fill:hi?'#DCFCE7':'#F8FAFC',rx:'8',stroke:hi?'#16A34A':'#E2E8F0','stroke-width':hi?2:1}));
+    const em=svgEl('text',{x:x+38,y:72,fill:'rgba(0,0,0,0)','font-size':'22','text-anchor':'middle'});em.textContent=emap[name]||'?';s.appendChild(em);
+    svgTxt(s,name,x+38,93,10,'#475569',false,'middle');
+    if(i<c.chain.length-1){
+      const arrX=x+76;const arr=svgEl('text',{x:arrX+7,y:80,fill:'#CBD5E1','font-size':'16','text-anchor':'middle'});arr.textContent='→';
+      arr.style.cssText='animation:dashFlow 1s infinite';s.appendChild(arr);
+    }
+    if(hi)svgTxt(s,'★ Eats Plants',x+38,32,9,'#D97706',true,'middle');
+  });
+  area.appendChild(s);
+}
+
+function drawDNA(area,c){
+  const W=380,H=142;const s=makeSVG(W,H);
+  const cols=['#2563EB','#F4841F','#059669'];
+  c.letters.forEach((letter,i)=>{
+    const x=58+i*100;
+    const box=svgEl('rect',{x:x-28,y:24,width:56,height:56,fill:cols[i],rx:'10'});box.style.cssText=`animation:popIn 0.4s ease ${i*0.15}s both`;s.appendChild(box);
+    const lt=svgEl('text',{x,y:57,fill:'#fff','font-size':'26','font-weight':'700','text-anchor':'middle','font-family':'Plus Jakarta Sans'});lt.textContent=letter;lt.style.cssText=`animation:popIn 0.4s ease ${i*0.15+0.05}s both`;s.appendChild(lt);
+    svgTxt(s,c.full[i],x,92,9,'#475569',false,'middle');
+    if(i<c.letters.length-1){const dash=svgEl('text',{x:x+35,y:56,fill:'#CBD5E1','font-size':'18','text-anchor':'middle'});dash.textContent='-';s.appendChild(dash);}
+  });
+  svgTxt(s,'Deoxyribonucleic Acid',W/2,118,11,'#64748B',false,'middle');
+  svgTxt(s,'= DNA',W/2,133,10,'#94A3B8',false,'middle');
+  area.appendChild(s);
+}
+
+// ── LANGUAGE VISUALS ──
+function drawWordFill(area,c){
+  const W=380,H=124;const s=makeSVG(W,H);
+  svgTxt(s,c.word||'Word',W/2,35,17,'#475569',false,'middle');
+  s.appendChild(svgEl('rect',{x:90,y:48,width:200,height:34,fill:'#F8FAFC',rx:'7',stroke:'#E2E8F0','stroke-width':1.5}));
+  svgTxt(s,c.answer||'?',W/2,70,15,'#059669',true,'middle');
+  if(c.pattern)svgTxt(s,'Pattern: '+c.pattern,W/2,100,10,'#94A3B8',false,'middle');
+  area.appendChild(s);
+}
+function drawSentence(area,c){
+  const W=380,H=108;const s=makeSVG(W,H);
+  const ccols={verb:'#2563EB',adjective:'#F4841F',noun:'#059669'};const hlC=ccols[c.type]||'#F4841F';
+  let cx=12;
+  c.words.forEach((w,i)=>{const ww=w.length*7.8+16,hi=i===c.highlight;
+    s.appendChild(svgEl('rect',{x:cx,y:32,width:ww,height:28,fill:hi?hlC+'22':'#F8FAFC',rx:'6',stroke:hi?hlC:'#E2E8F0','stroke-width':hi?2:1}));
+    svgTxt(s,w,cx+ww/2,50,12,hi?hlC:'#475569',hi,'middle');
+    if(hi){svgTxt(s,'↑',cx+ww/2,73,14,hlC,true,'middle');svgTxt(s,c.type.toUpperCase(),cx+ww/2,88,8.5,hlC,true,'middle');}
+    cx+=ww+6;
+  });
+  area.appendChild(s);
+}
+function drawAntonym(area,c){
+  const W=380,H=128;const s=makeSVG(W,H);
+  if(c.pair!==false){
+    s.appendChild(svgEl('rect',{x:30,y:38,width:120,height:44,fill:'#EFF6FF',rx:'8',stroke:'#2563EB','stroke-width':1.5}));
+    svgTxt(s,c.word,90,64,16,'#1D4ED8',true,'middle');
+    svgTxt(s,'↔',198,64,20,'#CBD5E1',false,'middle');
+    s.appendChild(svgEl('rect',{x:222,y:38,width:120,height:44,fill:'#FEF2F2',rx:'8',stroke:'#DC2626','stroke-width':1.5}));
+    svgTxt(s,c.opp,282,64,16,'#DC2626',true,'middle');
+    svgTxt(s,'ANTONYMS (Vilom Shabd)',W/2,108,10,'#94A3B8',false,'middle');
+  }else{
+    s.appendChild(svgEl('rect',{x:100,y:36,width:180,height:44,fill:'#ECFDF5',rx:'8',stroke:'#059669','stroke-width':1.5}));
+    svgTxt(s,c.word,W/2,62,15,'#15803D',true,'middle');
+    svgTxt(s,'Irregular Plural',W/2,98,10,'#64748B',false,'middle');
+    svgTxt(s,"NOT 'Childs' ✗",W/2,112,10,'#DC2626',false,'middle');
+  }
+  area.appendChild(s);
+}
+function drawSynonym(area,c){
+  const W=380,H=135;const s=makeSVG(W,H);
+  const cols=['#2563EB','#F4841F','#059669','#7C3AED'];
+  s.appendChild(svgEl('rect',{x:130,y:16,width:120,height:36,fill:'#EFF6FF',rx:'7',stroke:'#2563EB','stroke-width':1.5}));
+  svgTxt(s,c.word,W/2,38,15,'#1D4ED8',true,'middle');
+  svgTxt(s,'↓ Synonyms (Paryayavaachi)',W/2,66,9.5,'#94A3B8',false,'middle');
+  c.syns.forEach((syn,i)=>{
+    const x=15+i*90;const box=svgEl('rect',{x,y:72,width:78,height:26,fill:cols[i]+'22',rx:'6',stroke:cols[i],'stroke-width':1});box.style.cssText=`animation:popIn 0.35s ease ${i*0.1+0.4}s both`;s.appendChild(box);
+    svgTxt(s,syn,x+39,89,11,cols[i],true,'middle');
+  });
+  area.appendChild(s);
+}
+function drawTense(area,c){
+  const W=380,H=145;const s=makeSVG(W,H);
+  const ems=['🕐','🕰️','🔮'];
+  c.tenses.forEach((t,i)=>{
+    const x=16+i*118,hi=i===c.answer;
+    s.appendChild(svgEl('rect',{x,y:38,width:100,height:72,fill:hi?'#DCFCE7':'#F8FAFC',rx:'9',stroke:hi?'#16A34A':'#E2E8F0','stroke-width':hi?2:1}));
+    const em=svgEl('text',{x:x+50,y:68,fill:'rgba(0,0,0,0)','font-size':'20','text-anchor':'middle'});em.textContent=ems[i];s.appendChild(em);
+    svgTxt(s,t,x+50,85,11,hi?'#15803D':'#475569',hi,'middle');
+    if(hi)svgTxt(s,'★ Correct',x+50,32,9,'#D97706',true,'middle');
+  });
+  svgTxt(s,c.sentence,W/2,25,11,'#64748B',false,'middle');
+  area.appendChild(s);
+}
+function drawSyllable(area,c){
+  const W=380,H=128;const s=makeSVG(W,H);
+  const cols=['#2563EB','#F4841F','#059669','#7C3AED'];const n=c.split.length;const bW=56,gap=8;const sx=(W-n*(bW+gap)+gap)/2;
+  c.split.forEach((syl,i)=>{
+    const x=sx+i*(bW+gap);const box=svgEl('rect',{x,y:32,width:bW,height:40,fill:cols[i%4],rx:'7'});box.style.cssText=`animation:popIn 0.4s ease ${i*0.12}s both`;s.appendChild(box);
+    svgTxt(s,syl,x+bW/2,56,14,'#fff',true,'middle');
+    if(i<n-1){const p=svgEl('text',{x:x+bW+3,y:56,fill:'#CBD5E1','font-size':'15','text-anchor':'middle'});p.textContent='+';s.appendChild(p);}
+  });
+  svgTxt(s,`= ${c.count} syllables`,W/2,96,13,'#F59E0B',true,'middle');
+  svgTxt(s,c.word,W/2,22,11,'#94A3B8',false,'middle');
+  area.appendChild(s);
+}
+
+// ═══════════ CONFETTI ═══════════
+function showConfetti(){
+  const c=document.getElementById('cnf');c.innerHTML='';
+  const cols=['#F4841F','#2563EB','#059669','#7C3AED','#FBBF24','#EC4899'];
+  for(let i=0;i<22;i++){const p=document.createElement('div');p.className='cnf-p';p.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*40}%;background:${cols[i%6]};animation-delay:${Math.random()*.4}s;width:${Math.random()*5+5}px;height:${Math.random()*5+5}px`;c.appendChild(p);}
+  setTimeout(()=>c.innerHTML='',2000);
+}
+
+// ═══════════ SCORING ═══════════
+let scTimer;
+function animateScoring(){
+  clearTimeout(scTimer);
+  const ids=['sc3','sc4','sc5','sc6','sc7','sc8'];
+  ids.forEach(id=>{const el=document.getElementById(id);if(el){el.classList.remove('active','done');el.querySelector('.sc-d').textContent=id.replace('sc','');}});
+  let i=0;
+  function step(){
+    if(i>0&&ids[i-1]){const el=document.getElementById(ids[i-1]);if(el){el.classList.remove('active');el.classList.add('done');const d=el.querySelector('.sc-d');if(d)d.textContent='✓';}}
+    if(i<ids.length){document.getElementById(ids[i])?.classList.add('active');i++;scTimer=setTimeout(step,1000);}
+    else{
+      // Animation done — show share section
+      setTimeout(showResultQR,400);
+    }
+  }
+  step();
+}
+
+// ═══════════ TEACHER DASHBOARD (DYNAMIC from IndexedDB) ═══════════
+function refreshTeacher(){
+  loadAllSessions(sessions=>{
+    if(!sessions.length){buildEmptyTeacher();return;}
+    // Get latest session per student
+    const byStudent={};
+    sessions.forEach(s=>{if(!byStudent[s.student]||s.timestamp>byStudent[s.student].timestamp)byStudent[s.student]=s;});
+    buildTeacherFromData(sessions,byStudent);
+  });
+}
+function buildEmptyTeacher(){
+  document.getElementById('class-stats').innerHTML=`
+    <div class="cs-card"><div class="cs-num" style="color:var(--navy)">0</div><div class="cs-lbl">Sessions Today</div></div>
+    <div class="cs-card"><div class="cs-num" style="color:var(--text3)">—</div><div class="cs-lbl">Class Average</div></div>
+    <div class="cs-card"><div class="cs-num" style="color:var(--text3)">—</div><div class="cs-lbl">Need Help</div></div>
+    <div class="cs-card"><div class="cs-num" style="color:var(--text3)">—</div><div class="cs-lbl">Avg Time/Q</div></div>`;
+  const dots=document.getElementById('td-dots');dots.innerHTML='';
+  // All dots gray (not yet attempted)
+  for(let i=0;i<42;i++){const d=document.createElement('div');d.className='sdot na';d.textContent=i+1;d.title='No quiz data yet';dots.appendChild(d);}
+  document.getElementById('td-concept-bars').innerHTML='<div style="font-size:12px;color:var(--text3)">No quiz data. Ask students to take a quiz first.</div>';
+  document.getElementById('td-ai-insights').innerHTML='<div style="font-size:12px;color:var(--text3)">Complete quizzes to see AI insights here.</div>';
+  document.getElementById('td-students').innerHTML='<div style="font-size:12px;color:var(--text3)">No student data in IndexedDB yet.</div>';
+  document.getElementById('td-history').innerHTML='<div style="font-size:12px;color:var(--text3)">No sessions yet.</div>';
+}
+function buildTeacherFromData(allSessions,byStudent){
+  const today=new Date();today.setHours(0,0,0,0);
+  const todaySessions=allSessions.filter(s=>new Date(s.timestamp)>=today);
+  const avgScore=allSessions.reduce((a,s)=>a+s.score/s.total,0)/allSessions.length;
+  const needHelp=Object.values(byStudent).filter(s=>s.score/s.total<0.5).length;
+  const allTimings=allSessions.flatMap(s=>s.timings||[]).filter(t=>t>0);
+  const avgTime=allTimings.length?(allTimings.reduce((a,b)=>a+b,0)/allTimings.length).toFixed(1)+'s':'—';
+
+  document.getElementById('class-stats').innerHTML=`
+    <div class="cs-card"><div class="cs-num" style="color:var(--navy)">${todaySessions.length}</div><div class="cs-lbl">Sessions Today</div></div>
+    <div class="cs-card"><div class="cs-num" style="color:${avgScore>=.7?'var(--teal)':avgScore>=.5?'var(--yel)':'var(--red)'}">${Math.round(avgScore*100)}%</div><div class="cs-lbl">Class Average</div></div>
+    <div class="cs-card"><div class="cs-num" style="color:var(--red)">${needHelp}</div><div class="cs-lbl">Need Help</div></div>
+    <div class="cs-card"><div class="cs-num" style="color:var(--ora)">${avgTime}</div><div class="cs-lbl">Avg Time/Q</div></div>`;
+
+  // Concept bars (from most recent subject data)
+  const latestSubj=(Object.values(byStudent)[0]?.subject)||'Math';
+  const concepts=CONCEPTS[latestSubj]||CONCEPTS.Math;
+  const cbHTML=concepts.map(c=>{
+    const col=c.pct>=70?'var(--teal)':c.pct>=50?'var(--yel)':'var(--red)';
+    return`<div class="cbr"><div class="cbn">${c.t}</div><div class="cbb"><div class="cbf" style="width:${c.pct}%;background:${col}"></div></div><div class="cbpc" style="color:${col}">${c.pct}%</div></div>`;
+  }).join('');
+  document.getElementById('td-concept-bars').innerHTML=cbHTML;
+
+  // Dot grid from actual student data
+  const stuList=Object.keys(byStudent);
+  const dots=document.getElementById('td-dots');dots.innerHTML='';
+  for(let i=0;i<42;i++){
+    const d=document.createElement('div');
+    const stuSess=stuList[i]?byStudent[stuList[i]]:null;
+    if(stuSess){const pct=stuSess.score/stuSess.total;d.className='sdot '+(pct>=.7?'ok':pct>=.5?'par':'mis');d.textContent=i+1;
+      d.innerHTML+=`<div class="sdot-tip">${stuSess.student}: ${stuSess.score}/${stuSess.total} (${Math.round(pct*100)}%)</div>`;
+      d.onclick=()=>{sName=stuSess.student;answers=stuSess.answers||[];timings=stuSess.timings||[];flags=stuSess.flags||[];subj=stuSess.subject||'Math';goto('s-analysis');};}
+    else{d.className='sdot na';d.textContent=i+1;const tip=document.createElement('div');tip.className='sdot-tip';tip.textContent='No data yet';d.appendChild(tip);}
+    dots.appendChild(d);
+  }
+
+  // AI Insights (dynamic based on actual data)
+  const weakConcepts=concepts.filter(c=>c.pct<55);
+  const fastFlags=allSessions.flatMap(s=>(s.flags||[]).filter(f=>f.reason==='TOO_FAST'));
+  const timeoutFlags=allSessions.flatMap(s=>(s.flags||[]).filter(f=>f.reason==='TIMEOUT'));
+  const stuCount=Object.keys(byStudent).length;
+  let insights='';
+  if(avgScore>=.75)insights+=`<div class="ai-card ok"><span>✅</span><div class="ai-card-txt"><strong>Class performing well!</strong> Average ${Math.round(avgScore*100)}% — above expected. Continue with next chapter.</div></div>`;
+  else insights+=`<div class="ai-card warn"><span>⚠️</span><div class="ai-card-txt"><strong>Class needs support.</strong> Average ${Math.round(avgScore*100)}%. Focus on ${weakConcepts[0]?.t||'weak concepts'} before advancing.</div></div>`;
+  if(weakConcepts.length)insights+=`<div class="ai-card bad"><span>📉</span><div class="ai-card-txt"><strong>Weakest concept: ${weakConcepts[0].t}</strong> (${weakConcepts[0].pct}%). Recommend: 15-min focused activity. ${weakConcepts[0].tip}</div></div>`;
+  if(fastFlags.length)insights+=`<div class="ai-card warn"><span>⚡</span><div class="ai-card-txt"><strong>${fastFlags.length} fast answers detected</strong> across sessions (under 3s). These students may be guessing — recommend 1-on-1 check.</div></div>`;
+  if(timeoutFlags.length)insights+=`<div class="ai-card bad"><span>⏱</span><div class="ai-card-txt"><strong>${timeoutFlags.length} timeouts</strong> — students ran out of time. Consider increasing time limit or re-teaching these concepts.</div></div>`;
+  insights+=`<div class="ai-card info"><span>📊</span><div class="ai-card-txt"><strong>${stuCount} students</strong> have taken quizzes. ${42-stuCount} students haven't taken today's quiz yet.</div></div>`;
+  document.getElementById('td-ai-insights').innerHTML=insights;
+
+  // Per-student list
+  const stuHTML=Object.entries(byStudent).slice(0,8).map(([name,sess])=>{
+    const pct=Math.round(sess.score/sess.total*100);const col=pct>=70?'var(--teal)':pct>=50?'var(--yel)':'var(--red)';
+    const avgT=sess.timings?.length?(sess.timings.reduce((a,b)=>a+(b||0),0)/sess.timings.length).toFixed(1)+'s':'—';
+    const fastF=(sess.flags||[]).filter(f=>f.reason==='TOO_FAST').length;
+    const timeF=(sess.flags||[]).filter(f=>f.reason==='TIMEOUT').length;
+    let aiSug='';
+    if(pct<50)aiSug=`🤖 <strong>BodhAI:</strong> ${name} scored ${pct}%. Struggling with ${CONCEPTS[sess.subject||'Math']?.find(c=>c.s==='mis')?.t||'key concepts'}. Recommend 1-on-1 support.`;
+    else if(fastF>1)aiSug=`🤖 <strong>BodhAI:</strong> ${fastF} fast answers detected in ${name}'s session — possible guessing. Verify understanding with oral quiz.`;
+    else if(timeF>0)aiSug=`🤖 <strong>BodhAI:</strong> ${name} timed out on ${timeF} question(s). Needs more practice time on ${sess.subject} concepts.`;
+    else if(pct>=80)aiSug=`🤖 <strong>BodhAI:</strong> ${name} is performing excellently (${pct}%). Consider giving advanced practice problems.`;
+    else aiSug=`🤖 <strong>BodhAI:</strong> ${name} shows average understanding (${pct}%). Continue regular practice.`;
+    return`<div class="student-row">
+      <div class="stu-ava">${name[0].toUpperCase()}</div>
+      <div class="stu-info">
+        <div class="stu-name">${name}</div>
+        <div class="stu-detail">${sess.subject} · Avg time: ${avgT} · ${fastF>0?`⚡${fastF} fast`:''} ${timeF>0?`⏱${timeF} timeout`:''}</div>
+        <div class="ai-suggestion">${aiSug}</div>
+      </div>
+      <div><div class="stu-score" style="color:${col}">${sess.score}/${sess.total}</div><div style="font-size:10px;color:var(--text3);text-align:right">${pct}%</div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('td-students').innerHTML=stuHTML||'<div style="font-size:12px;color:var(--text3)">No student sessions found.</div>';
+
+  // History
+  const histHTML=allSessions.slice(-8).reverse().map(s=>{
+    const pct=Math.round(s.score/s.total*100);const d=new Date(s.timestamp);
+    return`<div class="student-row" style="padding:8px 0">
+      <div class="stu-ava" style="width:32px;height:32px;font-size:13px">${s.student[0]}</div>
+      <div class="stu-info"><div class="stu-name" style="font-size:12px">${s.student} · ${s.subject}</div><div class="stu-detail">${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} · ${LM[s.lang]?.v||s.lang}</div></div>
+      <div class="stu-score" style="color:${pct>=70?'var(--teal)':'var(--red)'}; font-size:14px">${s.score}/${s.total}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('td-history').innerHTML=histHTML||'<div style="font-size:12px;color:var(--text3)">No history.</div>';
+}
+
+// ═══════════ LANGUAGE GRID ═══════════
+async function buildLangGrid(){
+  const grid=document.getElementById('lang-grid');if(!grid)return;
+  const voices=await loadVoices();
+  grid.innerHTML=Object.entries(LM).map(([code,meta])=>{
+    const hasVoice=voices.some(v=>v.lang.toLowerCase().startsWith(code.toLowerCase()));
+    const isSel=code===lang;
+    return`<div class="lang-card${isSel?' sel':''}" onclick="pickLangCard('${code}',this)">
+      <div class="lc-s">${{hi:'अ',bn:'অ',ta:'அ',en:'A',mr:'अ',te:'అ'}[code]}</div>
+      <div class="lc-n">${meta.n}</div><div class="lc-v">${meta.v}</div>
+      <div class="voice-avail ${hasVoice?'va-yes':'va-no'}">${hasVoice?'🔊 Audio ready':'🔕 Text only'}</div>
+    </div>`;
+  }).join('');
+  const availCount=Object.keys(LM).filter(c=>voices.some(v=>v.lang.toLowerCase().startsWith(c.toLowerCase()))).length;
+  document.getElementById('tts-note').textContent=`${availCount} of 6 languages have TTS voices in this browser. For missing languages, English audio plays as fallback.`;
+}
+function pickLangCard(code,el){lang=code;try{localStorage.setItem('bodhai_lang',code);}catch(e){}document.querySelectorAll('.lang-card').forEach(function(c){c.classList.remove('sel');});el.classList.add('sel');var LN={'hi':'Hindi','en':'English','bn':'Bengali','ta':'Tamil','te':'Telugu','mr':'Marathi'};var nd=document.getElementById('lang-name-display');if(nd)nd.textContent=LN[code]||code;}
+
+// ═══════════ ANALYSIS ═══════════
+function buildAnalysis(){
+  const qs=getQs();const correct=answers.filter((a,i)=>a===qs[i].ans).length;
+  const total=qs.length,pct=Math.round(correct/total*100);
+  const grade=pct>=85?'A+':pct>=70?'A':pct>=55?'B':pct>=40?'C':'D';
+  const avgT=timings.filter(t=>t>0).length?(timings.filter(t=>t>0).reduce((a,b)=>a+b,0)/timings.filter(t=>t>0).length).toFixed(1)+'s':'—';
+  document.getElementById('an-ava').textContent=(sName[0]||'S').toUpperCase();
+  document.getElementById('an-name').textContent=sName;
+  document.getElementById('an-sub').textContent=`Class ${sCls} · ${subj} · Roll ${sRoll}`;
+  const pc=pct>=70?'var(--teal)':pct>=50?'var(--yel)':'var(--red)';
+  var _cs=(typeof Calibration!=='undefined'&&sName)?Calibration.getStatus(sName):{threshold:62,total:0,calibrated:false};var _tc=_cs.calibrated?'#059669':(_cs.total>0?'#D97706':'#2563EB');document.getElementById('an-pills').innerHTML=[{n:correct+'/'+total,l:'Score',c:pc},{n:pct+'%',l:'Accuracy',c:'#D97706'},{n:grade,l:'Grade',c:pc},{n:avgT,l:'Avg Time',c:'#2563EB'},{n:'AI '+_cs.threshold+'%',l:'Voice AI',c:_tc}].map(function(p){return '<div class="ah-pill"><div class="ahp-n" style="color:'+p.c+'">'+p.n+'</div><div class="ahp-l">'+p.l+'</div></div>';}).join('');var _calDiv=document.createElement('div');_calDiv.className='card';var _cb=_cs.calibrated?'<div style="background:#F0FDF4;border-radius:8px;padding:8px;font-size:12px;color:#065F46">&#9989; Threshold personalized.</div>':(_cs.total>0?'<div style="background:#FFFBEB;border-radius:8px;padding:8px;font-size:12px;color:#92400E">&#8987; '+(10-_cs.total)+' more voice answers.</div>':'<div style="background:#EFF6FF;border-radius:8px;padding:8px;font-size:12px;color:#1D4ED8">&#127908; Use mic during quiz.</div>');_calDiv.innerHTML='<div class="card-title">&#127919; AI Voice Calibration</div><div style="padding:12px;font-size:13px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:#64748B">Threshold</span><span style="font-weight:700;color:'+_tc+'">'+_cs.threshold+'%</span></div><div style="background:#F1F5F9;border-radius:6px;height:8px;margin-bottom:8px"><div style="width:'+Math.min(100,_cs.total*10)+'%;background:'+_tc+';height:8px;border-radius:6px"></div></div>'+_cb+'</div>';var _ab=document.getElementById('analysis-body');if(_ab)_ab.insertBefore(_calDiv,_ab.firstChild);
+
+  const body=document.getElementById('analysis-body');body.innerHTML='';
+  const mk=(t)=>{const d=document.createElement('div');d.className='card';d.innerHTML=`<div class="card-title">${t}</div>`;return d;};
+
+  // Donut
+  const dc=mk('📈 Overall Performance');const r=52,circ=2*Math.PI*r;
+  dc.innerHTML+=`<div class="donut-wrap"><svg width="110" height="110" viewBox="0 0 110 110"><circle cx="55" cy="55" r="${r}" fill="none" stroke="#F1F5F9" stroke-width="12" transform="rotate(-90 55 55)"/><circle id="dan" cx="55" cy="55" r="${r}" fill="none" stroke="${pct>=70?'#059669':pct>=50?'#D97706':'#DC2626'}" stroke-width="12" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" stroke-linecap="round" transform="rotate(-90 55 55)" style="transition:stroke-dashoffset 1.5s cubic-bezier(.25,.8,.25,1)"/><text x="55" y="50" fill="#1E293B" font-size="20" font-weight="800" text-anchor="middle">${pct}%</text><text x="55" y="67" fill="#94A3B8" font-size="10" text-anchor="middle">Grade ${grade}</text></svg><div class="dleg"><div class="dl-i"><div class="dl-d" style="background:#059669"></div>${correct} Correct</div><div class="dl-i"><div class="dl-d" style="background:#DC2626"></div>${total-correct} Wrong</div><div class="dl-i"><div class="dl-d" style="background:#CBD5E1"></div>${qs.length-answers.filter(a=>a!==-1&&a!==undefined).length} Skipped</div></div></div>`;
+  body.appendChild(dc);setTimeout(()=>{const el=document.getElementById('dan');if(el)el.style.strokeDashoffset=circ*(1-pct/100);},200);
+
+  // Q bars
+  const qc=mk('📋 Question-by-Question + Time');
+  qc.innerHTML+=qs.map((q,i)=>{const c=answers[i]===q.ans;const t=timings[i]?timings[i].toFixed(1)+'s':'—';const fl=flags.find(f=>f.q===i);const flbadge=fl?`<span style="font-size:9px;color:${fl.reason==='TOO_FAST'?'#D97706':'#DC2626'};margin-left:4px">${fl.reason==='TOO_FAST'?'⚡Fast':'⏱Timeout'}</span>`:'';return`<div class="qbar-row"><div class="qbar-lbl">Q${i+1}</div><div class="qbar-track"><div class="qbar-fill" style="width:${c?'100':'40'}%;background:${c?'#059669':'#DC2626'}">${c?'✓ Correct':'✗ Wrong'}${flbadge}</div></div><div class="qbar-time">${t}</div></div>`;}).join('');
+  body.appendChild(qc);
+
+  // Time histogram
+  const tc=mk('⏱ Time Analysis');const maxT=Math.max(...timings.filter(t=>t>0),5);
+  tc.innerHTML+=`<div style="font-size:10px;color:var(--text3);margin-bottom:7px">🔴 &lt;3s (possibly guessing) · 🟡 3–12s (normal) · 🟢 &gt;12s (careful thinking)</div><div class="time-hist">`+qs.map((_,i)=>{const t=timings[i]||0;const h=Math.max(5,Math.round(t/maxT*62));const col=!t?'#E2E8F0':t<3?'#DC2626':t<12?'#D97706':'#059669';return`<div class="th-col"><div class="th-bar" style="height:${h}px;background:${col}"></div><div class="th-lbl">Q${i+1}</div></div>`;}).join('')+'</div>';
+  body.appendChild(tc);
+
+  // AI Insights
+  const ac=mk('🤖 BodhAI Personalised Insights');let aiHTML='';
+  if(pct>=80&&!flags.length)aiHTML+=`<div class="ai-card ok"><span style="font-size:18px">🌟</span><div class="ai-card-txt"><strong>Outstanding performance!</strong> You scored ${pct}% with no flags. You're mastering ${subj} concepts well. Consider attempting harder problems.</div></div>`;
+  else if(pct>=60)aiHTML+=`<div class="ai-card info"><span style="font-size:18px">👍</span><div class="ai-card-txt"><strong>Good performance (${pct}%).</strong> You understand most concepts. Focus on your wrong answers to reach the next level.</div></div>`;
+  else aiHTML+=`<div class="ai-card bad"><span style="font-size:18px">💪</span><div class="ai-card-txt"><strong>Keep practising! (${pct}%)</strong> Several concepts need revision. Don't give up — BodhAI will help you improve step by step.</div></div>`;
+  flags.forEach(f=>{if(f.reason==='TOO_FAST')aiHTML+=`<div class="ai-card warn"><span style="font-size:17px">⚡</span><div class="ai-card-txt"><strong>Q${f.q+1} answered in ${f.time.toFixed(1)}s</strong> — BodhAI flagged as too fast. Please review ${getQ(f.q).concept} carefully before moving on.</div></div>`;if(f.reason==='TIMEOUT')aiHTML+=`<div class="ai-card bad"><span style="font-size:17px">⏱</span><div class="ai-card-txt"><strong>Q${f.q+1} timed out.</strong> This means ${getQ(f.q).concept} needs more practice. Allocate more study time here.</div></div>`;});
+  const wrongQs=qs.filter((_,i)=>answers[i]!==undefined&&answers[i]!==getQs()[i].ans);
+  if(wrongQs.length){const concepts=(CONCEPTS[subj]||CONCEPTS.Math).filter(c=>c.s!=='ok');if(concepts.length)aiHTML+=`<div class="ai-card bad"><span style="font-size:17px">📚</span><div class="ai-card-txt"><strong>Focus areas: ${concepts.map(c=>c.t).join(', ')}.</strong> ${concepts[0].tip}</div></div>`;}
+  ac.innerHTML+=aiHTML;body.appendChild(ac);
+
+  // Concept bars
+  const cc=mk('📚 Concept Mastery Map');const concepts=CONCEPTS[subj]||CONCEPTS.Math;
+  cc.innerHTML+=concepts.map(c=>{const col=c.pct>=70?'#059669':c.pct>=50?'#D97706':'#DC2626';return`<div class="cbr"><div class="cbn">${c.t}</div><div class="cbb"><div class="cbf" style="width:${c.pct}%;background:${col}"></div></div><div class="cbpc" style="color:${col}">${c.pct}%</div></div>`;}).join('');
+  body.appendChild(cc);
+}
+
+// ═══════════ FEEDBACK ═══════════
+
+
+
+function stopFBAudio(){if(window.speechSynthesis)speechSynthesis.cancel();fbPlaying=false;clearInterval(fbInt);const pb=document.getElementById('fb-pb');if(pb){pb.textContent='▶';pb.classList.remove('on');}document.querySelectorAll('#fb-aw .aw').forEach(b=>b.classList.remove('lit'));}
+
+
+// ── MOBILE DRAWER ──────────────────────────────────────────────────
+function openDrawer(){
+  document.getElementById('sidebar-overlay').classList.add('open');
+  document.getElementById('sidebar-drawer').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeDrawer(){
+  document.getElementById('sidebar-overlay').classList.remove('open');
+  document.getElementById('sidebar-drawer').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// ═══════════ HELP & CREATE QUIZ ═══════════
+function openHelp(){
+  const m=document.getElementById('help-modal');m.style.display='flex';
+}
+function closeHelp(){document.getElementById('help-modal').style.display='none';}
+
+let cqSubj='Math';
+function openCreateQuiz(){
+  cqSubj=subj||'Math';
+  document.querySelectorAll('[id^="cqs-"]').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('cqs-'+cqSubj)?.classList.add('sel');
+  updateCQPreview();
+  document.getElementById('create-quiz-modal').style.display='flex';
+}
+function closeCreateQuiz(){document.getElementById('create-quiz-modal').style.display='none';}
+function cqPickSubj(s,el){
+  cqSubj=s;
+  document.querySelectorAll('[id^="cqs-"]').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  updateCQPreview();
+}
+const SUBJ_PREVIEWS={
+  Math:'7 questions — Fractions, Patterns, Number Line, Bar Graph, Word Problems, Comparison, Formula',
+  Hindi:'6 questions — Vachan, Kriya, Vilom, Paryayavaachi, Kaal, Akshar Gyan',
+  Science:'6 questions — Photosynthesis, Water Cycle, Plant Parts, Animal Classification, Food Chain, DNA',
+  English:'5 questions — Subject-Verb, Irregular Plurals, Simple Present, Parts of Speech, Prepositions'
+};
+function updateCQPreview(){document.getElementById('cq-preview').textContent=SUBJ_PREVIEWS[cqSubj]||'';}
+function launchCreatedQuiz(){
+  subj=cqSubj;
+  lang=document.getElementById('cq-lang').value||'hi';
+  sCls=document.getElementById('cq-class').value||'6B';
+  closeCreateQuiz();
+  // Navigate to student profile pre-filled
+  document.getElementById('inp-cls').value=sCls;
+  document.querySelectorAll('.subj-opt').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('so-'+cqSubj)?.classList.add('sel');
+  goto('s-profile');
+}
+// Close modals on overlay click
+document.addEventListener('click', function(e){
+  if(e.target.id==='help-modal')closeHelp();
+  if(e.target.id==='create-quiz-modal')closeCreateQuiz();
+});
+
+// Fix refreshTeacher with safe element check
+function safeRefresh(){
+  if(!document.getElementById('s-teacher').classList.contains('active'))return;
+  refreshTeacher();
+}
+
+
+// ════ STUDENT — PHASE 2 ADDITIONS ══════════════════════════════════════════
+let sessionCode = 'DIRECT';
+
+function readSessionCode(){
+  const el=document.getElementById('inp-session');
+  sessionCode=(el?.value||'').toUpperCase().trim()||'DIRECT';
+  localStorage.setItem('bodhStudentSession',sessionCode);
+}
+
+
+
+function compressResult(){
+  const qs=getQs();
+  const score=answers.filter((a,i)=>i<qs.length&&a===qs[i].ans).length;
+  const nm=(sName||'S').substring(0,10).trim().replace(/\|/g,'');
+  const roll=parseInt(document.getElementById('inp-roll')?.value||'0')||0;
+  const sj=(subj||'Math').replace(/\|/g,''); // full subject name - handles Geography etc
+  const ans=answers.slice(0,qs.length).map(a=>(a>=0&&a<=9)?a:9).join('');
+  const fl=(flags||[]).filter(f=>f.reason==='TOO_FAST').map(f=>f.q).join('');
+  const sess=((document.getElementById('inp-session')?.value||sessionCode||'DIRECT')
+    .toUpperCase().replace('BODH-','')).substring(0,8);
+  const ts=Math.floor(Date.now()/60000);
+  const packed=nm+'|'+roll+'|'+sj+'|'+score+'|'+qs.length+'|'+ans+'|'+(fl||'0')+'|'+sess+'|'+ts;
+  return btoa(packed).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+function showResultQR(){
+  const wrap=document.getElementById('qr-share-wrap');
+  const codeEl=document.getElementById('result-code-display');
+  const lenEl=document.getElementById('code-length-display');
+  if(!wrap)return;
+  try{
+    const encoded=compressResult();
+    window._resultCode=encoded;
+    // Show the section
+    wrap.style.display='block';
+    // Show the short code prominently
+    if(codeEl){codeEl.textContent=encoded;codeEl.style.fontSize=encoded.length<=60?'13px':'10px';}
+    if(lenEl)lenEl.textContent=encoded.length+' characters';
+    // Generate QR code (optional bonus)
+    const qrWrap=document.getElementById('qr-canvas-wrap');
+    if(qrWrap&&typeof QRCode!=='undefined'){
+      qrWrap.innerHTML='';qrWrap.style.display='block';
+      new QRCode(qrWrap,{text:encoded,width:140,height:140,
+        colorDark:'#0B2447',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+    }
+  }catch(e){
+    console.warn('showResultQR:',e);
+    if(wrap)wrap.style.display='block';
+    if(codeEl)codeEl.textContent='Code error — tap Copy Code';
+  }
+}
+function shareResultWhatsApp(){
+  const code=window._resultCode||compressResult();
+  const nm=typeof sName!=='undefined'?sName:'Student';
+  const sj=typeof subj!=='undefined'?subj:'';
+  const msg='BodhAI Result for '+nm+' ('+sj+'):\n'+code;
+  if(navigator.share){
+    navigator.share({title:'BodhAI Result - '+nm,text:msg}).catch(()=>fallbackWA(msg));
+  }else{fallbackWA(msg);}
+}
+function fallbackWA(msg){window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');}
+function copyResultCode(btn){
+  const code=window._resultCode||compressResult();
+  const codeEl=document.getElementById('result-code-display');
+  const copyText=()=>{
+    if(codeEl){codeEl.textContent='Copied!';codeEl.classList.add('rsc-copied');setTimeout(()=>{codeEl.textContent=code.substring(0,60)+'...';codeEl.classList.remove('rsc-copied');},2000);}
+    if(btn){const orig=btn.innerHTML;btn.innerHTML='<span class="rsc-btn-icon">Done!</span>';setTimeout(()=>{btn.innerHTML=orig;},1800);}
+  };
+  if(navigator.clipboard){navigator.clipboard.writeText(code).then(copyText);}
+  else{try{const t=document.createElement('textarea');t.value=code;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);copyText();}catch(e){}}
+}
+
+function nextStudent(){try{stopTTS();stopTimer();stopFBAudio();stopSTT();curQ=0;answers=[];timings=[];flags=[];var ni=document.getElementById('inp-name');if(ni)ni.value='';var ri=document.getElementById('inp-roll');if(ri)ri.value='';sName='';sRoll='';goto('s-profile');setTimeout(function(){var n2=document.getElementById('inp-name');if(n2)n2.focus();},150);showToast&&showToast('Ready for next student');}catch(e){goto('s-profile');}}
+async function matchVoice(t){
+  const q=getQ(curQ);const opts=q.opts[lang]||q.opts.en;const txt=t.toLowerCase().trim();
+  const vtr=document.getElementById('vtr');
+  if(typeof window.semanticSTTMatch==='function'){
+    try{
+      const r=await window.semanticSTTMatch(t,q.opts.en||opts);
+      if(r&&r.confidence>0.45){
+        selectOpt(r.idx);
+        if(vtr)vtr.textContent=`✅ Semantic: Option ${String.fromCharCode(65+r.idx)} (${Math.round(r.confidence*100)}% · ${r.ms}ms)`;
+        return;
+      }
+    }catch(e){}
+  }
+  let best=-1;
+  if(/\ba\b|option a|first|पहला|প্রথম/.test(txt))best=0;
+  else if(/\bb\b|option b|second|दूसरा|দ্বিতীয়/.test(txt))best=1;
+  else if(/\bc\b|option c|third|तीसरा|তৃতীয়/.test(txt))best=2;
+  else if(/\bd\b|option d|fourth|चौथा|চতুর্থ/.test(txt))best=3;
+  if(best===-1)opts.forEach((o,i)=>{if(txt.includes(o.toLowerCase().substring(0,5)))best=i;});
+  if(best!==-1){selectOpt(best);if(vtr)vtr.textContent=`✅ Matched: Option ${String.fromCharCode(65+best)}`;}
+  else if(vtr)vtr.textContent=`⚠️ Heard: "${t}" — tap an option.`;
+}
+
+
+// ════ BODHAI AI — PHASE 2 ADDITIONS ════════════════════════════════════════
+
+// Show AI info modal
+function showAIInfo(){
+  const m=document.getElementById('ai-info-modal');
+  const c=document.getElementById('ai-info-content');
+  if(!m||!c)return;
+  const info=window.getMLInfo?window.getMLInfo():{};
+  c.innerHTML=`
+    <div style="margin-bottom:6px"><strong>Model:</strong> ${info.model||'all-MiniLM-L6-v2'}</div>
+    <div style="margin-bottom:6px"><strong>Type:</strong> ${info.type||'Sentence Transformer'}</div>
+    <div style="margin-bottom:6px"><strong>Size:</strong> ${info.size||'~22MB'} (cached offline)</div>
+    <div style="margin-bottom:6px"><strong>Runtime:</strong> ${info.runtime||'WebAssembly (ONNX)'}</div>
+    <div style="margin-bottom:6px"><strong>Load time:</strong> ${info.loadTime||'—'}</div>
+    <div style="margin-bottom:6px"><strong>Avg inference:</strong> ${info.avgInference||'—'}</div>
+    <div style="margin-bottom:6px"><strong>Inferences run:</strong> ${info.inferences||0}</div>
+    <div style="margin-bottom:6px"><strong>API calls:</strong> 0 (on-device only)</div>
+    <div style="margin-top:10px;padding:8px 10px;background:#F0FDF4;border-radius:8px;font-size:12px;color:#15803D">
+      ✓ On-device inference — no data leaves the device
+    </div>`;
+  m.style.display='flex';
+}
+
+// Concept tips per subject
+const CONCEPT_TIPS={
+  Math:{'Fraction Basics':{ok:'Foundation solid! Numerator, denominator and equal parts all clear.',par:'Review: fraction = parts taken ÷ total equal parts. Draw and count.',mis:'Start basic: divide a circle into equal parts, shade some. That = your fraction.'},'Fraction Patterns':{ok:'Pattern recognition strong! Series extended correctly.',par:'Check: does the numerator increase by 1 each step? Write it out.',mis:'Write slowly: 1/5, 2/5, 3/5… The top adds 1 each time.'},'Number Line':{ok:'You place fractions correctly between 0 and 1.',par:'½=0.5 is midpoint. ¾=0.75 is between ½ and 1.',mis:'Draw: Mark 0 and 1. Put ½ in the middle. ¾ is 3/4 of the way to 1.'},'Graph Reading':{ok:'You read bar graphs and extract data correctly.',par:'Trace a line from bar top to Y-axis to read exact values.',mis:'Practise daily. Each bar height = a number on the Y-axis.'},'Word Problems':{ok:'Excellent! You translate word problems into maths correctly.',par:'Read twice: 1st understand the story, 2nd find numbers and operation.',mis:'Underline numbers. Circle the question. Decide: add/subtract/multiply/divide?'},'Fraction Comparison':{ok:'You compare fractions confidently using LCM.',par:'Convert to same denominator: ⅔=8/12, ¾=9/12. Compare numerators.',mis:'Find LCM of denominators first. Make equal, then compare.'},'Unlike Denominators':{ok:'You add fractions with different denominators correctly!',par:'3 steps: Find LCM. Convert fractions. Add numerators.',mis:'Practice: ¾+⅕ → LCM(4,5)=20 → 15/20+4/20=19/20.'}},
+  Hindi:{'Vachan (Number)':{ok:'वचन पहचान उत्तम!',par:'रोज़ 5 शब्दों का बहुवचन लिखो।',mis:'एकवचन=एक, बहुवचन=अनेक। नियम याद करो।'},'Kriya (Verb)':{ok:'क्रिया पहचान सटीक!',par:'पूछो: "क्या हो रहा है?" — वह क्रिया है।',mis:'"वह जाता है" — "जाता" = क्रिया।'},'Vilom Shabd':{ok:'विलोम शब्द उत्तम!',par:'10 जोड़े रोज़ याद करो।',mis:'विलोम = उल्टा अर्थ।'},'Paryayavaachi':{ok:'पर्यायवाची उत्तम!',par:'हर शब्द के 2-3 पर्यायवाची याद करो।',mis:'पर्यायवाची = समान अर्थ।'},'Kaal (Tense)':{ok:'काल पहचान सटीक!',par:'है/हैं=वर्तमान, था/थी=भूत, गा/गी=भविष्य।',mis:'3 काल याद करो।'},'Akshar (Syllables)':{ok:'अक्षर गणना सही!',par:'ताली बजाओ — हर ताली = एक अक्षर।',mis:'धीरे बोलो: वि-द्या-ल-य = 4 अक्षर।'}},
+  Science:{'Photosynthesis':{ok:'CO₂ absorbed, O₂ released — all clear!',par:'CO₂+H₂O+sunlight → glucose+O₂.',mis:'Plants make food using sunlight, CO₂ and water.'},'Water Cycle':{ok:'All water cycle stages clear!',par:'Evaporation→Condensation→Precipitation.',mis:'Heat evaporates water→clouds→rain. Draw the cycle.'},'Plant Parts':{ok:'Plant parts and functions correct.',par:'Roots absorb water, stem carries it, leaves make food.',mis:'Draw and label each part with its function.'},'Animal Classification':{ok:'All 4 groups identified correctly.',par:'Feeds milk?→Mammal. Scales?→Reptile. Feathers?→Bird.',mis:'Dog=mammal, Frog=amphibian, Snake=reptile, Eagle=bird.'},'Food Chain':{ok:'Energy flow from producers to consumers clear.',par:'Sun→Plants→Herbivores→Carnivores.',mis:'Who eats whom. Always starts with Sun and plants.'},'DNA & Cells':{ok:'DNA = Deoxyribonucleic Acid. Correctly identified!',par:'DNA in cell nucleus, carries genetic information.',mis:'Full form: Deoxyribonucleic Acid. Re-read NCERT Ch.8.'}},
+  English:{'Subject-Verb Agreement':{ok:"'Doesn't' with he/she/it — perfect!",par:"He/She/It + doesn't. They/We/I + don't.",mis:"'He doesn't know' = correct. 'He don't know' = wrong."},'Irregular Plurals':{ok:'Irregular plurals mastered!',par:'child→children, man→men, tooth→teeth.',mis:"Doesn't use -s/-es. Make flashcards."},'Simple Present Tense':{ok:'-s/-es added for singular subjects correctly.',par:"Singular: 'The sun rises.' 'She reads.'",mis:"Rule: singular + verb+s. 'The sun rises.' NOT 'rise'."},'Parts of Speech':{ok:'Adjective, noun, verb — all clear.',par:'Noun=thing. Verb=action. Adjective=describes noun.',mis:"'She has a beautiful voice.' She=noun, has=verb, beautiful=adjective."},'Prepositions':{ok:'Prepositions mastered! in/on/at/by correct.',par:'ON=surfaces. IN=inside. AT=specific point.',mis:'Draw pictures: cup ON table, book IN bag.'}}
+};
+
+function computeConceptMastery(){
+  const qs=getQs(); if(!qs||!qs.length)return[];
+  const map={};
+  qs.forEach((q,i)=>{
+    const cn=q.concept; const a=answers[i];
+    const correct=a!==undefined&&a!==null&&a===q.ans;
+    const t=timings[i]||0; const tooFast=correct&&t>0&&t<3;
+    if(!map[cn])map[cn]={c:0,t:0,fast:0};
+    map[cn].t++;
+    if(correct)map[cn].c++;
+    if(tooFast)map[cn].fast++;
+  });
+  const tips=CONCEPT_TIPS[subj]||{};
+  return Object.entries(map).map(([name,d])=>{
+    const raw=Math.round(d.c/d.t*100);
+    const pen=d.fast>0?Math.min(15,d.fast*12):0;
+    const pct=Math.max(0,raw-pen);
+    const s=pct>=70?'ok':pct>=45?'par':'mis';
+    const icon=s==='ok'?'✅':s==='par'?'⚠️':'❌';
+    const ct=tips[name]||{};
+    const tip=ct[s]||(s==='ok'?'Well understood!':s==='par'?'Review this concept.':'Needs more practice.');
+    return{icon,t:name,s,tip,pct};
+  }).sort((a,b)=>a.pct-b.pct);
+}
+
+function generateFeedbackMsg(code,pct,strong,weak,ff){
+  const nm=(sName||'Student').split(' ')[0];
+  const fl=ff>0?` (${ff} fast answer${ff>1?'s':''} flagged)`:'';
+  const lv=pct>=85?'A':pct>=70?'B':pct>=50?'C':'D';
+  const M={
+    hi:{A:`${nm}, शानदार! ${pct}%.${strong?' '+strong+' में मजबूत।':''}${weak?' '+weak+' पर ध्यान दो।':''}${fl}`,B:`${nm}, बहुत अच्छा! ${pct}%.${weak?' '+weak+' को दोबारा पढ़ो।':''}${fl}`,C:`${nm}, अच्छा प्रयास! ${pct}%.${weak?' '+weak+' पर मेहनत करो।':''}${fl}`,D:`${nm}, प्रयास जारी रखो! ${pct}%.${weak?' '+weak+' पर ध्यान चाहिए।':''}${fl}`},
+    en:{A:`${nm}, outstanding! ${pct}%.${strong?' Very strong in '+strong+'.':''}${weak?' Just revise '+weak+'.':''}${fl}`,B:`${nm}, well done! ${pct}%.${weak?' Review '+weak+'.':''}${fl}`,C:`${nm}, good effort! ${pct}%.${weak?' '+weak+' needs more practice.':''}${fl}`,D:`${nm}, keep going! ${pct}%.${weak?' Focus on '+weak+'.':''}${fl}`},
+    bn:{A:`${nm}, অসাধারণ! ${pct}%.${weak?' '+weak+' আরো পড়ো।':''}${fl}`,B:`${nm}, ভালো! ${pct}%.${weak?' '+weak+' আরো পড়ো।':''}${fl}`,C:`${nm}, ভালো প্রচেষ্টা! ${pct}%.${fl}`,D:`${nm}, চেষ্টা করো! ${pct}%.${fl}`},
+    ta:{A:`${nm}, அருமை! ${pct}%.${fl}`,B:`${nm}, நல்லது! ${pct}%.${fl}`,C:`${nm}, முயற்சி! ${pct}%.${fl}`,D:`${nm}, தொடரவும்! ${pct}%.${fl}`},
+    mr:{A:`${nm}, अप्रतिम! ${pct}%.${fl}`,B:`${nm}, छान! ${pct}%.${fl}`,C:`${nm}, प्रयत्न! ${pct}%.${fl}`,D:`${nm}, चालू ठेवा! ${pct}%.${fl}`},
+    te:{A:`${nm}, అద్భుతం! ${pct}%.${fl}`,B:`${nm}, బాగుంది! ${pct}%.${fl}`,C:`${nm}, ప్రయత్నం! ${pct}%.${fl}`,D:`${nm}, కొనసాగించు! ${pct}%.${fl}`}
+  };
+  const t=M[code]||M.en; return (t[lv]||t.B).replace(/\s{2,}/g,' ').trim();
+}
+
+function generateVoiceMsg(code,pct){
+  const nm=(sName||'Student').split(' ')[0],good=pct>=70;
+  const v={hi:good?`${nm}, बहुत बढ़िया! ${pct}% अंक।`:`${nm}, और अभ्यास करो।`,en:good?`${nm}, well done! ${pct} percent.`:`${nm}, keep practising.`,bn:good?`${nm}, ভালো! ${pct}%.`:`${nm}, আরো পড়ো।`,ta:good?`${nm}, நல்லது!`:`${nm}, மேலும் படி.`,mr:good?`${nm}, छान!`:`${nm}, सराव करा.`,te:good?`${nm}, బాగుంది!`:`${nm}, అభ్యాసం చేయి.`};
+  return v[code]||v.en;
+}
+
+// Phase 2 state
+// [removed duplicate]
+
+function buildFeedback(){
+  const qs=getQs();
+  const correct=answers.filter((a,i)=>i<qs.length&&a===qs[i].ans).length;
+  fbLang=lang;
+  _cConcepts=computeConceptMastery();
+  _cPct=Math.round(correct/qs.length*100);
+  _cFlags=(flags||[]).filter(f=>f.reason==='TOO_FAST').length;
+  const pct=_cPct;
+  const grade=pct>=85?'A+':pct>=70?'A':pct>=55?'B':pct>=40?'C':'D';
+  const [gc,gc2]=pct>=70?['rgba(5,150,105,.12)','#059669']:pct>=50?['rgba(217,119,6,.1)','#D97706']:['rgba(220,38,38,.1)','#DC2626'];
+  const S=id=>document.getElementById(id);
+  const T=(id,v)=>{const e=S(id);if(e)e.textContent=v;};
+  T('fb-nm',sName+' — Feedback');
+  T('fb-sc',`${correct}/${qs.length}`);
+  T('fb-sub',`${subj} · ${qs[0]?.concept||subj}`);
+  const em=S('fb-em');if(em)em.textContent=pct>=85?'🏆':pct>=70?'🌟':pct>=50?'👍':'💪';
+  const gd=S('fb-grade');if(gd)gd.innerHTML=`<span style="background:${gc};color:${gc2};padding:4px 16px;border-radius:20px;font-size:14px;font-weight:800;display:inline-block;margin-top:6px">Grade: ${grade} · ${pct}%</span>`;
+  const row=S('fb-langs');
+  if(row){row.innerHTML='';Object.entries(LM).forEach(([code,meta])=>{const chip=document.createElement('div');chip.className='lp'+(code===fbLang?' on':'');chip.textContent=meta.v||meta.n||code;chip.onclick=()=>{stopFBAudio();document.querySelectorAll('.lp').forEach(x=>x.classList.remove('on'));chip.classList.add('on');fbLang=code;renderFBLang(code);};row.appendChild(chip);});}
+  const aw=S('fb-aw');if(aw)aw.innerHTML=[30,65,100,80,55,90,70,45,80,60,50,75,95,60,35].map(h=>`<div class="aw" style="height:${h}%"></div>`).join('');
+  renderFBLang(fbLang);
+  // Run TinyBERT scoring in background
+  if(typeof window.runAIScoring==='function')
+    window.runAIScoring(qs,answers,timings).then(r=>{window._aiResults=r;}).catch(()=>{});
+}
+
+function renderFBLang(code){
+  const concepts=_cConcepts||computeConceptMastery();
+  const pct=_cPct; const ff=_cFlags;
+  const lN=LM[code]?.n||'English';
+  const best=concepts.filter(c=>c.s==='ok').slice(-1)[0]?.t||'';
+  const worst=concepts.find(c=>c.s==='mis')?.t||concepts.find(c=>c.s==='par')?.t||'';
+  const msg=generateFeedbackMsg(code,pct,best,worst,ff);
+  const T=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  T('fb-lbl','✅ BodhAI Feedback ('+lN+')');
+  T('fb-txt',msg);
+  T('fb-albl','🎙️ '+lN+' Audio');
+  const cb=document.getElementById('fb-concepts');
+  if(cb){cb.innerHTML=concepts.map(con=>{
+    const stag=con.s==='ok'?'<span class="tag ttl">✓ Understood</span>':con.s==='par'?'<span class="tag tye">⚠ Partial</span>':'<span class="tag trd">✗ Revise</span>';
+    const bc=con.s==='ok'?'#059669':con.s==='par'?'#D97706':'#DC2626';
+    return`<div class="cfi"><div style="font-size:19px;flex-shrink:0">${con.icon}</div><div class="cfb"><div class="cfhd"><div class="cft">${con.t}</div>${stag}<span style="margin-left:auto;font-size:11px;font-weight:800;color:${bc}">${con.pct}%</span></div><div class="cfp">${con.tip}</div><div class="cfpb"><div class="cfpf" style="width:${Math.max(con.pct,2)}%;background:${bc}"></div></div></div></div>`;
+  }).join('');}
+}
+
+async function playFBAudio(){
+  if(!window.speechSynthesis){alert('Use Chrome for audio.');return;}
+  if(fbPlaying){stopFBAudio();return;}
+  const lo=LM[fbLang];const pb=document.getElementById('fb-pb');if(pb)pb.textContent='⏳';
+  const voices=await loadVoices();const voice=pickVoice(voices,fbLang,lo.voice);
+  const text=generateVoiceMsg(fbLang,_cPct);
+  const utter=new SpeechSynthesisUtterance(text);
+  if(voice)utter.voice=voice;
+  utter.lang=voice?.lang||'en-US';utter.rate=0.88;utter.volume=1.0;
+  utter.onstart=()=>{fbPlaying=true;if(pb){pb.textContent='⏸';pb.classList.add('on');}
+    let idx=0;const bars=document.querySelectorAll('#fb-aw .aw');
+    fbInt=setInterval(()=>{bars.forEach(b=>b.classList.remove('lit'));for(let j=0;j<3;j++)bars[(idx+j)%bars.length]?.classList.add('lit');idx=(idx+1)%bars.length;},100);};
+  utter.onend=utter.onerror=stopFBAudio;
+  speechSynthesis.cancel();
+  setTimeout(()=>{try{speechSynthesis.speak(utter);}catch(e){stopFBAudio();}},120);
+}
+
+// Update matchVoice to use TinyBERT semantically
+// [removed duplicate]
+
+// PWA service worker (only on real http/https)
+(function(){
+  if(!('serviceWorker' in navigator))return;
+  if(!['http:','https:'].includes(location.protocol))return;
+  if(location.href.includes('blob'))return;
+  try{
+    const sw=['const C="bai-v3";','self.addEventListener("install",e=>{self.skipWaiting();});','self.addEventListener("activate",e=>{e.waitUntil(clients.claim());});'].join('');
+    navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
+  }catch(e){}
+})();
+
+
+
+// ════ QR SHARE SYSTEM — DISTRIBUTED CLASSROOM ════════════════════════════
+
+// [removed duplicate]
+// [removed duplicate]
+// [removed duplicate]
+// [removed duplicate]
+
+// ── Session code management ───────────────────────────────────────────────
+// [removed duplicate]
+
+// [removed duplicate]
+
+// ── Compress quiz result for QR ───────────────────────────────────────────
+// [removed duplicate]
+
+// ── Show QR code on score screen ─────────────────────────────────────────
+// [removed duplicate]
+
+// ── Open/close scanner modal ──────────────────────────────────────────────
+// [removed duplicate]
+
+// [removed duplicate]
+
+// ── Continuous scan loop (runs every frame) ───────────────────────────────
+// [removed duplicate]
+
+// ── Process a scanned QR code ─────────────────────────────────────────────
+// [removed duplicate]
+
+// ── Update scan count badge ───────────────────────────────────────────────
+// [removed duplicate]
+
+// ── Set scanner status message ────────────────────────────────────────────
+// [removed duplicate]
+
+// ── Read session code from profile form ──────────────────────────────────
+// [removed duplicate]
+
+
+
+
+
+
+
+
+
+// Device health monitoring — prevents crashes on low-end devices
+function startDeviceMonitor(){
+  // Pause quiz timer when tab is hidden (student switches apps)
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden && timerInt){
+      clearInterval(timerInt);
+    } else if(!document.hidden && curQ >= 0 && curQ < getQs().length){
+      startTimer();
+    }
+  });
+  // Battery warning
+  if(navigator.getBattery){
+    navigator.getBattery().then(b=>{
+      if(b.level < 0.10 && !b.charging){
+        const el=document.getElementById('quiz-battery-warn');
+        if(el)el.style.display='block';
+      }
+    });
+  }
+  // Memory pressure — unload TinyBERT if needed
+  if(performance.memory){
+    setInterval(()=>{
+      if(performance.memory.usedJSHeapSize > 200e6){
+        if(window._ML && window._ML.ready){
+          console.log('Memory pressure: TinyBERT unloaded');
+          window._ML.ready = false;
+          window._ML.pipe = null;
+        }
+      }
+    }, 30000);
+  }
+}
+
+
+// ── Offline queue & reconnect sync (TABLE 4: sync_queue) ─────────────────────
+function queueOfflineSession(sessionData){
+  try{
+    const q=JSON.parse(localStorage.getItem('bodhOfflineQueue')||'[]');
+    const isDupe=q.some(s=>s.student===sessionData.student&&
+      s.subject===sessionData.subject&&Math.abs((s.timestamp||0)-(sessionData.timestamp||0))<5000);
+    if(!isDupe){
+      const did=localStorage.getItem('bodhDeviceId')||(()=>{
+        const id='dev-'+Math.random().toString(36).slice(2,10);
+        localStorage.setItem('bodhDeviceId',id);return id;})();
+      q.push({...sessionData,deviceId:did});
+      localStorage.setItem('bodhOfflineQueue',JSON.stringify(q.slice(-200)));
+    }
+  }catch(e){}
+}
+
+async function syncOfflineQueue(){
+  const queue=JSON.parse(localStorage.getItem('bodhOfflineQueue')||'[]');
+  if(!queue.length||!API_URL)return;
+  try{
+    const r=await fetch(API_URL+'/api/sync',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({sessions:queue,deviceId:localStorage.getItem('bodhDeviceId')||''}),
+      signal:AbortSignal.timeout(10000)});
+    if(r.ok){const d=await r.json();if(d.synced>0)localStorage.setItem('bodhOfflineQueue','[]');}
+  }catch(e){}
+}
+
+// Use sessionStorage to persist online state across renders
+// This ensures false→true transition triggers sync even on page reload
+async function checkStudentOnline(){
+  if(!API_URL){ updateStudentConnStatus(false); return false; }
+  try{
+    const controller = new AbortController();
+    const tid = setTimeout(()=>controller.abort(), 4000);
+    const r = await fetch(API_URL+'/api/health', {signal: controller.signal});
+    clearTimeout(tid);
+    const d = await r.json();
+    const nowOnline = (d.status === 'ok');
+    updateStudentConnStatus(nowOnline);
+    const wasOnline = (sessionStorage.getItem('bodhWasOnline') === 'true');
+    sessionStorage.setItem('bodhWasOnline', String(nowOnline));
+    const queue = JSON.parse(localStorage.getItem('bodhOfflineQueue') || '[]');
+    if(nowOnline && (!wasOnline || queue.length > 0)){
+      console.log('Online — syncing offline queue:', queue.length, 'items');
+      syncOfflineQueue();
+    }
+    return nowOnline;
+  }catch(e){
+    updateStudentConnStatus(false);
+    sessionStorage.setItem('bodhWasOnline','false');
+    return false;
+  }
+}
+// Poll every 10s when there's queued data, else 30s
+function startOnlinePolling(){
+  setInterval(()=>{
+    const q=JSON.parse(localStorage.getItem('bodhOfflineQueue')||'[]');
+    if(q.length>0) checkStudentOnline(); // urgent: data waiting
+  },10000);
+  setInterval(checkStudentOnline,30000); // regular check
+}
+
+
+// Auto-fill session code from URL parameter
+// Teacher shares: http://192.168.x.x:3000/BodhAI_Student.html?code=BODH-XXXXXXXX
+function autoFillSessionCode(){
+  try{
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code') || params.get('session') || params.get('s');
+    if(code && code.length >= 5){
+      const el = document.getElementById('inp-session');
+      if(el){ el.value = code.toUpperCase(); el.style.borderColor='#059669'; }
+      localStorage.setItem('lastSessionCode', code.toUpperCase());
+    } else {
+      // Restore last used session code
+      const last = localStorage.getItem('lastSessionCode');
+      if(last){
+        const el = document.getElementById('inp-session');
+        if(el) el.value = last;
+      }
+    }
+  }catch(e){}
+}
+
+var Calibration={DEF:0.62,MIN:0.45,MAX:0.80,load:function(n){try{var r=localStorage.getItem('cal_'+n);return r?JSON.parse(r):this._new(n);}catch(e){return this._new(n);}},save:function(p){try{localStorage.setItem('cal_'+p.name,JSON.stringify(p));}catch(e){}},_new:function(n){return{name:n,threshold:this.DEF,total:0};},getStatus:function(n){var p=this.load(n);return{threshold:Math.round(p.threshold*100),total:p.total,calibrated:p.total>=10};}};
+
+// ══ WEBSOCKET AUTO-JOIN — Production Grade ═══════════════════════════════
+var _autoJoinWs = null;
+var _autoJoinRetry = 0;
+var _activeSessions = [];   // ALL currently active teacher sessions
+var _myCode = '';           // code this student has committed to
+
+function connectAutoJoin() {
+  if (!API_URL || API_URL === '') return;
+  try {
+    var url = API_URL.replace(/^http/, 'ws').replace(/\/api$/, '') + '/ws';
+    _autoJoinWs = new WebSocket(url);
+
+    _autoJoinWs.onopen = function () {
+      _autoJoinRetry = 0;
+      // Restore committed code from localStorage
+      try {
+        var saved = localStorage.getItem('bodhStudentSession');
+        if (saved && saved !== 'DIRECT') {
+          _myCode = saved;
+          var inp = document.getElementById('inp-session');
+          if (inp) inp.value = saved;
+          _autoJoinWs.send(JSON.stringify({ type: 'join-room', code: saved }));
+        }
+      } catch(e) {}
+    };
+
+    _autoJoinWs.onmessage = function (ev) {
+      try {
+        var d = JSON.parse(ev.data);
+
+        // Server sends ALL active sessions on connect
+        if (d.type === 'connected') {
+          if (d.activeSessions && d.activeSessions.length) {
+            d.activeSessions.forEach(function(s) { upsertSession(s); });
+            // If student has no committed code, auto-fill the most recent
+            if (!_myCode) commitSession(_activeSessions[0].code, _activeSessions[0].label);
+            else renderSessionBanner();
+          } else {
+            renderSessionBanner(); // shows "waiting..."
+          }
+          return;
+        }
+
+        // A teacher just broadcast a new/updated session
+        if (d.type === 'session-activated' && d.code) {
+          upsertSession({ code: d.code, label: d.label || d.code, ts: d.ts || Date.now() });
+          // If student has no code yet, auto-commit
+          if (!_myCode) commitSession(d.code, d.label || d.code);
+          else renderSessionBanner(); // show updated list including new session
+          return;
+        }
+
+        // A teacher ended their session — remove from list
+        if (d.type === 'session-deactivated' && d.code) {
+          _activeSessions = _activeSessions.filter(function(s) { return s.code !== d.code.toUpperCase(); });
+          if (_myCode === d.code.toUpperCase()) {
+            _myCode = '';
+            var inp = document.getElementById('inp-session');
+            if (inp) { inp.value = ''; inp.style.borderColor = ''; inp.style.background = ''; }
+          }
+          renderSessionBanner();
+          return;
+        }
+
+        if (d.type === 'pong') {}
+      } catch(e) {}
+    };
+
+    _autoJoinWs.onerror = function () {};
+    _autoJoinWs.onclose = function () {
+      if (_autoJoinRetry < 5) {
+        _autoJoinRetry++;
+        setTimeout(connectAutoJoin, Math.min(2000 * _autoJoinRetry, 10000));
+      }
+    };
+
+    setInterval(function () {
+      if (_autoJoinWs && _autoJoinWs.readyState === WebSocket.OPEN)
+        _autoJoinWs.send(JSON.stringify({ type: 'ping' }));
+    }, 25000);
+
+  } catch(e) {}
+}
+
+// Add or update a session in the active list (dedup by code)
+function upsertSession(s) {
+  var code = s.code.toUpperCase();
+  var idx = _activeSessions.findIndex(function(x) { return x.code === code; });
+  if (idx >= 0) _activeSessions[idx] = { code: code, label: s.label || code, ts: s.ts || Date.now() };
+  else _activeSessions.push({ code: code, label: s.label || code, ts: s.ts || Date.now() });
+  _activeSessions.sort(function(a, b) { return b.ts - a.ts; }); // newest first
+}
+
+// Student commits to a session — fills input, joins WS room
+function commitSession(code, label) {
+  code = code.toUpperCase();
+  _myCode = code;
+  var inp = document.getElementById('inp-session');
+  if (inp) {
+    inp.value = code;
+    inp.style.borderColor = '#059669';
+    inp.style.background = '#F0FDF4';
+  }
+  try { localStorage.setItem('bodhStudentSession', code); } catch(e) {}
+  try {
+    if (_autoJoinWs && _autoJoinWs.readyState === WebSocket.OPEN)
+      _autoJoinWs.send(JSON.stringify({ type: 'join-room', code: code }));
+  } catch(e) {}
+  renderSessionBanner();
+}
+
+// Render the banner — shows all active sessions, highlights current
+function renderSessionBanner() {
+  var b = document.getElementById('auto-join-banner');
+  if (!b) return;
+
+  if (!_activeSessions.length) {
+    b.innerHTML = '<span style="color:#64748B;font-size:12px">&#128225; Connected &#8212; waiting for teacher to broadcast session...</span>';
+    b.style.background = '#F8FAFF'; b.style.borderColor = '#E2E8F0';
+    return;
+  }
+
+  var html = '';
+
+  if (_activeSessions.length === 1 && _myCode === _activeSessions[0].code) {
+    // Only 1 session and already committed — compact green banner
+    b.innerHTML = '<b style="color:#059669">&#9989; Session: ' + _myCode + '</b>'
+      + '<span style="color:#64748B;font-size:11px;display:block;margin-top:2px">Auto-detected &#8212; enter your name and start</span>';
+    b.style.background = '#F0FDF4'; b.style.borderColor = '#059669';
+    return;
+  }
+
+  // Multiple sessions OR different from committed — show full picker
+  html += '<div style="font-size:11px;font-weight:700;color:#0B2447;margin-bottom:8px">'
+    + '&#127979; ' + _activeSessions.length + ' active classroom'
+    + (_activeSessions.length > 1 ? 's' : '') + ' &#8212; tap yours:</div>';
+
+  _activeSessions.forEach(function(s) {
+    var isMine = s.code === _myCode;
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      + '<button data-code="' + s.code + '" data-label="' + (s.label||s.code) + '"'
+      + ' style="flex:1;padding:9px 12px;border:none;border-radius:9px;cursor:pointer;text-align:left;font-size:12px;font-weight:700;'
+      + (isMine
+        ? 'background:#059669;color:#fff;'
+        : 'background:#EFF6FF;color:#0B2447;border:1.5px solid #BFDBFE;')
+      + '">'
+      + (isMine ? '&#9989; ' : '&#9711; ')
+      + (s.label && s.label !== s.code ? s.label + ' ' : '')
+      + '<span style="font-family:monospace;font-size:11px;' + (isMine?'color:rgba(255,255,255,0.85)':'color:#64748B') + '">' + s.code + '</span>'
+      + '</button>'
+      + '</div>';
+  });
+
+  b.innerHTML = html;
+  b.style.background = '#F8FAFF'; b.style.borderColor = '#E2E8F0';
+
+  // Wire click handlers
+  b.querySelectorAll('button[data-code]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      commitSession(this.getAttribute('data-code'), this.getAttribute('data-label'));
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  startDeviceMonitor();
+  autoFillSessionCode();
+  startOnlinePolling();
+  setTimeout(()=>checkStudentOnline(),2000); // check immediately on load
+  initDB();
+  if(window.speechSynthesis){speechSynthesis.onvoiceschanged=()=>{voicesCache=speechSynthesis.getVoices();};speechSynthesis.getVoices();}
+  buildTeacherDots();buildLangGrid();goto('s-splash');
+  try{var _rl=localStorage.getItem('bodhai_lang')||'hi';lang=_rl;var _LN={'hi':'Hindi','en':'English','bn':'Bengali','ta':'Tamil','te':'Telugu','mr':'Marathi'};var _nd=document.getElementById('lang-name-display');if(_nd)_nd.textContent=_LN[_rl]||_rl;var _clb=document.getElementById('change-lang-btn');if(_clb)_clb.addEventListener('click',function(){goto('s-lang');});}catch(e){}
+  try{if(typeof connectAutoJoin==='function')connectAutoJoin();}catch(e){}
+});
+function buildTeacherDots(){const el=document.getElementById('td-dots');if(!el)return;el.innerHTML='';for(let i=0;i<42;i++){const d=document.createElement('div');d.className='sdot na';d.textContent=i+1;const tip=document.createElement('div');tip.className='sdot-tip';tip.textContent='No data yet';d.appendChild(tip);el.appendChild(d);}}
+</script>
+
+<div id="ai-badge" style="display:none;position:fixed;bottom:80px;right:12px;z-index:300;background:rgba(11,36,71,.9);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:6px 12px;font-size:10.5px;color:rgba(255,255,255,.8);align-items:center;gap:6px;cursor:pointer" onclick="showAIInfo()">
+  <div id="ai-dot" style="width:7px;height:7px;border-radius:50%;background:#94A3B8;flex-shrink:0"></div>
+  <span id="ai-txt">AI loading…</span>
+</div>
+<div id="ai-info-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#fff;border-radius:16px;padding:24px;max-width:320px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="font-size:15px;font-weight:800;color:#0B2447;margin-bottom:14px">🤖 BodhAI AI Engine</div>
+    <div id="ai-info-content" style="font-size:12.5px;color:#475569;line-height:1.7"></div>
+    <button onclick="document.getElementById('ai-info-modal').style.display='none'" style="margin-top:14px;background:#0B2447;color:#fff;border:none;padding:9px 22px;border-radius:22px;cursor:pointer;font-size:13px;font-weight:700;width:100%">Close</button>
+  </div>
+</div>
+</body>
+</html>
